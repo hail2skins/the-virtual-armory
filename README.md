@@ -1,10 +1,108 @@
-# Project github.com/hail2skins/the-virtual-armory
+# The Virtual Armory
 
-One Paragraph of project description goes here
+A web application with authentication using Authboss and GORM.
 
-## Getting Started
+## Features
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+- User authentication (login, register, password recovery)
+- Admin user support
+- GORM for database abstraction
+- Gin for routing
+- Templ for templating
+
+## Prerequisites
+
+- Go 1.24+
+- PostgreSQL
+- Docker (optional, for running PostgreSQL)
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+PORT=8080
+HOST=localhost
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=virtualarmory
+DB_SCHEMA=public
+```
+
+## Running the Application
+
+1. Start PostgreSQL:
+
+```bash
+docker-compose up -d
+```
+
+2. Run the application:
+
+```bash
+go run cmd/api/main.go
+```
+
+Or use the Makefile:
+
+```bash
+make run
+```
+
+## Creating an Admin User
+
+To create an admin user, run:
+
+```bash
+go run cmd/scripts/create_admin.go <email> <password>
+```
+
+For example:
+
+```bash
+go run cmd/scripts/create_admin.go admin@example.com password123
+```
+
+## Authentication
+
+The application uses Authboss for authentication. The following routes are available:
+
+- `/login` - Login page
+- `/register` - Registration page
+- `/recover` - Password recovery page
+- `/auth/*` - Authboss routes
+
+## Protected Routes
+
+The following routes are protected and require authentication:
+
+- `/protected/profile` - User profile page
+
+## Admin Routes
+
+The following routes are protected and require admin privileges:
+
+- `/admin/dashboard` - Admin dashboard
+
+## Development
+
+To generate Templ files:
+
+```bash
+templ generate
+```
+
+To run tests:
+
+```bash
+make test
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## MakeFile
 
