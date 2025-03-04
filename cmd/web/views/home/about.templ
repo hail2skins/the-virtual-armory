@@ -1,0 +1,23 @@
+package home
+
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+
+templ About() {
+	@partials.Base() {
+		<div class="max-w-4xl mx-auto">
+			<h2 class="text-3xl font-bold mb-6">About The Virtual Armory</h2>
+			
+			<div class="bg-white p-6 rounded-lg shadow-md">
+				<p class="mb-4">
+					The Virtual Armory is a platform for managing and showcasing virtual items, weapons, and armor from various games and virtual worlds.
+				</p>
+				<p class="mb-4">
+					Our mission is to provide a comprehensive database and management system for virtual items, allowing users to track, trade, and showcase their collections.
+				</p>
+				<p>
+					This project is currently under development. Stay tuned for more features and updates!
+				</p>
+			</div>
+		</div>
+	}
+} 

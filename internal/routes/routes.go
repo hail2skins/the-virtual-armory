@@ -1,24 +1,18 @@
-package server
+package routes
 
 import (
+	"io/fs"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
-	"io/fs"
-
-	"log"
-
-	"context"
-
 	"github.com/hail2skins/the-virtual-armory/cmd/web"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 )
 
-func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
-
+// RegisterRoutes registers all routes for the application
+func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
+	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Add your frontend URL
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
@@ -27,11 +21,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	// Add Authboss middleware
-	r.Use(s.auth.Middleware())
+	r.Use(authInstance.Middleware())
 
-	// Public routes
-	r.GET("/", s.HelloWorldHandler)
-	r.GET("/health", s.healthHandler)
+	// Register home routes
+	RegisterHomeRoutes(r)
+
+	// Health check route
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	// Static files
 	staticFiles, _ := fs.Sub(web.Files, "assets")
@@ -60,45 +58,39 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	r.POST("/register", func(c *gin.Context) {
-		// Get form data
+		// This should be moved to an auth controller in the future
 		email := c.PostForm("email")
 		password := c.PostForm("password")
 		confirmPassword := c.PostForm("confirm_password")
 
-		log.Printf("Received registration request: email=%s", email)
-
 		// Validate form data
 		if email == "" || password == "" || confirmPassword == "" {
-			log.Printf("Missing required fields")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields"})
 			return
 		}
 
 		if password != confirmPassword {
-			log.Printf("Passwords do not match")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Passwords do not match"})
 			return
 		}
 
 		// Get the storer from Authboss
-		storer := s.auth.Config.Storage.Server.(*auth.GORMStorer)
+		storer := authInstance.Config.Storage.Server.(*auth.GORMStorer)
 
 		// Create a new user
-		user := storer.New(context.Background())
+		user := storer.New(c.Request.Context())
 		userWrapper := user.(*auth.UserWrapper)
 		userWrapper.PutEmail(email)
 		userWrapper.PutPassword(password)
 		userWrapper.PutConfirmed(true) // Auto-confirm for now
 
 		// Save the user
-		err := storer.Create(context.Background(), user)
+		err := storer.Create(c.Request.Context(), user)
 		if err != nil {
-			log.Printf("Error creating user: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
 			return
 		}
 
-		log.Printf("User created successfully: %s", email)
 		c.Redirect(http.StatusFound, "/auth/login")
 	})
 
@@ -108,42 +100,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Protected routes
 	protected := r.Group("/protected")
-	protected.Use(s.auth.RequireAuth())
+	protected.Use(authInstance.RequireAuth())
 	{
-		protected.GET("/profile", s.profileHandler)
+		protected.GET("/profile", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "This is a protected profile page"})
+		})
 	}
 
 	// Admin routes
 	admin := r.Group("/admin")
-	admin.Use(s.auth.RequireAdmin())
+	admin.Use(authInstance.RequireAdmin())
 	{
-		admin.GET("/dashboard", s.adminDashboardHandler)
+		admin.GET("/dashboard", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "This is the admin dashboard"})
+		})
 	}
-
-	return r
-}
-
-func (s *Server) HelloWorldHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	c.JSON(http.StatusOK, resp)
-}
-
-func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
-}
-
-func (s *Server) profileHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "This is a protected profile page"
-
-	c.JSON(http.StatusOK, resp)
-}
-
-func (s *Server) adminDashboardHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "This is the admin dashboard"
-
-	c.JSON(http.StatusOK, resp)
 }

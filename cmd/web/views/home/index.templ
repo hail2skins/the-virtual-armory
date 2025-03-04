@@ -1,0 +1,39 @@
+package home
+
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+
+templ Index() {
+	@partials.Base() {
+		<div class="max-w-4xl mx-auto">
+			<h2 class="text-3xl font-bold mb-6">Welcome to The Virtual Armory</h2>
+			
+			<div class="bg-white p-6 rounded-lg shadow-md">
+				<h3 class="text-xl font-semibold mb-4">Hello World Form</h3>
+				<form hx-post="/hello" method="POST" hx-target="#hello-container" class="mb-4">
+					<div class="flex items-center">
+						<input 
+							class="bg-gray-100 text-black p-2 border border-gray-300 rounded-lg mr-2 flex-grow"
+							id="name" 
+							name="name" 
+							type="text"
+							placeholder="Enter your name"
+						/>
+						<button 
+							type="submit" 
+							class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+						>
+							Submit
+						</button>
+					</div>
+				</form>
+				<div id="hello-container" class="mt-4"></div>
+			</div>
+		</div>
+	}
+}
+
+templ HelloResponse(name string) {
+	<div class="bg-green-100 p-4 shadow-md rounded-lg">
+		<p class="text-lg">Hello, { name }! Welcome to The Virtual Armory.</p>
+	</div>
+} 
