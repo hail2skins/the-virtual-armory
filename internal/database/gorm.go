@@ -52,6 +52,7 @@ func InitGORM() (*gorm.DB, error) {
 	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Manufacturer{},
+		&models.Caliber{},
 	)
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)

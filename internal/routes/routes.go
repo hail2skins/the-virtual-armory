@@ -50,4 +50,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
 
 	// Register manufacturer routes
 	RegisterManufacturerRoutes(r, authInstance)
+
+	// Register caliber routes
+	RegisterCaliberRoutes(r, authInstance)
 }

@@ -14,6 +14,10 @@ func RunSeeds(db *gorm.DB) {
 	log.Println("Seeding manufacturers...")
 	SeedManufacturers(db)
 
+	// Run caliber seeds
+	log.Println("Seeding calibers...")
+	SeedCalibers(db)
+
 	// Add more seed functions here as needed
 
 	log.Println("Database seeding completed")
