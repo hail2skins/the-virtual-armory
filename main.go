@@ -17,7 +17,7 @@ func main() {
 	cfg := config.New()
 
 	// Initialize database
-	_, err := database.InitGORM()
+	db, err := database.InitGORM()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// Create and start the server
-	srv := server.New(cfg, authInstance)
+	srv := server.New(cfg, authInstance, db)
 
 	// Start the server in a goroutine
 	go func() {

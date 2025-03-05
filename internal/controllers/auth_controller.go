@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	authviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/database"
+	"github.com/hail2skins/the-virtual-armory/internal/models"
 )
 
 // AuthController handles authentication-related routes
@@ -41,13 +43,25 @@ func (c *AuthController) Recover(ctx *gin.Context) {
 // Profile handles the user profile page
 func (c *AuthController) Profile(ctx *gin.Context) {
 	// Get the current user from the context
-	// user, err := c.Auth.CurrentUser(ctx.Request)
-	// if err != nil {
-	//     ctx.AbortWithStatus(http.StatusInternalServerError)
-	//     return
-	// }
+	user, err := auth.GetCurrentUser(ctx)
+	if err != nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to get current user"})
+		return
+	}
 
-	component := authviews.Profile()
+	// Get the user's guns from the database
+	db := database.GetDB()
+	var guns []models.Gun
+	if err := db.Where("owner_id = ?", user.ID).
+		Preload("WeaponType").
+		Preload("Caliber").
+		Preload("Manufacturer").
+		Find(&guns).Error; err != nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve guns"})
+		return
+	}
+
+	component := authviews.Profile(*user, guns)
 	component.Render(ctx, ctx.Writer)
 }
 
@@ -66,12 +80,16 @@ func (c *AuthController) AdminDashboard(ctx *gin.Context) {
 
 // ProcessLogin handles the login form submission
 func (c *AuthController) ProcessLogin(ctx *gin.Context) {
-	// This would normally be handled by Authboss
-	// For now, we'll simulate a successful login by setting a session cookie
-	ctx.SetCookie("is_logged_in", "true", 3600, "/", "", false, true)
+	// Get the email from the form
+	email := ctx.PostForm("email")
 
-	// Redirect to the about page
-	ctx.Redirect(http.StatusSeeOther, "/about")
+	// This would normally be handled by Authboss
+	// For now, we'll simulate a successful login by setting session cookies
+	ctx.SetCookie("is_logged_in", "true", 3600, "/", "", false, true)
+	ctx.SetCookie("user_email", email, 3600, "/", "", false, true)
+
+	// Redirect to the owner page
+	ctx.Redirect(http.StatusSeeOther, "/owner")
 }
 
 // ProcessRegister handles the registration form submission

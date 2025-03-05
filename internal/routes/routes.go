@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"gorm.io/gorm"
 )
 
 // HeadMiddleware handles HEAD requests by converting them to GET requests
@@ -24,7 +25,7 @@ func HeadMiddleware() gin.HandlerFunc {
 }
 
 // RegisterRoutes registers all routes for the application
-func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
+func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB) {
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Add your frontend URL
@@ -56,4 +57,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
 
 	// Register weapon type routes
 	RegisterWeaponTypeRoutes(r, authInstance)
+
+	// Register gun routes
+	RegisterGunRoutes(r, db, authInstance)
 }

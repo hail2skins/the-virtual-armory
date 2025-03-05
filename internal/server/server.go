@@ -10,6 +10,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/config"
 	"github.com/hail2skins/the-virtual-armory/internal/routes"
+	"gorm.io/gorm"
 )
 
 // Server represents the HTTP server
@@ -17,10 +18,11 @@ type Server struct {
 	router *gin.Engine
 	config *config.Config
 	auth   *auth.Auth
+	db     *gorm.DB
 }
 
 // New creates a new server instance
-func New(cfg *config.Config, auth *auth.Auth) *Server {
+func New(cfg *config.Config, auth *auth.Auth, db *gorm.DB) *Server {
 	router := gin.Default()
 
 	// Create a new server
@@ -28,6 +30,7 @@ func New(cfg *config.Config, auth *auth.Auth) *Server {
 		router: router,
 		config: cfg,
 		auth:   auth,
+		db:     db,
 	}
 
 	// Set up routes
@@ -55,7 +58,7 @@ func (s *Server) setupRoutes() {
 	s.router.HEAD("/favicon.ico", faviconHandler)
 
 	// Register all routes
-	routes.RegisterRoutes(s.router, s.auth)
+	routes.RegisterRoutes(s.router, s.auth, s.db)
 }
 
 // Start starts the HTTP server

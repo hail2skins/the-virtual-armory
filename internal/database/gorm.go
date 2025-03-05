@@ -54,6 +54,7 @@ func InitGORM() (*gorm.DB, error) {
 		&models.Manufacturer{},
 		&models.Caliber{},
 		&models.WeaponType{},
+		&models.Gun{},
 	)
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)

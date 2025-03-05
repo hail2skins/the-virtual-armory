@@ -36,7 +36,7 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth) {
 	protected := router.Group("/")
 	protected.Use(auth.RequireAuth())
 	{
-		protected.GET("/profile", authController.Profile)
+		protected.GET("/owner", authController.Profile)
 	}
 
 	// Admin routes (require admin privileges)
