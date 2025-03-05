@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	authviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/auth"
@@ -30,7 +31,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 // Register handles the registration page
 func (c *AuthController) Register(ctx *gin.Context) {
-	component := authviews.RegisterForm()
+	component := authviews.RegisterForm("", "")
 	component.Render(ctx, ctx.Writer)
 }
 
@@ -94,8 +95,66 @@ func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 
 // ProcessRegister handles the registration form submission
 func (c *AuthController) ProcessRegister(ctx *gin.Context) {
-	// This would normally be handled by Authboss
-	// For now, we'll just redirect to the login page
+	// Get form data
+	email := ctx.PostForm("email")
+	password := ctx.PostForm("password")
+	confirmPassword := ctx.PostForm("confirm_password")
+
+	// Validate form data
+	if email == "" || password == "" || confirmPassword == "" {
+		component := authviews.RegisterForm("All fields are required", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Validate email format
+	if !strings.Contains(email, "@") {
+		component := authviews.RegisterForm("Invalid email format", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Validate password match
+	if password != confirmPassword {
+		component := authviews.RegisterForm("Passwords do not match", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Validate password strength
+	if len(password) < 8 {
+		component := authviews.RegisterForm("Password must be at least 8 characters long", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Get the database connection
+	// In tests, we'll use the test database
+	db := database.GetDB()
+
+	// Check if email already exists
+	var existingUser models.User
+	result := db.Where("email = ?", email).First(&existingUser)
+	if result.Error == nil {
+		component := authviews.RegisterForm("Email already registered", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Create new user
+	user := models.User{
+		Email:    email,
+		Password: password, // In a real implementation, this would be hashed
+	}
+
+	result = db.Create(&user)
+	if result.Error != nil {
+		component := authviews.RegisterForm("Error creating user: "+result.Error.Error(), email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Redirect to login page
 	ctx.Redirect(http.StatusSeeOther, "/login")
 }
 

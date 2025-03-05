@@ -14,6 +14,8 @@ import (
 
 var (
 	DB *gorm.DB
+	// TestDB is used for testing
+	TestDB *gorm.DB
 )
 
 // InitGORM initializes the GORM database connection
@@ -71,6 +73,12 @@ func InitGORM() (*gorm.DB, error) {
 
 // GetDB returns the GORM database connection
 func GetDB() *gorm.DB {
+	// If TestDB is set, use it for testing
+	if TestDB != nil {
+		return TestDB
+	}
+
+	// Otherwise, use the regular DB
 	if DB == nil {
 		var err error
 		DB, err = InitGORM()
