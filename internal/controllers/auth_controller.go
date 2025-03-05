@@ -24,7 +24,7 @@ func NewAuthController(auth *auth.Auth) *AuthController {
 
 // Login handles the login page
 func (c *AuthController) Login(ctx *gin.Context) {
-	component := authviews.LoginForm()
+	component := authviews.LoginForm("", "")
 	component.Render(ctx, ctx.Writer)
 }
 
