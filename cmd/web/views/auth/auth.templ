@@ -6,7 +6,7 @@ templ LoginForm() {
 	@partials.Base() {
 		<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
 			<h2 class="text-2xl font-bold mb-6">Login</h2>
-			<form action="/auth/login" method="POST">
+			<form action="/login" method="POST">
 				<div class="mb-4">
 					<label for="email" class="block text-gray-700 mb-2">Email</label>
 					<input 
@@ -103,7 +103,7 @@ templ RecoverForm() {
 	@partials.Base() {
 		<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
 			<h2 class="text-2xl font-bold mb-6">Recover Password</h2>
-			<form action="/auth/recover" method="POST">
+			<form action="/recover" method="POST">
 				<div class="mb-6">
 					<label for="email" class="block text-gray-700 mb-2">Email</label>
 					<input 

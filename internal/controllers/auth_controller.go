@@ -67,8 +67,11 @@ func (c *AuthController) AdminDashboard(ctx *gin.Context) {
 // ProcessLogin handles the login form submission
 func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 	// This would normally be handled by Authboss
-	// For now, we'll just redirect to the profile page
-	ctx.Redirect(http.StatusSeeOther, "/profile")
+	// For now, we'll simulate a successful login by setting a session cookie
+	ctx.SetCookie("is_logged_in", "true", 3600, "/", "", false, true)
+
+	// Redirect to the about page
+	ctx.Redirect(http.StatusSeeOther, "/about")
 }
 
 // ProcessRegister handles the registration form submission
@@ -88,6 +91,7 @@ func (c *AuthController) ProcessRecover(ctx *gin.Context) {
 // Logout handles user logout
 func (c *AuthController) Logout(ctx *gin.Context) {
 	// This would normally be handled by Authboss
-	// For now, we'll just redirect to the home page
+	// For now, we'll just clear the cookie and redirect to the home page
+	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
 	ctx.Redirect(http.StatusSeeOther, "/")
 }

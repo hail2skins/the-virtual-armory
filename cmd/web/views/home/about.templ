@@ -2,8 +2,8 @@ package home
 
 import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 
-templ About() {
-	@partials.Base() {
+templ About(isLoggedIn bool) {
+	@partials.BaseWithAuth(isLoggedIn) {
 		<div class="max-w-4xl mx-auto">
 			<h2 class="text-3xl font-bold mb-6">About The Virtual Armory</h2>
 			

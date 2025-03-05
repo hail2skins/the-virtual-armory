@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/hail2skins/the-virtual-armory/internal/database/seed"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -48,13 +49,20 @@ func InitGORM() (*gorm.DB, error) {
 	}
 
 	// Auto migrate the schema
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Manufacturer{},
+	)
 	if err != nil {
 		log.Printf("Failed to migrate database: %v", err)
 		return nil, err
 	}
 
 	log.Printf("Connected to database: %s", dbname)
+
+	// Run database seeds
+	seed.RunSeeds(DB)
+
 	return DB, nil
 }
 

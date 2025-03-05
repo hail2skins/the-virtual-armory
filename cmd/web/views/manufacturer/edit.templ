@@ -1,0 +1,83 @@
+package manufacturer
+
+import (
+	"strconv"
+
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+	"github.com/hail2skins/the-virtual-armory/internal/models"
+)
+
+templ Edit(manufacturer models.Manufacturer) {
+	@partials.Base() {
+		<div class="max-w-2xl mx-auto">
+			<div class="flex justify-between items-center mb-6">
+				<h2 class="text-3xl font-bold">Edit Manufacturer</h2>
+				<div class="space-x-2">
+					<a href="/admin/manufacturers" class="text-blue-600 hover:text-blue-800">
+						Back to List
+					</a>
+					<a href={ templ.SafeURL("/admin/manufacturers/" + strconv.FormatUint(uint64(manufacturer.ID), 10)) } class="text-blue-600 hover:text-blue-800">
+						View Details
+					</a>
+				</div>
+			</div>
+			
+			<div class="bg-white shadow-md rounded-lg p-6">
+				<form method="POST" action={ templ.SafeURL("/admin/manufacturers/" + strconv.FormatUint(uint64(manufacturer.ID), 10)) }>
+					<div class="mb-4">
+						<label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name *</label>
+						<input 
+							type="text" 
+							id="name" 
+							name="name" 
+							required
+							value={ manufacturer.Name }
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+							placeholder="Enter manufacturer name"
+						/>
+					</div>
+					
+					<div class="mb-4">
+						<label for="nickname" class="block text-gray-700 text-sm font-bold mb-2">Nickname</label>
+						<input 
+							type="text" 
+							id="nickname" 
+							name="nickname"
+							value={ manufacturer.Nickname }
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+							placeholder="Enter nickname (optional)"
+						/>
+					</div>
+					
+					<div class="mb-6">
+						<label for="country" class="block text-gray-700 text-sm font-bold mb-2">Country *</label>
+						<input 
+							type="text" 
+							id="country" 
+							name="country" 
+							required
+							value={ manufacturer.Country }
+							class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+							placeholder="Enter country of origin"
+						/>
+					</div>
+					
+					<div class="flex items-center justify-between">
+						<button 
+							type="submit" 
+							class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+						>
+							Update Manufacturer
+						</button>
+						<a 
+							href={ templ.SafeURL("/admin/manufacturers/" + strconv.FormatUint(uint64(manufacturer.ID), 10)) }
+							class="inline-block align-baseline font-bold text-sm text-blue-600 hover:text-blue-800"
+						>
+							Cancel
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+} 

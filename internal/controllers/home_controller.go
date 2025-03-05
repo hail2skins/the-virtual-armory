@@ -18,8 +18,15 @@ func NewHomeController() *HomeController {
 
 // Index handles the home page request
 func (h *HomeController) Index(c *gin.Context) {
-	component := home.Index()
-	err := component.Render(c.Request.Context(), c.Writer)
+	// Check if user is logged in
+	isLoggedIn := false
+	cookie, err := c.Cookie("is_logged_in")
+	if err == nil && cookie == "true" {
+		isLoggedIn = true
+	}
+
+	component := home.Index(isLoggedIn)
+	err = component.Render(c.Request.Context(), c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf("Error rendering index page: %v", err)
@@ -29,8 +36,15 @@ func (h *HomeController) Index(c *gin.Context) {
 
 // About handles the about page request
 func (h *HomeController) About(c *gin.Context) {
-	component := home.About()
-	err := component.Render(c.Request.Context(), c.Writer)
+	// Check if user is logged in
+	isLoggedIn := false
+	cookie, err := c.Cookie("is_logged_in")
+	if err == nil && cookie == "true" {
+		isLoggedIn = true
+	}
+
+	component := home.About(isLoggedIn)
+	err = component.Render(c.Request.Context(), c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf("Error rendering about page: %v", err)
@@ -40,8 +54,15 @@ func (h *HomeController) About(c *gin.Context) {
 
 // Contact handles the contact page request
 func (h *HomeController) Contact(c *gin.Context) {
-	component := home.Contact()
-	err := component.Render(c.Request.Context(), c.Writer)
+	// Check if user is logged in
+	isLoggedIn := false
+	cookie, err := c.Cookie("is_logged_in")
+	if err == nil && cookie == "true" {
+		isLoggedIn = true
+	}
+
+	component := home.Contact(isLoggedIn)
+	err = component.Render(c.Request.Context(), c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf("Error rendering contact page: %v", err)

@@ -109,11 +109,19 @@ func (a *Auth) Middleware() gin.HandlerFunc {
 // RequireAuth is a middleware that requires authentication
 func (a *Auth) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get the current user
+		// Check for the is_logged_in cookie first (our simplified auth)
+		cookie, err := c.Cookie("is_logged_in")
+		if err == nil && cookie == "true" {
+			// User is logged in via cookie
+			c.Next()
+			return
+		}
+
+		// Fall back to Authboss authentication
 		user, err := a.CurrentUser(c.Request)
 		if err != nil || user == nil {
 			// Redirect to login page
-			c.Redirect(http.StatusFound, "/auth/login")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
@@ -124,11 +132,19 @@ func (a *Auth) RequireAuth() gin.HandlerFunc {
 // RequireAdmin is a middleware that requires admin privileges
 func (a *Auth) RequireAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get the current user
+		// Check for the is_logged_in cookie first (our simplified auth)
+		cookie, err := c.Cookie("is_logged_in")
+		if err == nil && cookie == "true" {
+			// For now, assume all logged-in users are admins
+			c.Next()
+			return
+		}
+
+		// Fall back to Authboss authentication
 		user, err := a.CurrentUser(c.Request)
 		if err != nil || user == nil {
 			// Redirect to login page
-			c.Redirect(http.StatusFound, "/auth/login")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}

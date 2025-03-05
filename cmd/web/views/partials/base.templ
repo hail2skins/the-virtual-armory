@@ -20,8 +20,48 @@ templ Base() {
 							<li><a href="/" class="hover:underline">Home</a></li>
 							<li><a href="/about" class="hover:underline">About</a></li>
 							<li><a href="/contact" class="hover:underline">Contact</a></li>
-							<li><a href="/login" class="hover:underline">Login</a></li>
-							<li><a href="/register" class="hover:underline">Register</a></li>
+						</ul>
+					</nav>
+				</div>
+			</header>
+			<main class="container mx-auto p-4">
+				{ children... }
+			</main>
+			<footer class="bg-gray-200 p-4 mt-8">
+				<div class="container mx-auto text-center">
+					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+				</div>
+			</footer>
+		</body>
+	</html>
+}
+
+templ BaseWithAuth(isLoggedIn bool) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-screen">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width,initial-scale=1"/>
+			<title>The Virtual Armory</title>
+			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<script src="/assets/js/htmx.min.js"></script>
+		</head>
+		<body class="bg-gray-100">
+			<header class="bg-blue-800 text-white p-4">
+				<div class="container mx-auto">
+					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
+					<nav class="mt-2">
+						<ul class="flex space-x-4">
+							<li><a href="/" class="hover:underline">Home</a></li>
+							<li><a href="/about" class="hover:underline">About</a></li>
+							<li><a href="/contact" class="hover:underline">Contact</a></li>
+							if isLoggedIn {
+								<li><a href="/logout" class="hover:underline">Logout</a></li>
+							} else {
+								<li><a href="/login" class="hover:underline">Login</a></li>
+								<li><a href="/register" class="hover:underline">Register</a></li>
+							}
 						</ul>
 					</nav>
 				</div>

@@ -47,4 +47,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
 
 	// Register auth routes
 	RegisterAuthRoutes(r, authInstance)
+
+	// Register manufacturer routes
+	RegisterManufacturerRoutes(r, authInstance)
 }

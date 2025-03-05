@@ -25,9 +25,11 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth) {
 
 	// Auth routes without /auth prefix for convenience
 	router.GET("/login", authController.Login)
+	router.POST("/login", authController.ProcessLogin)
 	router.GET("/register", authController.Register)
 	router.POST("/register", authController.ProcessRegister)
 	router.GET("/recover", authController.Recover)
+	router.POST("/recover", authController.ProcessRecover)
 	router.GET("/logout", authController.Logout)
 
 	// Protected routes (require authentication)

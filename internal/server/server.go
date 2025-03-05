@@ -43,6 +43,9 @@ func (s *Server) setupRoutes() {
 	s.router.Static("/styles", "./cmd/web/styles")
 	s.router.Static("/static", "./static")
 
+	// Load HTML templates
+	// s.router.LoadHTMLGlob("cmd/web/views/**/*.html")
+
 	// Add a specific handler for favicon.ico
 	faviconHandler := func(c *gin.Context) {
 		log.Println("Favicon request received")
