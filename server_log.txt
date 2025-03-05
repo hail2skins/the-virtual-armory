@@ -1,0 +1,134 @@
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[2.328ms] [34;1m[rows:1][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND table_type = 'BASE TABLE'
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.325ms] [34;1m[rows:1][0m SELECT CURRENT_DATABASE()
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[6.014ms] [34;1m[rows:-][0m SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = 'armory-dev' AND table_schema = CURRENT_SCHEMA() AND table_name = 'users'
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.395ms] [34;1m[rows:-][0m SELECT * FROM "users" LIMIT 5
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[4.766ms] [34;1m[rows:-][0m SELECT constraint_name FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_catalog, table_name, constraint_name) JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema AND tc.table_name = c.table_name AND ccu.column_name = c.column_name WHERE constraint_type IN ('PRIMARY KEY', 'UNIQUE') AND c.table_catalog = 'armory-dev' AND c.table_schema = CURRENT_SCHEMA() AND c.table_name = 'users' AND constraint_type = 'UNIQUE'
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[4.477ms] [34;1m[rows:-][0m SELECT c.column_name, constraint_name, constraint_type FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_catalog, table_name, constraint_name) JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema AND tc.table_name = c.table_name AND ccu.column_name = c.column_name WHERE constraint_type IN ('PRIMARY KEY', 'UNIQUE') AND c.table_catalog = 'armory-dev' AND c.table_schema = CURRENT_SCHEMA() AND c.table_name = 'users'
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.705ms] [34;1m[rows:-][0m SELECT a.attname as column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+		FROM pg_attribute a JOIN pg_class b ON a.attrelid = b.oid AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA())
+		WHERE a.attnum > 0 -- hide internal columns
+		AND NOT a.attisdropped -- hide deleted columns
+		AND b.relname = 'users'
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[1.542ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'id') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.949ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'created_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[1.053ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'updated_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[1.020ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'deleted_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.987ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'email') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[1.084ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'password') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.314ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'is_admin') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.240ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'recover_token') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.228ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'recover_token_expiry') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.213ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'remember_token') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.215ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'confirm_token') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.221ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'confirm_token_expiry') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.214ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'confirmed') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.208ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'attempt_count') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.192ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'last_attempt') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.192ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'locked') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[1.024ms] [34;1m[rows:1][0m SELECT count(*) FROM pg_indexes WHERE tablename = 'users' AND indexname = 'idx_users_deleted_at' AND schemaname = CURRENT_SCHEMA()
+
+2025/03/04 17:53:50 [32m/home/art/the-virtual-armory/internal/database/gorm.go:51
+[0m[33m[0.502ms] [34;1m[rows:1][0m SELECT count(*) FROM pg_indexes WHERE tablename = 'users' AND indexname = 'idx_users_email' AND schemaname = CURRENT_SCHEMA()
+2025/03/04 17:53:50 Connected to database: armory-dev
+2025/03/04 17:53:50 Ensuring register module is enabled
+2025/03/04 17:53:50 Authboss initialized with core modules
+2025/03/04 17:53:50 Mount path: /auth
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /assets/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] HEAD   /assets/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] GET    /styles/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] HEAD   /styles/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] GET    /static/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] HEAD   /static/*filepath         --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] GET    /favicon.ico              --> github.com/hail2skins/the-virtual-armory/internal/server.(*Server).setupRoutes.func1 (3 handlers)
+[GIN-debug] HEAD   /favicon.ico              --> github.com/hail2skins/the-virtual-armory/internal/server.(*Server).setupRoutes.func1 (3 handlers)
+[GIN-debug] GET    /health                   --> github.com/hail2skins/the-virtual-armory/internal/routes.RegisterHealthRoute.func1 (6 handlers)
+[GIN-debug] GET    /                         --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*HomeController).Index-fm (6 handlers)
+[GIN-debug] POST   /hello                    --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*HomeController).HandleHelloForm-fm (6 handlers)
+[GIN-debug] GET    /about                    --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*HomeController).About-fm (6 handlers)
+[GIN-debug] GET    /contact                  --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*HomeController).Contact-fm (6 handlers)
+[GIN-debug] GET    /auth/login               --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Login-fm (6 handlers)
+[GIN-debug] POST   /auth/login               --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).ProcessLogin-fm (6 handlers)
+[GIN-debug] GET    /auth/recover             --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Recover-fm (6 handlers)
+[GIN-debug] POST   /auth/recover             --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).ProcessRecover-fm (6 handlers)
+[GIN-debug] GET    /login                    --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Login-fm (6 handlers)
+[GIN-debug] GET    /register                 --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Register-fm (6 handlers)
+[GIN-debug] POST   /register                 --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).ProcessRegister-fm (6 handlers)
+[GIN-debug] GET    /recover                  --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Recover-fm (6 handlers)
+[GIN-debug] GET    /logout                   --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Logout-fm (6 handlers)
+[GIN-debug] GET    /profile                  --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).Profile-fm (7 handlers)
+[GIN-debug] GET    /admin/dashboard          --> github.com/hail2skins/the-virtual-armory/internal/controllers.(*AuthController).AdminDashboard-fm (7 handlers)
+2025/03/04 17:53:50 Server started on port 3000
+2025/03/04 17:53:50 Starting server on port 3000
+2025/03/04 17:53:50 Server failed to start: listen tcp :3000: bind: address already in use
+exit status 1
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        2025/03/04 17:53:58 Authboss middleware handling path: GET / (User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)
+[GIN] 2025/03/04 - 17:53:58 | 200 |      96.065µs |             ::1 | GET      "/"
+2025/03/04 17:53:59 Authboss middleware handling path: GET / (User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)
+[GIN] 2025/03/04 - 17:53:59 | 200 |     144.843µs |             ::1 | GET      "/"
+2025/03/04 17:54:00 Authboss middleware handling path: GET /about (User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)
+[GIN] 2025/03/04 - 17:54:00 | 200 |     108.482µs |             ::1 | GET      "/about"
+2025/03/04 17:54:03 Authboss middleware handling path: GET /contact (User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)
+[GIN] 2025/03/04 - 17:54:03 | 200 |     115.998µs |             ::1 | GET      "/contact"
+2025/03/04 17:54:04 Authboss middleware handling path: GET /login (User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)
+[GIN] 2025/03/04 - 17:54:04 | 200 |      75.183µs |             ::1 | GET      "/login"
+2025/03/04 17:54:12 Authboss middleware handling path: GET /about (User-Agent: curl/8.5.0)
+[GIN] 2025/03/04 - 17:54:12 | 404 |      44.755µs |                 | GET      "/about"
+2025/03/04 17:54:19 Favicon request received
+[GIN] 2025/03/04 - 17:54:19 | 200 |      89.569µs |             ::1 | HEAD     "/favicon.ico"
+2025/03/04 17:54:37 Authboss middleware handling path: GET /about (User-Agent: curl/8.5.0)
+[GIN] 2025/03/04 - 17:54:37 | 200 |      85.019µs |             ::1 | GET      "/about"
+2025/03/04 17:55:37 Shutting down server...

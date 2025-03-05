@@ -1,0 +1,112 @@
+package auth
+
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+
+templ AdminDashboard() {
+	@partials.Base() {
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="bg-white shadow-md rounded-lg p-6">
+				<h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+				
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+					<div class="bg-blue-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Total Users</h3>
+						<p class="text-3xl font-bold">1,234</p>
+						<p class="text-sm text-gray-500 mt-2">+12% from last month</p>
+					</div>
+					
+					<div class="bg-green-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Active Users</h3>
+						<p class="text-3xl font-bold">987</p>
+						<p class="text-sm text-gray-500 mt-2">+8% from last month</p>
+					</div>
+					
+					<div class="bg-purple-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">New Registrations</h3>
+						<p class="text-3xl font-bold">56</p>
+						<p class="text-sm text-gray-500 mt-2">+15% from last month</p>
+					</div>
+				</div>
+				
+				<div class="mb-8">
+					<h2 class="text-xl font-semibold mb-4">Recent Users</h2>
+					<div class="overflow-x-auto">
+						<table class="min-w-full bg-white">
+							<thead class="bg-gray-100">
+								<tr>
+									<th class="py-3 px-4 text-left">Email</th>
+									<th class="py-3 px-4 text-left">Registered</th>
+									<th class="py-3 px-4 text-left">Last Login</th>
+									<th class="py-3 px-4 text-left">Status</th>
+									<th class="py-3 px-4 text-left">Actions</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-gray-200">
+								<tr>
+									<td class="py-3 px-4">user1@example.com</td>
+									<td class="py-3 px-4">Jan 15, 2023</td>
+									<td class="py-3 px-4">Today</td>
+									<td class="py-3 px-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span></td>
+									<td class="py-3 px-4">
+										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
+										<a href="#" class="text-red-600 hover:underline">Delete</a>
+									</td>
+								</tr>
+								<tr>
+									<td class="py-3 px-4">user2@example.com</td>
+									<td class="py-3 px-4">Feb 2, 2023</td>
+									<td class="py-3 px-4">Yesterday</td>
+									<td class="py-3 px-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span></td>
+									<td class="py-3 px-4">
+										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
+										<a href="#" class="text-red-600 hover:underline">Delete</a>
+									</td>
+								</tr>
+								<tr>
+									<td class="py-3 px-4">user3@example.com</td>
+									<td class="py-3 px-4">Mar 10, 2023</td>
+									<td class="py-3 px-4">3 days ago</td>
+									<td class="py-3 px-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Inactive</span></td>
+									<td class="py-3 px-4">
+										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
+										<a href="#" class="text-red-600 hover:underline">Delete</a>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="mt-4 text-right">
+						<a href="/admin/users" class="text-blue-600 hover:underline">View All Users →</a>
+					</div>
+				</div>
+				
+				<div>
+					<h2 class="text-xl font-semibold mb-4">System Status</h2>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="bg-gray-50 p-4 rounded-lg">
+							<h3 class="text-lg font-semibold mb-2">Server Health</h3>
+							<div class="flex items-center">
+								<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+								<p>All systems operational</p>
+							</div>
+							<div class="mt-2">
+								<p class="text-sm text-gray-500">Last checked: Today at 12:45 PM</p>
+							</div>
+						</div>
+						
+						<div class="bg-gray-50 p-4 rounded-lg">
+							<h3 class="text-lg font-semibold mb-2">Database Status</h3>
+							<div class="flex items-center">
+								<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+								<p>Connected (3ms response time)</p>
+							</div>
+							<div class="mt-2">
+								<p class="text-sm text-gray-500">Storage: 42% used</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+} 

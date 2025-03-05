@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/volatiletech/authboss/v3"
@@ -73,12 +74,26 @@ func (a *Auth) LoadAndSave(next http.Handler) http.Handler {
 // Middleware returns a Gin middleware that handles Authboss requests
 func (a *Auth) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Debug log
-		log.Printf("Authboss middleware handling path: %s %s", c.Request.Method, c.Request.URL.Path)
+		path := c.Request.URL.Path
+
+		// Skip processing for static files and favicon
+		if path == "/favicon.ico" ||
+			strings.HasPrefix(path, "/assets/") ||
+			strings.HasPrefix(path, "/styles/") ||
+			strings.HasPrefix(path, "/static/") {
+			c.Next()
+			return
+		}
+
+		// Debug log with more details
+		log.Printf("Authboss middleware handling path: %s %s (User-Agent: %s)",
+			c.Request.Method,
+			path,
+			c.Request.UserAgent())
 
 		// Skip Authboss middleware for non-Authboss paths
-		if len(c.Request.URL.Path) >= 5 && c.Request.URL.Path[:5] == "/auth" {
-			log.Printf("Handling Authboss path: %s %s", c.Request.Method, c.Request.URL.Path)
+		if len(path) >= 5 && path[:5] == "/auth" {
+			log.Printf("Handling Authboss path: %s %s", c.Request.Method, path)
 			a.LoadClientStateMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Handle the request with Authboss
 				log.Printf("Forwarding to Authboss router: %s %s", r.Method, r.URL.Path)

@@ -12,6 +12,7 @@ func RegisterHomeRoutes(router *gin.Engine) {
 	// Create a home routes group
 	homeGroup := router.Group("/")
 	{
+		// Register routes
 		homeGroup.GET("/", homeController.Index)
 		homeGroup.POST("/hello", homeController.HandleHelloForm) // For form submission
 		homeGroup.GET("/about", homeController.About)

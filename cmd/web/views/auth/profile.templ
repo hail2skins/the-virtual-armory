@@ -1,0 +1,57 @@
+package auth
+
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+
+templ Profile() {
+	@partials.Base() {
+		<div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+			<h2 class="text-2xl font-bold mb-6">User Profile</h2>
+			
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="bg-gray-50 p-4 rounded-lg">
+					<h3 class="text-lg font-semibold mb-4">Account Information</h3>
+					<div class="mb-4">
+						<p class="text-gray-600">Email</p>
+						<p class="font-medium">user@example.com</p>
+					</div>
+					<div class="mb-4">
+						<p class="text-gray-600">Member Since</p>
+						<p class="font-medium">January 1, 2023</p>
+					</div>
+					<a href="/profile/edit" class="text-blue-600 hover:underline">Edit Profile</a>
+				</div>
+				
+				<div class="bg-gray-50 p-4 rounded-lg">
+					<h3 class="text-lg font-semibold mb-4">Security</h3>
+					<div class="mb-4">
+						<p class="text-gray-600">Password</p>
+						<p class="font-medium">••••••••</p>
+					</div>
+					<a href="/profile/change-password" class="text-blue-600 hover:underline">Change Password</a>
+				</div>
+			</div>
+			
+			<div class="mt-8 bg-gray-50 p-4 rounded-lg">
+				<h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+				<div class="space-y-3">
+					<div class="flex justify-between">
+						<p>Login from new device</p>
+						<p class="text-gray-500">2 days ago</p>
+					</div>
+					<div class="flex justify-between">
+						<p>Password changed</p>
+						<p class="text-gray-500">2 weeks ago</p>
+					</div>
+					<div class="flex justify-between">
+						<p>Account created</p>
+						<p class="text-gray-500">January 1, 2023</p>
+					</div>
+				</div>
+			</div>
+			
+			<div class="mt-8 pt-6 border-t border-gray-200">
+				<a href="/logout" class="text-red-600 hover:underline">Logout</a>
+			</div>
+		</div>
+	}
+} 
