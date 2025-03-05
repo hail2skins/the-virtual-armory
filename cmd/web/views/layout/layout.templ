@@ -1,0 +1,36 @@
+package layout
+
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{ title } | The Virtual Armory</title>
+		<link rel="stylesheet" href="/assets/css/output.css" />
+		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+	</head>
+	<body class="bg-gray-100 min-h-screen">
+		<header class="bg-blue-800 text-white p-4 shadow-md">
+			<div class="container mx-auto flex justify-between items-center">
+				<a href="/" class="text-2xl font-bold">The Virtual Armory</a>
+				<nav>
+					<ul class="flex space-x-4">
+						<li><a href="/" class="hover:underline">Home</a></li>
+						<li><a href="/login" class="hover:underline">Login</a></li>
+						<li><a href="/register" class="hover:underline">Register</a></li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<main class="container mx-auto py-8 px-4">
+			{ children... }
+		</main>
+		<footer class="bg-blue-800 text-white p-4 mt-8">
+			<div class="container mx-auto text-center">
+				<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+			</div>
+		</footer>
+	</body>
+	</html>
+} 

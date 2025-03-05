@@ -6,6 +6,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/config"
+	"github.com/hail2skins/the-virtual-armory/internal/services/email"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +27,10 @@ func HeadMiddleware() gin.HandlerFunc {
 }
 
 // RegisterRoutes registers all routes for the application
-func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB) {
+func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *config.Config) {
+	// Initialize email service
+	emailService := email.NewMailJetService(cfg)
+
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Add your frontend URL
@@ -47,7 +52,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB) {
 	RegisterHomeRoutes(r)
 
 	// Register auth routes
-	RegisterAuthRoutes(r, authInstance)
+	RegisterAuthRoutes(r, authInstance, emailService, cfg)
 
 	// Register manufacturer routes
 	RegisterManufacturerRoutes(r, authInstance)

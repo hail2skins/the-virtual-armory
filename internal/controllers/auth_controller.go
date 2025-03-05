@@ -1,30 +1,50 @@
 package controllers
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	authviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/config"
 	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"github.com/hail2skins/the-virtual-armory/internal/services/email"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthController handles authentication-related routes
 type AuthController struct {
-	Auth *auth.Auth
+	Auth         *auth.Auth
+	EmailService email.EmailService
+	config       *config.Config
 }
 
 // NewAuthController creates a new AuthController
-func NewAuthController(auth *auth.Auth) *AuthController {
+func NewAuthController(auth *auth.Auth, emailService email.EmailService, config *config.Config) *AuthController {
 	return &AuthController{
-		Auth: auth,
+		Auth:         auth,
+		EmailService: emailService,
+		config:       config,
 	}
 }
 
 // Login handles the login page
 func (c *AuthController) Login(ctx *gin.Context) {
+	// Check if the verified query parameter is present
+	verified := ctx.Query("verified")
+	if verified == "true" {
+		// Use the LoginFormWithVerified template
+		component := authviews.LoginFormWithVerified("", "")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
 	component := authviews.LoginForm("", "")
 	component.Render(ctx, ctx.Writer)
 }
@@ -83,6 +103,41 @@ func (c *AuthController) AdminDashboard(ctx *gin.Context) {
 func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 	// Get the email from the form
 	email := ctx.PostForm("email")
+	password := ctx.PostForm("password")
+
+	// Validate form data
+	if email == "" || password == "" {
+		component := authviews.LoginForm("Email and password are required", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Get the database connection
+	db := database.GetDB()
+
+	// Find the user by email
+	var user models.User
+	result := db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		component := authviews.LoginForm("Invalid email or password", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Check if the user is confirmed
+	if !user.Confirmed {
+		component := authviews.LoginForm("Please verify your email before logging in", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Compare the hashed password
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		component := authviews.LoginForm("Invalid email or password", email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
 
 	// This would normally be handled by Authboss
 	// For now, we'll simulate a successful login by setting session cookies
@@ -141,10 +196,32 @@ func (c *AuthController) ProcessRegister(ctx *gin.Context) {
 		return
 	}
 
+	// Generate confirmation token
+	token, err := generateToken(32)
+	if err != nil {
+		component := authviews.RegisterForm("Error creating user: "+err.Error(), email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Set token expiry (24 hours from now)
+	tokenExpiry := time.Now().Add(24 * time.Hour)
+
+	// Hash the password using bcrypt
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		component := authviews.RegisterForm("Error creating user: "+err.Error(), email)
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
 	// Create new user
 	user := models.User{
-		Email:    email,
-		Password: password, // In a real implementation, this would be hashed
+		Email:              email,
+		Password:           string(hashedPassword),
+		ConfirmToken:       token,
+		ConfirmTokenExpiry: tokenExpiry,
+		Confirmed:          false,
 	}
 
 	result = db.Create(&user)
@@ -154,8 +231,132 @@ func (c *AuthController) ProcessRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Redirect to login page
-	ctx.Redirect(http.StatusSeeOther, "/login")
+	// Send verification email
+	if c.EmailService != nil && c.EmailService.IsConfigured() {
+		err = c.EmailService.SendVerificationEmail(email, token)
+		if err != nil {
+			// Log the error but don't fail the registration
+			log.Printf("Error sending verification email: %v", err)
+		} else {
+			log.Printf("Verification email sent to %s", email)
+		}
+	}
+
+	// Redirect to a verification pending page
+	ctx.Redirect(http.StatusSeeOther, "/verification-pending")
+}
+
+// VerifyEmail handles email verification
+func (c *AuthController) VerifyEmail(ctx *gin.Context) {
+	// Get token from URL parameter
+	token := ctx.Param("token")
+	if token == "" {
+		component := authviews.Error("Invalid verification token")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Find the user with this verification token
+	var user models.User
+	db := database.GetDB()
+	result := db.Where("confirm_token = ?", token).First(&user)
+	if result.Error != nil {
+		log.Printf("Error finding user by verification token: %v", result.Error)
+		component := authviews.Error("Invalid or expired verification token. Please request a new verification email.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Check if token is expired
+	if user.ConfirmTokenExpiry.Before(time.Now()) {
+		log.Printf("Verification token expired for user %s", user.Email)
+		component := authviews.Error("Your verification token has expired. Please request a new verification email.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Mark user as verified
+	user.Confirmed = true
+	user.ConfirmToken = ""
+	user.ConfirmTokenExpiry = time.Time{}
+
+	err := db.Save(&user).Error
+	if err != nil {
+		log.Printf("Error updating user verification status: %v", err)
+		component := authviews.Error("An error occurred while verifying your email. Please try again later.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Redirect to login page with success message
+	ctx.Redirect(http.StatusSeeOther, "/login?verified=true")
+}
+
+// VerificationPending shows a page indicating that verification is pending
+func (c *AuthController) VerificationPending(ctx *gin.Context) {
+	component := authviews.VerificationPending()
+	component.Render(ctx, ctx.Writer)
+}
+
+// ResendVerification handles resending the verification email
+func (c *AuthController) ResendVerification(ctx *gin.Context) {
+	// Get email from form
+	email := ctx.PostForm("email")
+	if email == "" {
+		component := authviews.Error("Email is required")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Find the user by email
+	var user models.User
+	db := database.GetDB()
+	result := db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		log.Printf("Error finding user by email: %v", result.Error)
+		component := authviews.Error("User not found")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Check if the user is already confirmed
+	if user.Confirmed {
+		component := authviews.Error("Your email is already verified")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Generate a new token
+	token, err := generateToken(32)
+	if err != nil {
+		log.Printf("Error generating token: %v", err)
+		component := authviews.Error("An error occurred. Please try again later.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Update the user with the new token
+	user.ConfirmToken = token
+	user.ConfirmTokenExpiry = time.Now().Add(24 * time.Hour)
+	err = db.Save(&user).Error
+	if err != nil {
+		log.Printf("Error updating user with new token: %v", err)
+		component := authviews.Error("An error occurred. Please try again later.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Send the verification email
+	err = c.EmailService.SendVerificationEmail(user.Email, token)
+	if err != nil {
+		log.Printf("Error sending verification email: %v", err)
+		component := authviews.Error("An error occurred while sending the verification email. Please try again later.")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Redirect to verification pending page
+	ctx.Redirect(http.StatusSeeOther, "/verification-pending")
 }
 
 // ProcessRecover handles the password recovery form submission
@@ -171,4 +372,13 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	// For now, we'll just clear the cookie and redirect to the home page
 	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
 	ctx.Redirect(http.StatusSeeOther, "/")
+}
+
+// Helper function to generate a random token
+func generateToken(length int) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

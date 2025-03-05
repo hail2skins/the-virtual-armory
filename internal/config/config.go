@@ -15,6 +15,12 @@ type Config struct {
 	Environment  string
 	CookieSecret string
 	SessionName  string
+	// MailJet configuration
+	MailJetAPIKey      string
+	MailJetSecretKey   string
+	MailJetSenderEmail string
+	MailJetSenderName  string
+	AppBaseURL         string
 }
 
 // New creates a new Config instance with values from environment variables
@@ -26,11 +32,16 @@ func New() *Config {
 	}
 
 	return &Config{
-		Port:         port,
-		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/the_virtual_armory?sslmode=disable"),
-		Environment:  getEnv("ENVIRONMENT", "development"),
-		CookieSecret: getEnv("COOKIE_SECRET", "something-very-secret"),
-		SessionName:  getEnv("SESSION_NAME", "the-virtual-armory-session"),
+		Port:               port,
+		DatabaseURL:        getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/the_virtual_armory?sslmode=disable"),
+		Environment:        getEnv("ENVIRONMENT", "development"),
+		CookieSecret:       getEnv("COOKIE_SECRET", "something-very-secret"),
+		SessionName:        getEnv("SESSION_NAME", "the-virtual-armory-session"),
+		MailJetAPIKey:      getEnv("MAILJET_API_KEY", ""),
+		MailJetSecretKey:   getEnv("MAILJET_SECRET_KEY", ""),
+		MailJetSenderEmail: getEnv("MAILJET_SENDER_EMAIL", "noreply@thevirtualarmory.com"),
+		MailJetSenderName:  getEnv("MAILJET_SENDER_NAME", "The Virtual Armory"),
+		AppBaseURL:         getEnv("APP_BASE_URL", "http://localhost:8080"),
 	}
 }
 

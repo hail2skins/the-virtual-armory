@@ -3,27 +3,17 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/config"
 	"github.com/hail2skins/the-virtual-armory/internal/controllers"
+	"github.com/hail2skins/the-virtual-armory/internal/services/email"
 )
 
 // RegisterAuthRoutes registers all authentication-related routes
-func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth) {
+func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth, emailService email.EmailService, config *config.Config) {
 	// Create the auth controller
-	authController := controllers.NewAuthController(auth)
+	authController := controllers.NewAuthController(auth, emailService, config)
 
-	// Auth routes with /auth prefix
-	authGroup := router.Group("/auth")
-	{
-		// Login routes
-		authGroup.GET("/login", authController.Login)
-		authGroup.POST("/login", authController.ProcessLogin)
-
-		// Password recovery routes
-		authGroup.GET("/recover", authController.Recover)
-		authGroup.POST("/recover", authController.ProcessRecover)
-	}
-
-	// Auth routes without /auth prefix for convenience
+	// Auth routes - all without /auth prefix
 	router.GET("/login", authController.Login)
 	router.POST("/login", authController.ProcessLogin)
 	router.GET("/register", authController.Register)
@@ -31,6 +21,9 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth) {
 	router.GET("/recover", authController.Recover)
 	router.POST("/recover", authController.ProcessRecover)
 	router.GET("/logout", authController.Logout)
+	router.GET("/verification-pending", authController.VerificationPending)
+	router.POST("/resend-verification", authController.ResendVerification)
+	router.GET("/verify/:token", authController.VerifyEmail)
 
 	// Protected routes (require authentication)
 	protected := router.Group("/")

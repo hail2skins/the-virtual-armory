@@ -45,8 +45,8 @@ func TestRegisterSuccess(t *testing.T) {
 
 	// Register the routes
 	router.POST("/register", authController.ProcessRegister)
-	router.GET("/login", func(c *gin.Context) {
-		c.String(http.StatusOK, "Login Page")
+	router.GET("/verification-pending", func(c *gin.Context) {
+		c.String(http.StatusOK, "Verification Pending Page")
 	})
 
 	// Create form data
@@ -63,7 +63,7 @@ func TestRegisterSuccess(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, http.StatusSeeOther, w.Code)
-	assert.Equal(t, "/login", w.Header().Get("Location"))
+	assert.Equal(t, "/verification-pending", w.Header().Get("Location"))
 
 	// Verify user was created in the database
 	user, err := testutils.GetTestUser(db, "test@example.com")

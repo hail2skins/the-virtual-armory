@@ -58,7 +58,7 @@ func (s *Server) setupRoutes() {
 	s.router.HEAD("/favicon.ico", faviconHandler)
 
 	// Register all routes
-	routes.RegisterRoutes(s.router, s.auth, s.db)
+	routes.RegisterRoutes(s.router, s.auth, s.db, s.config)
 }
 
 // Start starts the HTTP server
