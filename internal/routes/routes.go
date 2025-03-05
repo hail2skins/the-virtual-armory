@@ -53,4 +53,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth) {
 
 	// Register caliber routes
 	RegisterCaliberRoutes(r, authInstance)
+
+	// Register weapon type routes
+	RegisterWeaponTypeRoutes(r, authInstance)
 }

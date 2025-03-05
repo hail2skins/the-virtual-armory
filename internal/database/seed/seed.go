@@ -18,6 +18,10 @@ func RunSeeds(db *gorm.DB) {
 	log.Println("Seeding calibers...")
 	SeedCalibers(db)
 
+	// Run weapon type seeds
+	log.Println("Seeding weapon types...")
+	SeedWeaponTypes(db)
+
 	// Add more seed functions here as needed
 
 	log.Println("Database seeding completed")

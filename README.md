@@ -1,6 +1,7 @@
 # The Virtual Armory
 
-A web application with authentication using Authboss and GORM.
+A web application for the gun community to track the weapons they own. Eventual improvements will include ability
+to track ammo owned. Then range visits to track shots put down range per weapon. And more.
 
 ## Features
 
