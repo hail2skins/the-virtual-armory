@@ -13,6 +13,11 @@ type User struct {
 	Password string `gorm:"not null"`
 	IsAdmin  bool   `gorm:"default:false"`
 
+	// Subscription related fields
+	SubscriptionTier      string `gorm:"default:'free'"`
+	SubscriptionExpiresAt time.Time
+	StripeCustomerID      string
+
 	// Authboss required fields
 	RecoverToken       string
 	RecoverTokenExpiry time.Time
@@ -169,4 +174,25 @@ func (u *User) PutRememberToken(token string) {
 // PutAdminStatus sets the user's admin status
 func (u *User) PutAdminStatus(isAdmin bool) {
 	u.IsAdmin = isAdmin
+}
+
+// HasActiveSubscription checks if the user has an active subscription
+func (u *User) HasActiveSubscription() bool {
+	// If the subscription tier is free, return false
+	if u.SubscriptionTier == "free" {
+		return false
+	}
+
+	// If the subscription is lifetime or premium_lifetime, return true
+	if u.IsLifetimeSubscriber() {
+		return true
+	}
+
+	// Otherwise, check if the subscription is expired
+	return time.Now().Before(u.SubscriptionExpiresAt)
+}
+
+// IsLifetimeSubscriber checks if the user has a lifetime subscription
+func (u *User) IsLifetimeSubscriber() bool {
+	return u.SubscriptionTier == "lifetime" || u.SubscriptionTier == "premium_lifetime"
 }

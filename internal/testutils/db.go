@@ -34,6 +34,7 @@ func SetupTestDB() (*gorm.DB, error) {
 		&models.Caliber{},
 		&models.WeaponType{},
 		&models.Gun{},
+		&models.Payment{},
 	)
 	if err != nil {
 		log.Printf("Failed to migrate test database: %v", err)
@@ -52,6 +53,7 @@ func CleanupTestDB(db *gorm.DB) {
 	db.Exec("DELETE FROM calibers")
 	db.Exec("DELETE FROM weapon_types")
 	db.Exec("DELETE FROM guns")
+	db.Exec("DELETE FROM payments")
 }
 
 // CreateTestUser creates a test user in the database
