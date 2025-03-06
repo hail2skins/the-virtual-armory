@@ -89,6 +89,14 @@ templ Index(guns []models.Gun) {
 								</tbody>
 							</table>
 						</div>
+						if len(guns) > 0 && guns[0].HasMoreGuns {
+							<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-4">
+								<p class="font-bold">Limited View</p>
+								<p>You have { strconv.Itoa(guns[0].TotalGuns - 2) } more guns that are not displayed.</p>
+								<p>Please re-subscribe to see all your guns.</p>
+								<a href="/pricing" class="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">View Subscription Options</a>
+							</div>
+						}
 					}
 				</div>
 			</main>

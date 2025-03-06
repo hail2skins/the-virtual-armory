@@ -9,38 +9,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hail2skins/the-virtual-armory/internal/controllers"
+	"github.com/hail2skins/the-virtual-armory/internal/controllers/payment_test/payment_test_utils"
 	"github.com/hail2skins/the-virtual-armory/internal/testutils"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
-
-// setupPricingTestRouter sets up a test router with the payment controller for pricing tests
-func setupPricingTestRouter(t *testing.T, db *gorm.DB) (*gin.Engine, *controllers.PaymentController) {
-	// Set Gin to test mode
-	gin.SetMode(gin.TestMode)
-
-	// Create a new router
-	router := gin.Default()
-
-	// For tests, we don't need to load actual templates
-	// Just mock the HTML renderer to prevent panics
-	router.HTMLRender = &testRenderer{}
-
-	// Create the payment controller
-	paymentController := controllers.NewPaymentController(db)
-
-	return router, paymentController
-}
 
 // TestPricingPageContent tests that the pricing page displays the correct content
 func TestPricingPageContent(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Set up test router and controller
-	router, paymentController := setupPricingTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for the pricing page
 	router.GET("/pricing", func(c *gin.Context) {
@@ -54,24 +35,25 @@ func TestPricingPageContent(t *testing.T) {
 
 	// Check that the pricing page is displayed
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Subscription Plans")
-	assert.Contains(t, w.Body.String(), "Free Tier")
-	assert.Contains(t, w.Body.String(), "Monthly Subscription")
-	assert.Contains(t, w.Body.String(), "Yearly Subscription")
-	assert.Contains(t, w.Body.String(), "Lifetime Subscription")
+	assert.Contains(t, w.Body.String(), "Choose Your Plan")
+	assert.Contains(t, w.Body.String(), "Free")
+	assert.Contains(t, w.Body.String(), "Monthly")
+	assert.Contains(t, w.Body.String(), "Yearly")
+	assert.Contains(t, w.Body.String(), "Lifetime")
+	assert.Contains(t, w.Body.String(), "Premium Lifetime")
 }
 
 // TestPricingPageWithLoggedInUser tests that the pricing page displays correctly for a logged-in user
 func TestPricingPageWithLoggedInUser(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Set up test router and controller
-	router, paymentController := setupPricingTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up the route for the pricing page
 	router.GET("/pricing", func(c *gin.Context) {
@@ -93,21 +75,21 @@ func TestPricingPageWithLoggedInUser(t *testing.T) {
 
 	// Check that the pricing page is displayed with the user's information
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Subscription Plans")
-	assert.Contains(t, w.Body.String(), "Current Plan: Free Tier")
+	assert.Contains(t, w.Body.String(), "Choose Your Plan")
+	assert.Contains(t, w.Body.String(), "Your Current Plan: Free Tier")
 }
 
 // TestPricingPageWithSubscribedUser tests that the pricing page shows the current subscription information
 func TestPricingPageWithSubscribedUser(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Set up test router and controller
-	router, paymentController := setupPricingTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Create a test user with a subscription
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 	db.Model(&user).Updates(map[string]interface{}{
 		"subscription_tier":       "monthly",
 		"subscription_expires_at": time.Now().Add(30 * 24 * time.Hour),
@@ -133,21 +115,21 @@ func TestPricingPageWithSubscribedUser(t *testing.T) {
 
 	// Check that the pricing page is displayed with the user's subscription information
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Current Plan: Monthly Subscription")
-	assert.Contains(t, w.Body.String(), "Expires:")
+	assert.Contains(t, w.Body.String(), "Your Current Plan: Monthly Subscription")
+	assert.Contains(t, w.Body.String(), "Expires on")
 }
 
 // TestStripeCheckoutRedirect tests that selecting a subscription option redirects to Stripe checkout
 func TestStripeCheckoutRedirect(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Set up test router and controller
-	router, paymentController := setupPricingTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up the route for creating a checkout session
 	router.POST("/checkout", func(c *gin.Context) {

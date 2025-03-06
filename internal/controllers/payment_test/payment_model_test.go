@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hail2skins/the-virtual-armory/internal/controllers/payment_test/payment_test_utils"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/testutils"
 	"github.com/stretchr/testify/assert"
@@ -12,20 +13,21 @@ import (
 // TestPaymentModel tests the Payment model
 func TestPaymentModel(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Create a test payment
 	payment := models.Payment{
-		UserID:           user.ID,
-		Amount:           500, // $5.00
-		Currency:         "usd",
-		StripePaymentID:  "pi_test123",
-		Status:           "succeeded",
-		SubscriptionTier: "monthly",
+		UserID:      user.ID,
+		Amount:      500, // $5.00
+		Currency:    "usd",
+		PaymentType: "subscription",
+		Status:      "succeeded",
+		Description: "Monthly subscription",
+		StripeID:    "pi_test123",
 	}
 
 	// Save the payment to the database
@@ -40,19 +42,23 @@ func TestPaymentModel(t *testing.T) {
 	assert.Equal(t, payment.UserID, retrievedPayment.UserID)
 	assert.Equal(t, payment.Amount, retrievedPayment.Amount)
 	assert.Equal(t, payment.Currency, retrievedPayment.Currency)
-	assert.Equal(t, payment.StripePaymentID, retrievedPayment.StripePaymentID)
+	assert.Equal(t, payment.PaymentType, retrievedPayment.PaymentType)
 	assert.Equal(t, payment.Status, retrievedPayment.Status)
-	assert.Equal(t, payment.SubscriptionTier, retrievedPayment.SubscriptionTier)
+	assert.Equal(t, payment.Description, retrievedPayment.Description)
+	assert.Equal(t, payment.StripeID, retrievedPayment.StripeID)
+
+	// Test FormatAmount method
+	assert.Equal(t, "$5.00", retrievedPayment.FormatAmount())
 }
 
 // TestUserSubscriptionFields tests the subscription-related fields in the User model
 func TestUserSubscriptionFields(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set subscription fields
 	futureTime := time.Now().Add(30 * 24 * time.Hour) // 30 days in the future
@@ -111,37 +117,40 @@ func TestUserSubscriptionFields(t *testing.T) {
 // TestPaymentHistory tests retrieving a user's payment history
 func TestPaymentHistory(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Create multiple payments for the user
 	payments := []models.Payment{
 		{
-			UserID:           user.ID,
-			Amount:           500, // $5.00
-			Currency:         "usd",
-			StripePaymentID:  "pi_test1",
-			Status:           "succeeded",
-			SubscriptionTier: "monthly",
+			UserID:      user.ID,
+			Amount:      999, // $9.99
+			Currency:    "usd",
+			PaymentType: "subscription",
+			Status:      "succeeded",
+			Description: "Monthly subscription",
+			StripeID:    "pi_test1",
 		},
 		{
-			UserID:           user.ID,
-			Amount:           3000, // $30.00
-			Currency:         "usd",
-			StripePaymentID:  "pi_test2",
-			Status:           "succeeded",
-			SubscriptionTier: "yearly",
+			UserID:      user.ID,
+			Amount:      9999, // $99.99
+			Currency:    "usd",
+			PaymentType: "subscription",
+			Status:      "succeeded",
+			Description: "Yearly subscription",
+			StripeID:    "pi_test2",
 		},
 		{
-			UserID:           user.ID,
-			Amount:           10000, // $100.00
-			Currency:         "usd",
-			StripePaymentID:  "pi_test3",
-			Status:           "succeeded",
-			SubscriptionTier: "lifetime",
+			UserID:      user.ID,
+			Amount:      19999, // $199.99
+			Currency:    "usd",
+			PaymentType: "one-time",
+			Status:      "succeeded",
+			Description: "Lifetime access",
+			StripeID:    "pi_test3",
 		},
 	}
 
@@ -152,13 +161,12 @@ func TestPaymentHistory(t *testing.T) {
 	}
 
 	// Retrieve the user's payment history
-	var retrievedPayments []models.Payment
-	err := db.Where("user_id = ?", user.ID).Order("created_at desc").Find(&retrievedPayments).Error
+	retrievedPayments, err := models.GetPaymentsByUserID(db, user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, len(payments), len(retrievedPayments))
 
-	// The payments should be in reverse chronological order
-	assert.Equal(t, "lifetime", retrievedPayments[0].SubscriptionTier)
-	assert.Equal(t, "yearly", retrievedPayments[1].SubscriptionTier)
-	assert.Equal(t, "monthly", retrievedPayments[2].SubscriptionTier)
+	// The payments should be in reverse chronological order (newest first)
+	assert.Equal(t, "pi_test3", retrievedPayments[0].StripeID)
+	assert.Equal(t, "pi_test2", retrievedPayments[1].StripeID)
+	assert.Equal(t, "pi_test1", retrievedPayments[2].StripeID)
 }

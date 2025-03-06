@@ -1,0 +1,32 @@
+package payment
+
+import (
+	"github.com/hail2skins/the-virtual-armory/internal/models"
+)
+
+// TestPage is a simple test page
+templ TestPage(user *models.User) {
+	<html>
+		<head>
+			<title>Test Page</title>
+			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+		</head>
+		<body class="bg-gray-100">
+			<div class="container mx-auto px-4 py-8">
+				<h1 class="text-3xl font-bold text-blue-600">Test Page</h1>
+				<p class="mt-4 text-gray-700">This is a test page to see if Tailwind CSS is working.</p>
+				
+				<div class="mt-8 grid grid-cols-2 gap-4">
+					<div class="bg-white p-4 rounded shadow">
+						<h2 class="text-xl font-semibold">Box 1</h2>
+						<p>This is the first box.</p>
+					</div>
+					<div class="bg-white p-4 rounded shadow">
+						<h2 class="text-xl font-semibold">Box 2</h2>
+						<p>This is the second box.</p>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+} 

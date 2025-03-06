@@ -10,6 +10,8 @@ import (
 type Gun struct {
 	gorm.Model
 	Name           string
+	Description    string
+	SerialNumber   string
 	Acquired       *time.Time
 	WeaponTypeID   uint
 	WeaponType     WeaponType `gorm:"foreignKey:WeaponTypeID"`
@@ -19,6 +21,8 @@ type Gun struct {
 	Manufacturer   Manufacturer `gorm:"foreignKey:ManufacturerID"`
 	OwnerID        uint
 	Owner          User `gorm:"foreignKey:OwnerID"`
+	HasMoreGuns    bool `gorm:"-"` // Indicates if there are more guns not being shown (not stored in DB)
+	TotalGuns      int  `gorm:"-"` // Total number of guns the user has (not stored in DB)
 }
 
 // TableName specifies the table name for the Gun model
@@ -27,12 +31,37 @@ func (Gun) TableName() string {
 }
 
 // FindGunsByOwner retrieves all guns belonging to a specific owner
+// For free tier users, only returns the first 2 guns
 func FindGunsByOwner(db *gorm.DB, ownerID uint) ([]Gun, error) {
-	var guns []Gun
-	if err := db.Preload("WeaponType").Preload("Caliber").Preload("Manufacturer").Where("owner_id = ?", ownerID).Find(&guns).Error; err != nil {
+	// First, get the user to check their subscription status
+	var user User
+	if err := db.First(&user, ownerID).Error; err != nil {
 		return nil, err
 	}
-	return guns, nil
+
+	// Get all guns for this owner
+	var allGuns []Gun
+	if err := db.Preload("WeaponType").Preload("Caliber").Preload("Manufacturer").Where("owner_id = ?", ownerID).Find(&allGuns).Error; err != nil {
+		return nil, err
+	}
+
+	// If the user has an active subscription, return all guns
+	if user.HasActiveSubscription() {
+		return allGuns, nil
+	}
+
+	// For free tier users, only return the first 2 guns
+	if len(allGuns) <= 2 {
+		return allGuns, nil
+	}
+
+	// Set a flag on the first gun to indicate there are more guns
+	if len(allGuns) > 0 {
+		allGuns[0].HasMoreGuns = true
+		allGuns[0].TotalGuns = len(allGuns)
+	}
+
+	return allGuns[:2], nil
 }
 
 // FindGunByID retrieves a gun by its ID, ensuring it belongs to the specified owner

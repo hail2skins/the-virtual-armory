@@ -9,39 +9,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hail2skins/the-virtual-armory/internal/controllers"
+	"github.com/hail2skins/the-virtual-armory/internal/controllers/payment_test/payment_test_utils"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/testutils"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
-
-// setupPaymentTestRouter sets up a test router with the payment controller
-func setupPaymentTestRouter(t *testing.T, db *gorm.DB) (*gin.Engine, *controllers.PaymentController) {
-	// Set Gin to test mode
-	gin.SetMode(gin.TestMode)
-
-	// Create a new router
-	router := gin.Default()
-
-	// For tests, we don't need to load actual templates
-	// Just mock the HTML renderer to prevent panics
-	router.HTMLRender = &testRenderer{}
-
-	// Create the payment controller
-	paymentController := controllers.NewPaymentController(db)
-
-	return router, paymentController
-}
 
 // TestPricingPageDisplay tests that the pricing page displays correctly
 func TestPricingPageDisplay(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Set up test router and controller
-	router, paymentController := setupPaymentTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for the pricing page
 	router.GET("/pricing", func(c *gin.Context) {
@@ -55,20 +36,20 @@ func TestPricingPageDisplay(t *testing.T) {
 
 	// Check that the pricing page is displayed
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Subscription Plans")
+	assert.Contains(t, w.Body.String(), "Choose Your Plan")
 }
 
-// TestSubscriptionTiers tests that the subscription tiers are correctly defined
+// TestSubscriptionTiers tests that the pricing page displays different subscription tiers
 func TestSubscriptionTiers(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up test router and controller
-	router, paymentController := setupPaymentTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for the pricing page
 	router.GET("/pricing", func(c *gin.Context) {
@@ -90,18 +71,16 @@ func TestSubscriptionTiers(t *testing.T) {
 
 	// Check that the pricing page is displayed with subscription tiers
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Free Tier")
-	assert.Contains(t, w.Body.String(), "Monthly Subscription")
-	assert.Contains(t, w.Body.String(), "Yearly Subscription")
-	assert.Contains(t, w.Body.String(), "Lifetime Subscription")
-	assert.Contains(t, w.Body.String(), "Premium Lifetime")
+	assert.Contains(t, w.Body.String(), "Free")
+	assert.Contains(t, w.Body.String(), "Monthly")
+	assert.Contains(t, w.Body.String(), "Yearly")
+	assert.Contains(t, w.Body.String(), "Lifetime")
 
 	// Check that the pricing information is displayed
 	assert.Contains(t, w.Body.String(), "$0")
 	assert.Contains(t, w.Body.String(), "$9.99")
 	assert.Contains(t, w.Body.String(), "$99.99")
 	assert.Contains(t, w.Body.String(), "$199.99")
-	assert.Contains(t, w.Body.String(), "$299.99")
 
 	// Check that the gun limits are displayed
 	assert.Contains(t, w.Body.String(), "2 guns")
@@ -113,14 +92,14 @@ func TestSubscriptionTiers(t *testing.T) {
 // TestStripeWebhookHandling tests that Stripe webhooks are handled correctly
 func TestStripeWebhookHandling(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up test router and controller
-	router, paymentController := setupPaymentTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for the Stripe webhook
 	router.POST("/webhook", func(c *gin.Context) {
@@ -163,14 +142,14 @@ func TestStripeWebhookHandling(t *testing.T) {
 // TestPaymentSuccess tests that successful payments are handled correctly
 func TestPaymentSuccess(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up test router and controller
-	router, paymentController := setupPaymentTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for payment success
 	router.GET("/payment/success", func(c *gin.Context) {
@@ -195,17 +174,17 @@ func TestPaymentSuccess(t *testing.T) {
 	assert.Equal(t, "/owner/guns", w.Header().Get("Location"))
 }
 
-// TestPaymentCancellation tests that cancelled payments are handled correctly
+// TestPaymentCancellation tests that payment cancellations are handled correctly
 func TestPaymentCancellation(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Set up test router and controller
-	router, paymentController := setupPaymentTestRouter(t, db)
+	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
 
 	// Set up the route for payment cancellation
 	router.GET("/payment/cancel", func(c *gin.Context) {

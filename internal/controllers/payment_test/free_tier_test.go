@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
 	"github.com/hail2skins/the-virtual-armory/internal/controllers"
+	"github.com/hail2skins/the-virtual-armory/internal/controllers/payment_test/payment_test_utils"
 	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/testutils"
@@ -233,19 +234,19 @@ func getExistingManufacturer(t *testing.T, db *gorm.DB) *models.Manufacturer {
 // TestFreeTierGunLimit tests that users on the free tier can only create 2 guns
 func TestFreeTierGunLimit(t *testing.T) {
 	// Set up test database
-	db := setupTestDB(t)
+	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
 	// Create a test user
-	user := createTestUser(t, db)
+	user := payment_test_utils.CreateTestUser(t, db)
 
 	// Get existing reference data
-	weaponType := getExistingWeaponType(t, db)
-	caliber := getExistingCaliber(t, db)
-	manufacturer := getExistingManufacturer(t, db)
+	weaponType := payment_test_utils.GetExistingWeaponType(t, db)
+	caliber := payment_test_utils.GetExistingCaliber(t, db)
+	manufacturer := payment_test_utils.GetExistingManufacturer(t, db)
 
 	// Set up test router and controller
-	router, gunController := setupTestRouter(t, db)
+	router, gunController := payment_test_utils.SetupGunTestRouter(t, db)
 
 	// Set up the route for creating guns
 	router.POST("/owner/guns", func(c *gin.Context) {
@@ -256,10 +257,10 @@ func TestFreeTierGunLimit(t *testing.T) {
 		gunController.Create(c)
 	})
 
-	// Create first gun (should succeed)
+	// Create the first gun (should succeed)
 	formData1 := url.Values{
 		"name":            {"Test Gun 1"},
-		"description":     {"A test gun"},
+		"serial_number":   {"SN12345"},
 		"weapon_type_id":  {fmt.Sprintf("%d", weaponType.ID)},
 		"caliber_id":      {fmt.Sprintf("%d", caliber.ID)},
 		"manufacturer_id": {fmt.Sprintf("%d", manufacturer.ID)},
@@ -273,13 +274,13 @@ func TestFreeTierGunLimit(t *testing.T) {
 	w1 := httptest.NewRecorder()
 	router.ServeHTTP(w1, req1)
 
-	// Check that the first gun was created successfully
-	assert.Equal(t, http.StatusSeeOther, w1.Code)
+	// Check that the gun was created successfully
+	assert.Equal(t, http.StatusSeeOther, w1.Code) // Redirect after successful creation
 
-	// Create second gun (should succeed)
+	// Create the second gun (should succeed)
 	formData2 := url.Values{
 		"name":            {"Test Gun 2"},
-		"description":     {"Another test gun"},
+		"serial_number":   {"SN67890"},
 		"weapon_type_id":  {fmt.Sprintf("%d", weaponType.ID)},
 		"caliber_id":      {fmt.Sprintf("%d", caliber.ID)},
 		"manufacturer_id": {fmt.Sprintf("%d", manufacturer.ID)},
@@ -294,12 +295,12 @@ func TestFreeTierGunLimit(t *testing.T) {
 	router.ServeHTTP(w2, req2)
 
 	// Check that the second gun was created successfully
-	assert.Equal(t, http.StatusSeeOther, w2.Code)
+	assert.Equal(t, http.StatusSeeOther, w2.Code) // Redirect after successful creation
 
-	// Create third gun (should fail for free tier)
+	// Try to create a third gun (should fail)
 	formData3 := url.Values{
 		"name":            {"Test Gun 3"},
-		"description":     {"Yet another test gun"},
+		"serial_number":   {"SN13579"},
 		"weapon_type_id":  {fmt.Sprintf("%d", weaponType.ID)},
 		"caliber_id":      {fmt.Sprintf("%d", caliber.ID)},
 		"manufacturer_id": {fmt.Sprintf("%d", manufacturer.ID)},
@@ -313,11 +314,11 @@ func TestFreeTierGunLimit(t *testing.T) {
 	w3 := httptest.NewRecorder()
 	router.ServeHTTP(w3, req3)
 
-	// Check that the third gun creation was redirected to the pricing page
+	// Check that the user is redirected to the pricing page
 	assert.Equal(t, http.StatusSeeOther, w3.Code)
 	assert.Equal(t, "/pricing", w3.Header().Get("Location"))
 
-	// Verify that only 2 guns were created for the user
+	// Verify that only 2 guns were created
 	var count int64
 	db.Model(&models.Gun{}).Where("owner_id = ?", user.ID).Count(&count)
 	assert.Equal(t, int64(2), count)
@@ -388,4 +389,79 @@ func TestExpiredSubscriptionRevertToFreeTier(t *testing.T) {
 
 	// But the controller should only return 2 guns for display
 	// This will be implemented in the controller later
+}
+
+// TestExpiredSubscriptionShowsLimitedGuns tests that a user with an expired subscription
+// only sees their first 2 guns with an indication that there are more
+func TestExpiredSubscriptionShowsLimitedGuns(t *testing.T) {
+	// Set up test database
+	db := payment_test_utils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(db)
+
+	// Create a test user with an expired subscription
+	user := payment_test_utils.CreateTestUser(t, db)
+
+	// Set up subscription data - expired 1 day ago
+	db.Model(&user).Updates(map[string]interface{}{
+		"subscription_tier":       "monthly",
+		"subscription_expires_at": time.Now().Add(-24 * time.Hour),
+	})
+
+	// Get existing reference data
+	weaponType := payment_test_utils.GetExistingWeaponType(t, db)
+	caliber := payment_test_utils.GetExistingCaliber(t, db)
+	manufacturer := payment_test_utils.GetExistingManufacturer(t, db)
+
+	// Create 5 guns for the user directly in the database
+	// (bypassing the controller to simulate a user who had a subscription)
+	for i := 1; i <= 5; i++ {
+		gun := models.Gun{
+			Name:           fmt.Sprintf("Test Gun %d", i),
+			WeaponTypeID:   weaponType.ID,
+			CaliberID:      caliber.ID,
+			ManufacturerID: manufacturer.ID,
+			OwnerID:        user.ID,
+		}
+		db.Create(&gun)
+	}
+
+	// Set up test router and controller
+	router, gunController := payment_test_utils.SetupGunTestRouter(t, db)
+
+	// Set up the route for listing guns
+	router.GET("/owner/guns", func(c *gin.Context) {
+		// Set authentication cookies for the test
+		c.SetCookie("is_logged_in", "true", 3600, "/", "localhost", false, true)
+		c.SetCookie("user_email", user.Email, 3600, "/", "localhost", false, true)
+
+		gunController.Index(c)
+	})
+
+	// Test accessing the guns list
+	req, _ := http.NewRequest("GET", "/owner/guns", nil)
+	// Add authentication cookies to the request
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Check that the response is successful
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Check the response body
+	body := w.Body.String()
+
+	// Should contain the first two guns
+	assert.Contains(t, body, "Test Gun 1")
+	assert.Contains(t, body, "Test Gun 2")
+
+	// Should NOT contain the other guns
+	assert.NotContains(t, body, "Test Gun 3")
+	assert.NotContains(t, body, "Test Gun 4")
+	assert.NotContains(t, body, "Test Gun 5")
+
+	// Should contain a message about having more guns
+	assert.Contains(t, body, "You have 3 more guns")
+	assert.Contains(t, body, "Please re-subscribe to see all your guns")
 }

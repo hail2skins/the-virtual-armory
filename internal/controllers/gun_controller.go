@@ -105,10 +105,10 @@ func (c *GunController) New(ctx *gin.Context) {
 func (c *GunController) Create(ctx *gin.Context) {
 	// Get form values
 	name := ctx.PostForm("name")
-	acquiredStr := ctx.PostForm("acquired")
 	weaponTypeIDStr := ctx.PostForm("weapon_type_id")
 	caliberIDStr := ctx.PostForm("caliber_id")
 	manufacturerIDStr := ctx.PostForm("manufacturer_id")
+	acquiredStr := ctx.PostForm("acquired")
 
 	// Parse IDs
 	weaponTypeID, err := strconv.ParseUint(weaponTypeIDStr, 10, 64)
@@ -134,6 +134,20 @@ func (c *GunController) Create(ctx *gin.Context) {
 	if err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to get current user"})
 		return
+	}
+
+	// Check if the user is on the free tier and already has 2 guns
+	if user.SubscriptionTier == "free" {
+		var count int64
+		c.DB.Model(&models.Gun{}).Where("owner_id = ?", user.ID).Count(&count)
+
+		// If the user already has 2 guns, redirect to the pricing page
+		if count >= 2 {
+			ctx.SetCookie("flash_message", "You've reached the limit of 2 guns for the free tier. Please upgrade your subscription to add more guns.", 5, "/", "", false, true)
+			ctx.SetCookie("flash_type", "warning", 5, "/", "", false, true)
+			ctx.Redirect(http.StatusSeeOther, "/pricing")
+			return
+		}
 	}
 
 	// Create the gun object
@@ -238,10 +252,10 @@ func (c *GunController) Update(ctx *gin.Context) {
 
 	// Get form values
 	name := ctx.PostForm("name")
-	acquiredStr := ctx.PostForm("acquired")
 	weaponTypeIDStr := ctx.PostForm("weapon_type_id")
 	caliberIDStr := ctx.PostForm("caliber_id")
 	manufacturerIDStr := ctx.PostForm("manufacturer_id")
+	acquiredStr := ctx.PostForm("acquired")
 
 	// Parse IDs
 	weaponTypeID, err := strconv.ParseUint(weaponTypeIDStr, 10, 64)

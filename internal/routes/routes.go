@@ -65,4 +65,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *co
 
 	// Register gun routes
 	RegisterGunRoutes(r, db, authInstance)
+
+	// Register payment routes
+	RegisterPaymentRoutes(r, db, authInstance)
 }
