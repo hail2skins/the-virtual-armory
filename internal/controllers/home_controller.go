@@ -20,13 +20,22 @@ func NewHomeController() *HomeController {
 func (h *HomeController) Index(c *gin.Context) {
 	// Check if user is logged in
 	isLoggedIn := false
-	cookie, err := c.Cookie("is_logged_in")
-	if err == nil && cookie == "true" {
+	if cookie, err := c.Cookie("is_logged_in"); err == nil && cookie == "true" {
 		isLoggedIn = true
 	}
 
+	// Check for flash messages and clear them
+	if _, err := c.Cookie("flash_message"); err == nil {
+		c.SetCookie("flash_message", "", -1, "/", "", false, true)
+	}
+
+	if _, err := c.Cookie("flash_type"); err == nil {
+		c.SetCookie("flash_type", "", -1, "/", "", false, true)
+	}
+
+	// Render the home page
 	component := home.Index(isLoggedIn)
-	err = component.Render(c.Request.Context(), c.Writer)
+	err := component.Render(c.Request.Context(), c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf("Error rendering index page: %v", err)

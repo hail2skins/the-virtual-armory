@@ -3,7 +3,7 @@ package home
 import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 
 templ Index(isLoggedIn bool) {
-	@partials.BaseWithAuth(isLoggedIn) {
+	@partials.BaseWithAuth(isLoggedIn, "", "") {
 		<div class="max-w-4xl mx-auto">
 			<h2 class="text-3xl font-bold mb-6">Welcome to The Virtual Armory</h2>
 			

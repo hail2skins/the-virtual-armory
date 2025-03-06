@@ -369,8 +369,14 @@ func (c *AuthController) ProcessRecover(ctx *gin.Context) {
 // Logout handles user logout
 func (c *AuthController) Logout(ctx *gin.Context) {
 	// This would normally be handled by Authboss
-	// For now, we'll just clear the cookie and redirect to the home page
+	// For now, we'll just clear the cookies and redirect to the home page with a flash message
 	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
+	ctx.SetCookie("user_email", "", -1, "/", "", false, true)
+
+	// Set a flash message cookie
+	ctx.SetCookie("flash_message", "You have been successfully logged out", 5, "/", "", false, false)
+	ctx.SetCookie("flash_type", "success", 5, "/", "", false, false)
+
 	ctx.Redirect(http.StatusSeeOther, "/")
 }
 

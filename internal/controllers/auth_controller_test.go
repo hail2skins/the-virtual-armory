@@ -362,3 +362,241 @@ func TestResendVerification(t *testing.T) {
 	assert.NotEqual(t, "old-token", updatedUser.ConfirmToken)
 	assert.True(t, updatedUser.ConfirmTokenExpiry.After(time.Now()))
 }
+
+// TestLoginSuccess tests successful login with a confirmed user
+func TestLoginSuccess(t *testing.T) {
+	// Set up test database
+	db := setupTestDB(t)
+	// Set the global DB variable directly
+	database.DB = db
+	defer database.CloseDB()
+
+	// Set up test router
+	router, authController := setupTestRouter(t, db)
+
+	// Set up the route
+	router.POST("/login", authController.ProcessLogin)
+
+	// Create a test user that is confirmed
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	user := models.User{
+		Email:     "test@example.com",
+		Password:  string(hashedPassword),
+		Confirmed: true,
+	}
+	db.Create(&user)
+
+	// Create a test request
+	form := url.Values{}
+	form.Add("email", "test@example.com")
+	form.Add("password", "password123")
+	req, _ := http.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Perform the request
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Check the response
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/owner", w.Header().Get("Location"))
+
+	// Check that cookies were set
+	cookies := w.Result().Cookies()
+	var isLoggedInCookie, userEmailCookie *http.Cookie
+	for _, cookie := range cookies {
+		if cookie.Name == "is_logged_in" {
+			isLoggedInCookie = cookie
+		} else if cookie.Name == "user_email" {
+			userEmailCookie = cookie
+		}
+	}
+	assert.NotNil(t, isLoggedInCookie, "is_logged_in cookie should be set")
+	assert.Equal(t, "true", isLoggedInCookie.Value)
+	assert.NotNil(t, userEmailCookie, "user_email cookie should be set")
+	assert.Equal(t, "test%40example.com", userEmailCookie.Value)
+}
+
+// TestLoginInvalidPassword tests login with an invalid password
+func TestLoginInvalidPassword(t *testing.T) {
+	// Set up test database
+	db := setupTestDB(t)
+	// Set the global DB variable directly
+	database.DB = db
+	defer database.CloseDB()
+
+	// Set up test router
+	router, authController := setupTestRouter(t, db)
+
+	// Set up the route
+	router.POST("/login", authController.ProcessLogin)
+
+	// Create a test user that is confirmed
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	user := models.User{
+		Email:     "test@example.com",
+		Password:  string(hashedPassword),
+		Confirmed: true,
+	}
+	db.Create(&user)
+
+	// Create a test request with wrong password
+	form := url.Values{}
+	form.Add("email", "test@example.com")
+	form.Add("password", "wrongpassword")
+	req, _ := http.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Perform the request
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Check the response
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Invalid email or password")
+}
+
+// TestLoginNonExistentUser tests login with a non-existent user
+func TestLoginNonExistentUser(t *testing.T) {
+	// Set up test database
+	db := setupTestDB(t)
+	// Set the global DB variable directly
+	database.DB = db
+	defer database.CloseDB()
+
+	// Set up test router
+	router, authController := setupTestRouter(t, db)
+
+	// Set up the route
+	router.POST("/login", authController.ProcessLogin)
+
+	// Create a test request with non-existent user
+	form := url.Values{}
+	form.Add("email", "nonexistent@example.com")
+	form.Add("password", "password123")
+	req, _ := http.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Perform the request
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Check the response
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Invalid email or password")
+}
+
+// TestLoginEmptyFields tests login with empty fields
+func TestLoginEmptyFields(t *testing.T) {
+	// Set up test database
+	db := setupTestDB(t)
+	// Set the global DB variable directly
+	database.DB = db
+	defer database.CloseDB()
+
+	// Set up test router
+	router, authController := setupTestRouter(t, db)
+
+	// Set up the route
+	router.POST("/login", authController.ProcessLogin)
+
+	// Test cases
+	testCases := []struct {
+		name     string
+		email    string
+		password string
+	}{
+		{"Empty Email", "", "password123"},
+		{"Empty Password", "test@example.com", ""},
+		{"Empty Both", "", ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a test request with empty fields
+			form := url.Values{}
+			form.Add("email", tc.email)
+			form.Add("password", tc.password)
+			req, _ := http.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			// Perform the request
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Check the response
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.Contains(t, w.Body.String(), "Email and password are required")
+		})
+	}
+}
+
+// TestLogout tests the logout functionality
+func TestLogout(t *testing.T) {
+	// Set up test database
+	db := setupTestDB(t)
+	// Set the global DB variable directly
+	database.DB = db
+	defer database.CloseDB()
+
+	// Set up test router
+	router, authController := setupTestRouter(t, db)
+
+	// Set up the route
+	router.GET("/logout", authController.Logout)
+
+	// Create a test request
+	req, _ := http.NewRequest("GET", "/logout", nil)
+
+	// Add a cookie to simulate a logged-in user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: "test@example.com",
+	})
+
+	// Perform the request
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Check the response
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/", w.Header().Get("Location"))
+
+	// Check that cookies were cleared
+	cookies := w.Result().Cookies()
+	var isLoggedInCookie, userEmailCookie, flashMessageCookie, flashTypeCookie *http.Cookie
+	for _, cookie := range cookies {
+		switch cookie.Name {
+		case "is_logged_in":
+			isLoggedInCookie = cookie
+		case "user_email":
+			userEmailCookie = cookie
+		case "flash_message":
+			flashMessageCookie = cookie
+		case "flash_type":
+			flashTypeCookie = cookie
+		}
+	}
+
+	// Check that login cookies were cleared
+	assert.NotNil(t, isLoggedInCookie, "is_logged_in cookie should be present")
+	assert.Equal(t, "", isLoggedInCookie.Value, "is_logged_in cookie should be empty")
+	assert.True(t, isLoggedInCookie.MaxAge < 0, "is_logged_in cookie should have negative MaxAge")
+
+	assert.NotNil(t, userEmailCookie, "user_email cookie should be present")
+	assert.Equal(t, "", userEmailCookie.Value, "user_email cookie should be empty")
+	assert.True(t, userEmailCookie.MaxAge < 0, "user_email cookie should have negative MaxAge")
+
+	// Check that flash message cookies were set
+	assert.NotNil(t, flashMessageCookie, "flash_message cookie should be present")
+	assert.Equal(t, "You+have+been+successfully+logged+out", flashMessageCookie.Value)
+	assert.Equal(t, 5, flashMessageCookie.MaxAge)
+
+	assert.NotNil(t, flashTypeCookie, "flash_type cookie should be present")
+	assert.Equal(t, "success", flashTypeCookie.Value)
+	assert.Equal(t, 5, flashTypeCookie.MaxAge)
+}
