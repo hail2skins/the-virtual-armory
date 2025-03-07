@@ -12,6 +12,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/testutils"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
@@ -26,13 +27,11 @@ func (r *TestRenderer) Instance(name string, data interface{}) render.Render {
 	}
 }
 
-// SetupTestDB sets up a test database and seeds it with necessary reference data
+// SetupTestDB sets up a test database
 func SetupTestDB(t *testing.T) *gorm.DB {
 	// Set up a test database using SQLite in-memory
 	db, err := testutils.SetupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to set up test database: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Set the global database variable to the test database
 	// This ensures that any code using database.GetDB() will use our test database
@@ -42,6 +41,11 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 	SeedTestDatabase(t, db)
 
 	return db
+}
+
+// CleanupTestDB cleans up the test database
+func CleanupTestDB(t *testing.T, db *gorm.DB) {
+	testutils.CleanupTestDB(db)
 }
 
 // SeedTestDatabase seeds the test database with necessary reference data
@@ -96,20 +100,46 @@ func SeedTestDatabase(t *testing.T, db *gorm.DB) {
 	}
 }
 
-// CreateTestUser creates a test user in the database
+// CreateTestUser creates a test user
 func CreateTestUser(t *testing.T, db *gorm.DB) *models.User {
 	// Generate a unique email for each test
 	uniqueEmail := fmt.Sprintf("test%d@example.com", time.Now().UnixNano())
 
 	user := &models.User{
-		Email:     uniqueEmail,
-		Password:  "password",
-		Confirmed: true,
+		Email:                 uniqueEmail,
+		Password:              "password",
+		SubscriptionTier:      "free",
+		SubscriptionExpiresAt: time.Now(),
+		Confirmed:             true,
 	}
-	if err := db.Create(user).Error; err != nil {
-		t.Fatalf("Failed to create test user: %v", err)
-	}
+	err := db.Create(user).Error
+	assert.NoError(t, err)
 	return user
+}
+
+// AuthMiddlewareMock creates a middleware that mocks authentication
+func AuthMiddlewareMock(user *models.User) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Set the user in the context
+		c.Set("user", user)
+		c.Next()
+	}
+}
+
+// CreateTestPayment creates a test payment
+func CreateTestPayment(t *testing.T, db *gorm.DB, user *models.User) *models.Payment {
+	payment := &models.Payment{
+		UserID:      user.ID,
+		Amount:      500, // $5.00
+		Currency:    "usd",
+		PaymentType: "subscription",
+		Status:      "succeeded",
+		Description: "Monthly subscription",
+		StripeID:    "pi_test123",
+	}
+	err := db.Create(payment).Error
+	assert.NoError(t, err)
+	return payment
 }
 
 // GetExistingWeaponType gets an existing weapon type from the database

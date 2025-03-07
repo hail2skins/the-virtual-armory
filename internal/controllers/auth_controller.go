@@ -84,15 +84,22 @@ func (c *AuthController) Profile(ctx *gin.Context) {
 
 	// Get flash message from cookie
 	flashMessage, _ := ctx.Cookie("flash_message")
+	flashType, _ := ctx.Cookie("flash_type")
 
-	// Clear flash cookies if they exist
+	// Log the flash message for debugging
 	if flashMessage != "" {
-		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
-		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
+		log.Printf("Flash message found: %s (type: %s)", flashMessage, flashType)
 	}
 
-	component := authviews.Profile(*user, guns)
-	component.Render(ctx, ctx.Writer)
+	// Render the profile template with flash message
+	component := authviews.Profile(user, guns, flashMessage, flashType)
+	component.Render(ctx.Request.Context(), ctx.Writer)
+
+	// Clear flash cookies after rendering
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, false)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, false)
+	}
 }
 
 // AdminDashboard handles the admin dashboard page

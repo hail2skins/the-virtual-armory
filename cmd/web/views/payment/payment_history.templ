@@ -55,7 +55,7 @@ templ statusBadge(status string) {
 }
 
 // PaymentHistory displays the payment history for a user
-templ PaymentHistory(user *models.User, payments []models.Payment) {
+templ PaymentHistory(user *models.User, payments []models.Payment, flashMessage string, flashType string) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-screen">
 		<head>
@@ -85,6 +85,25 @@ templ PaymentHistory(user *models.User, payments []models.Payment) {
 			</header>
 			<main class="bg-gray-50 min-h-screen py-12">
 				<div class="container mx-auto px-4 max-w-5xl">
+					if flashMessage != "" {
+						if flashType == "success" {
+							<div class="mb-6 p-4 rounded-md bg-green-500 text-white text-center">
+								<p>{ flashMessage }</p>
+							</div>
+						} else if flashType == "error" {
+							<div class="mb-6 p-4 rounded-md bg-red-500 text-white text-center">
+								<p>{ flashMessage }</p>
+							</div>
+						} else if flashType == "warning" {
+							<div class="mb-6 p-4 rounded-md bg-yellow-500 text-white text-center">
+								<p>{ flashMessage }</p>
+							</div>
+						} else {
+							<div class="mb-6 p-4 rounded-md bg-blue-500 text-white text-center">
+								<p>{ flashMessage }</p>
+							</div>
+						}
+					}
 					<div class="text-center mb-12">
 						<h1 class="text-3xl font-bold text-gray-900 mb-2">Payment History</h1>
 						<p class="text-gray-600">View your subscription and payment history</p>
@@ -106,7 +125,7 @@ templ PaymentHistory(user *models.User, payments []models.Payment) {
 										<p class="text-gray-600">Lifetime subscription</p>
 									}
 								</div>
-								<div class="mt-4 md:mt-0">
+								<div class="mt-4 md:mt-0 flex space-x-2">
 									if user.SubscriptionTier == "free" {
 										<a href="/pricing" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
 											Upgrade Plan
@@ -115,6 +134,20 @@ templ PaymentHistory(user *models.User, payments []models.Payment) {
 										<a href="/pricing" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
 											Change Plan
 										</a>
+										if !user.SubscriptionCanceled {
+											<a href="/subscription/cancel/confirm" class="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+												Cancel Subscription
+											</a>
+										} else {
+											<div class="inline-block bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg" style="min-width: 0;">
+												<div class="flex items-center">
+													<svg class="w-4 h-4 mr-1 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+													</svg>
+													<span>Canceled</span>
+												</div>
+											</div>
+										}
 									}
 								</div>
 							</div>

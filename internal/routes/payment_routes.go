@@ -40,5 +40,9 @@ func RegisterPaymentRoutes(r *gin.Engine, db *gorm.DB, authInstance *auth.Auth) 
 
 		// Payment history route
 		authorized.GET("/owner/payment-history", paymentController.ShowPaymentHistory)
+
+		// Subscription cancellation routes
+		authorized.GET("/subscription/cancel/confirm", paymentController.ShowCancelConfirmation)
+		authorized.POST("/subscription/cancel", paymentController.CancelSubscription)
 	}
 }

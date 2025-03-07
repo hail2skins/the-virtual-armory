@@ -1,0 +1,94 @@
+package payment
+
+import (
+	"github.com/hail2skins/the-virtual-armory/internal/models"
+)
+
+// CancelConfirmation displays the subscription cancellation confirmation page
+templ CancelConfirmation(user *models.User) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-screen">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>The Virtual Armory - Cancel Subscription</title>
+			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<script src="/assets/js/htmx.min.js"></script>
+		</head>
+		<body class="bg-gray-100">
+			<header class="bg-blue-800 text-white p-4">
+				<div class="container mx-auto">
+					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
+					<nav class="mt-2">
+						<ul class="flex space-x-4">
+							<li><a href="/" class="hover:underline">Home</a></li>
+							<li><a href="/about" class="hover:underline">About</a></li>
+							<li><a href="/contact" class="hover:underline">Contact</a></li>
+							<li><a href="/owner" class="hover:underline">My Profile</a></li>
+							<li><a href="/owner/guns" class="hover:underline">My Guns</a></li>
+							<li><a href="/pricing" class="hover:underline">Pricing</a></li>
+							<li><a href="/owner/payment-history" class="hover:underline">Payment History</a></li>
+						</ul>
+					</nav>
+				</div>
+			</header>
+			<main class="bg-gray-50 min-h-screen py-12">
+				<div class="container mx-auto px-4 max-w-3xl">
+					<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+						<div class="bg-red-600 p-6 text-white">
+							<h2 class="text-xl font-semibold">Cancel Subscription</h2>
+						</div>
+						<div class="p-6">
+							<div class="mb-6">
+								<h3 class="text-xl font-bold text-gray-900 mb-4">Are you sure you want to cancel your subscription?</h3>
+								<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+									<div class="flex">
+										<div class="flex-shrink-0">
+											<svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+												<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+											</svg>
+										</div>
+										<div class="ml-3">
+											<p class="text-sm text-yellow-700">
+												You will continue to have access until <span class="font-semibold">{ user.SubscriptionExpiresAt.Format("January 2, 2006") }</span>.
+											</p>
+											<p class="text-sm text-yellow-700 mt-2">
+												After this date, your subscription will not renew automatically and you will be downgraded to the free tier.
+											</p>
+										</div>
+									</div>
+								</div>
+								<p class="text-gray-600 mb-4">
+									If you cancel your subscription:
+								</p>
+								<ul class="list-disc pl-5 mb-6 space-y-2 text-gray-600">
+									<li>You will continue to have full access to all features until your current billing period ends.</li>
+									<li>You will not be charged again for this subscription.</li>
+									<li>After your subscription expires, you will be downgraded to the free tier with limited features.</li>
+									<li>You can resubscribe at any time if you change your mind.</li>
+								</ul>
+							</div>
+							
+							<div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+								<a href="/owner/payment-history" class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+									Go Back
+								</a>
+								<form method="POST" action="/subscription/cancel">
+									<button type="submit" class="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+										Confirm Cancellation
+									</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+			<footer class="bg-gray-200 p-4 mt-8">
+				<div class="container mx-auto text-center">
+					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+				</div>
+			</footer>
+		</body>
+	</html>
+} 

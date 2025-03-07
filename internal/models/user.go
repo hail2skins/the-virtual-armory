@@ -17,6 +17,8 @@ type User struct {
 	SubscriptionTier      string `gorm:"default:'free'"`
 	SubscriptionExpiresAt time.Time
 	StripeCustomerID      string
+	StripeSubscriptionID  string
+	SubscriptionCanceled  bool `gorm:"default:false"`
 
 	// Authboss required fields
 	RecoverToken       string

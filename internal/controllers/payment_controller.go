@@ -17,6 +17,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/checkout/session"
+	"github.com/stripe/stripe-go/v72/sub"
 	"github.com/stripe/stripe-go/v72/webhook"
 	"gorm.io/gorm"
 )
@@ -533,15 +534,27 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 
 		// Set expiration date based on subscription tier
 		var expirationDate time.Time
+
+		// Check if user has an existing subscription that hasn't expired yet
+		hasExistingTime := user.HasActiveSubscription() && !user.IsLifetimeSubscriber()
+
+		// If the user has an existing subscription, add time to it instead of replacing
+		if hasExistingTime {
+			// Start from the current expiration date
+			expirationDate = user.SubscriptionExpiresAt
+		} else {
+			// Start from now
+			expirationDate = time.Now()
+		}
+
+		// Add time based on the new subscription tier
 		switch tier {
 		case "monthly":
-			expirationDate = time.Now().AddDate(0, 1, 0) // 1 month from now
+			expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
 		case "yearly":
-			expirationDate = time.Now().AddDate(1, 0, 0) // 1 year from now
+			expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
 		case "lifetime", "premium_lifetime":
 			expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
-		default:
-			expirationDate = time.Now() // No subscription
 		}
 
 		// Update the user's subscription
@@ -549,6 +562,7 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 			"subscription_tier":       tier,
 			"subscription_expires_at": expirationDate,
 			"stripe_customer_id":      "cus_test_" + strconv.FormatUint(uint64(user.ID), 10),
+			"subscription_canceled":   false, // Reset the canceled flag when resubscribing
 		}).Error; err != nil {
 			log.Printf("Failed to update user %d subscription in test mode: %v", user.ID, err)
 		}
@@ -568,10 +582,12 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 			log.Printf("Failed to create payment record in test mode: %v", err)
 		}
 
-		// Set a success message
-		ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 5, "/", "", false, true)
-		ctx.SetCookie("flash_type", "success", 5, "/", "", false, true)
+		// Set a success message with cookies that are accessible to JavaScript
+		// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
+		ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 60, "/", "", false, false)
+		ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
 
+		// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 		// Redirect to the owner page
 		ctx.Redirect(http.StatusSeeOther, "/owner")
 		return
@@ -605,15 +621,27 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 
 	// Set expiration date based on subscription tier
 	var expirationDate time.Time
+
+	// Check if user has an existing subscription that hasn't expired yet
+	hasExistingTime := user.HasActiveSubscription() && !user.IsLifetimeSubscriber()
+
+	// If the user has an existing subscription, add time to it instead of replacing
+	if hasExistingTime {
+		// Start from the current expiration date
+		expirationDate = user.SubscriptionExpiresAt
+	} else {
+		// Start from now
+		expirationDate = time.Now()
+	}
+
+	// Add time based on the new subscription tier
 	switch tier {
 	case "monthly":
-		expirationDate = time.Now().AddDate(0, 1, 0) // 1 month from now
+		expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
 	case "yearly":
-		expirationDate = time.Now().AddDate(1, 0, 0) // 1 year from now
+		expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
 	case "lifetime", "premium_lifetime":
 		expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
-	default:
-		expirationDate = time.Now() // No subscription
 	}
 
 	// Update the user's subscription
@@ -621,6 +649,7 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 		"subscription_tier":       tier,
 		"subscription_expires_at": expirationDate,
 		"stripe_customer_id":      s.Customer.ID,
+		"subscription_canceled":   false, // Reset the canceled flag when resubscribing
 	}).Error; err != nil {
 		log.Printf("Failed to update user %d subscription: %v", user.ID, err)
 	}
@@ -660,10 +689,12 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 	// Log the successful payment
 	log.Printf("Payment success for user %d, session %s", user.ID, sessionID)
 
-	// Set a success message
-	ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 5, "/", "", false, true)
-	ctx.SetCookie("flash_type", "success", 5, "/", "", false, true)
+	// Set a success message with cookies that are accessible to JavaScript
+	// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
+	ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 60, "/", "", false, false)
+	ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
 
+	// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 	// Redirect to the owner page
 	ctx.Redirect(http.StatusSeeOther, "/owner")
 }
@@ -705,7 +736,153 @@ func (c *PaymentController) ShowPaymentHistory(ctx *gin.Context) {
 		return
 	}
 
-	// Render the payment history template
-	component := paymentViews.PaymentHistory(user, payments)
+	// Get flash message from cookie
+	flashMessage, _ := ctx.Cookie("flash_message")
+	flashType, _ := ctx.Cookie("flash_type")
+
+	// Log the flash message for debugging
+	if flashMessage != "" {
+		log.Printf("Payment history flash message found: %s (type: %s)", flashMessage, flashType)
+	}
+
+	// Render the payment history template with flash message
+	component := paymentViews.PaymentHistory(user, payments, flashMessage, flashType)
 	component.Render(ctx.Request.Context(), ctx.Writer)
+
+	// Clear flash cookies after rendering
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, false)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, false)
+	}
+}
+
+// ShowCancelConfirmation displays the subscription cancellation confirmation page
+func (c *PaymentController) ShowCancelConfirmation(ctx *gin.Context) {
+	// Get the current user
+	user, err := auth.GetCurrentUser(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// Check if the user has an active subscription
+	if user.SubscriptionTier == "free" || user.IsLifetimeSubscriber() {
+		// Redirect to payment history if the user doesn't have a recurring subscription
+		ctx.SetCookie("flash_message", "You don't have an active recurring subscription to cancel.", 5, "/", "", false, true)
+		ctx.SetCookie("flash_type", "error", 5, "/", "", false, true)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Check if the subscription is already canceled
+	if user.SubscriptionCanceled {
+		ctx.SetCookie("flash_message", "Your subscription is already scheduled for cancellation.", 5, "/", "", false, true)
+		ctx.SetCookie("flash_type", "info", 5, "/", "", false, true)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Render the cancellation confirmation page
+	component := paymentViews.CancelConfirmation(user)
+	component.Render(ctx.Request.Context(), ctx.Writer)
+}
+
+// CancelSubscription cancels the user's subscription
+func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
+	// Get the current user
+	user, err := auth.GetCurrentUser(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// Check if the user has an active subscription
+	if user.SubscriptionTier == "free" || user.IsLifetimeSubscriber() {
+		// Redirect to payment history if the user doesn't have a recurring subscription
+		ctx.SetCookie("flash_message", "You don't have an active recurring subscription to cancel.", 5, "/", "", false, true)
+		ctx.SetCookie("flash_type", "error", 5, "/", "", false, true)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Check if the subscription is already canceled
+	if user.SubscriptionCanceled {
+		ctx.SetCookie("flash_message", "Your subscription is already scheduled for cancellation.", 5, "/", "", false, true)
+		ctx.SetCookie("flash_type", "info", 5, "/", "", false, true)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Check if we're in test mode
+	if os.Getenv("APP_ENV") == "test" {
+		// In test mode, just mark the subscription as canceled
+		if err := c.DB.Model(user).Update("subscription_canceled", true).Error; err != nil {
+			log.Printf("Failed to cancel subscription for user %d in test mode: %v", user.ID, err)
+			ctx.SetCookie("flash_message", "Failed to cancel subscription. Please try again.", 60, "/", "", false, false)
+			ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+			ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+			return
+		}
+
+		// Set success message
+		ctx.SetCookie("flash_message", "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", 60, "/", "", false, false)
+		ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Set Stripe API key
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+	// Check if the user has a Stripe subscription ID
+	if user.StripeSubscriptionID == "" {
+		// Try to find the subscription by customer ID
+		params := &stripe.SubscriptionListParams{}
+		params.Customer = user.StripeCustomerID
+		iter := sub.List(params)
+		var subscription *stripe.Subscription
+		for iter.Next() {
+			subscription = iter.Subscription()
+			break
+		}
+
+		if subscription == nil {
+			log.Printf("Failed to find subscription for user %d with customer ID %s", user.ID, user.StripeCustomerID)
+			ctx.SetCookie("flash_message", "Failed to find your subscription. Please contact support.", 60, "/", "", false, false)
+			ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+			ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+			return
+		}
+
+		// Save the subscription ID for future use
+		if err := c.DB.Model(user).Update("stripe_subscription_id", subscription.ID).Error; err != nil {
+			log.Printf("Failed to save subscription ID for user %d: %v", user.ID, err)
+		}
+
+		// Use the found subscription ID
+		user.StripeSubscriptionID = subscription.ID
+	}
+
+	// Cancel the subscription at period end
+	_, err = sub.Update(user.StripeSubscriptionID, &stripe.SubscriptionParams{
+		CancelAtPeriodEnd: stripe.Bool(true),
+	})
+
+	if err != nil {
+		log.Printf("Failed to cancel subscription for user %d: %v", user.ID, err)
+		ctx.SetCookie("flash_message", "Failed to cancel subscription with Stripe. Please try again.", 60, "/", "", false, false)
+		ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+		return
+	}
+
+	// Mark the subscription as canceled in our database
+	if err := c.DB.Model(user).Update("subscription_canceled", true).Error; err != nil {
+		log.Printf("Failed to mark subscription as canceled for user %d: %v", user.ID, err)
+	}
+
+	// Set success message
+	ctx.SetCookie("flash_message", "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", 60, "/", "", false, false)
+	ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+	ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 }
