@@ -82,6 +82,15 @@ func (c *AuthController) Profile(ctx *gin.Context) {
 		return
 	}
 
+	// Get flash message from cookie
+	flashMessage, _ := ctx.Cookie("flash_message")
+
+	// Clear flash cookies if they exist
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
+	}
+
 	component := authviews.Profile(*user, guns)
 	component.Render(ctx, ctx.Writer)
 }

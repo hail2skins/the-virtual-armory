@@ -6,6 +6,45 @@ import (
 	t "github.com/a-h/templ"
 )
 
+// getStripeLink returns the appropriate Stripe link based on the tier and environment
+func getStripeLink(tier string) t.SafeURL {
+	appEnv := os.Getenv("APP_ENV")
+	var url string
+	
+	if appEnv == "production" {
+		// Production links
+		switch tier {
+		case "monthly":
+			url = os.Getenv("STRIPE_LINK_MONTHLY")
+			if url == "" {
+				url = "/checkout?tier=monthly"
+			}
+		case "yearly":
+			url = os.Getenv("STRIPE_LINK_YEARLY")
+			if url == "" {
+				url = "/checkout?tier=yearly"
+			}
+		case "lifetime":
+			url = os.Getenv("STRIPE_LINK_LIFETIME")
+			if url == "" {
+				url = "/checkout?tier=lifetime"
+			}
+		case "premium_lifetime":
+			url = os.Getenv("STRIPE_LINK_PREMIUM")
+			if url == "" {
+				url = "/checkout?tier=premium_lifetime"
+			}
+		default:
+			url = "#"
+		}
+	} else {
+		// Test links - use the checkout endpoint
+		url = "/checkout?tier=" + tier
+	}
+	
+	return t.URL(url)
+}
+
 // Pricing displays the pricing page with subscription tiers
 templ Pricing(user *models.User) {
 	<html>
@@ -124,9 +163,12 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<a href={ t.URL(os.Getenv("STRIPE_LINK_MONTHLY")) } class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-										Subscribe
-									</a>
+									<form method="POST" action="/checkout">
+										<input type="hidden" name="tier" value="monthly" />
+										<button type="submit" class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+											Subscribe
+										</button>
+									</form>
 								}
 							</div>
 						</div>
@@ -172,9 +214,12 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<a href={ t.URL(os.Getenv("STRIPE_LINK_YEARLY")) } class="block w-full bg-green-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-										Subscribe
-									</a>
+									<form method="POST" action="/checkout">
+										<input type="hidden" name="tier" value="yearly" />
+										<button type="submit" class="block w-full bg-green-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+											Subscribe
+										</button>
+									</form>
 								}
 							</div>
 						</div>
@@ -214,9 +259,12 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<a href={ t.URL(os.Getenv("STRIPE_LINK_LIFETIME")) } class="block w-full bg-purple-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-										Buy Lifetime
-									</a>
+									<form method="POST" action="/checkout">
+										<input type="hidden" name="tier" value="lifetime" />
+										<button type="submit" class="block w-full bg-purple-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+											Buy Lifetime
+										</button>
+									</form>
 								}
 							</div>
 						</div>
@@ -240,9 +288,12 @@ templ Pricing(user *models.User) {
 											Current Plan
 										</div>
 									} else {
-										<a href={ t.URL(os.Getenv("STRIPE_LINK_PREMIUM")) } class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-center text-base font-semibold text-yellow-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-											Get Premium
-										</a>
+										<form method="POST" action="/checkout">
+											<input type="hidden" name="tier" value="premium_lifetime" />
+											<button type="submit" class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-center text-base font-semibold text-yellow-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+												Get Premium
+											</button>
+										</form>
 									}
 								</div>
 							</div>

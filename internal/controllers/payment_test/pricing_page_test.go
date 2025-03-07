@@ -36,11 +36,10 @@ func TestPricingPageContent(t *testing.T) {
 	// Check that the pricing page is displayed
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "Choose Your Plan")
-	assert.Contains(t, w.Body.String(), "Free")
-	assert.Contains(t, w.Body.String(), "Monthly")
-	assert.Contains(t, w.Body.String(), "Yearly")
-	assert.Contains(t, w.Body.String(), "Lifetime")
-	assert.Contains(t, w.Body.String(), "Premium Lifetime")
+	assert.Contains(t, w.Body.String(), "Free Plan")
+	assert.Contains(t, w.Body.String(), "Liking It Plan")
+	assert.Contains(t, w.Body.String(), "Loving It Plan")
+	assert.Contains(t, w.Body.String(), "Supporter Plan")
 }
 
 // TestPricingPageWithLoggedInUser tests that the pricing page displays correctly for a logged-in user
@@ -115,7 +114,7 @@ func TestPricingPageWithSubscribedUser(t *testing.T) {
 
 	// Check that the pricing page is displayed with the user's subscription information
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Your Current Plan: Monthly Subscription")
+	assert.Contains(t, w.Body.String(), "Your Current Plan: Liking It")
 	assert.Contains(t, w.Body.String(), "Expires on")
 }
 
@@ -124,6 +123,10 @@ func TestStripeCheckoutRedirect(t *testing.T) {
 	// Set up test database
 	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
+
+	// Set test environment
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("APP_BASE_URL", "http://localhost:3000")
 
 	// Set up test router and controller
 	router, paymentController := payment_test_utils.SetupPricingTestRouter(t, db)
@@ -153,7 +156,7 @@ func TestStripeCheckoutRedirect(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Check that the user is redirected to Stripe checkout
+	// Check that the user is redirected to the success page with a test session ID
 	assert.Equal(t, http.StatusSeeOther, w.Code)
-	assert.Contains(t, w.Header().Get("Location"), "checkout.stripe.com")
+	assert.Contains(t, w.Header().Get("Location"), "/payment/success?session_id=cs_test_")
 }

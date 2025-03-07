@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/controllers"
+	"github.com/hail2skins/the-virtual-armory/internal/middleware"
 	"gorm.io/gorm"
 )
 
@@ -15,8 +16,16 @@ func RegisterPaymentRoutes(r *gin.Engine, db *gorm.DB, authInstance *auth.Auth) 
 	// Public routes
 	r.GET("/pricing", paymentController.ShowPricingPage)
 
-	// Webhook route for Stripe (public)
-	r.POST("/webhook", paymentController.HandleStripeWebhook)
+	// Webhook route for Stripe (public) with monitoring middleware
+	r.POST("/webhook", middleware.WebhookMonitor(), paymentController.HandleStripeWebhook)
+
+	// Webhook health check endpoint (admin only)
+	admin := r.Group("/admin")
+	admin.Use(authInstance.RequireAuth())
+	admin.Use(authInstance.RequireAdmin()) // Use the existing RequireAdmin middleware
+	{
+		admin.GET("/webhook-health", middleware.WebhookHealthCheck())
+	}
 
 	// Payment success/cancel routes (public)
 	r.GET("/payment/success", paymentController.HandlePaymentSuccess)

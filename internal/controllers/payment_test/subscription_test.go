@@ -71,16 +71,16 @@ func TestSubscriptionTiers(t *testing.T) {
 
 	// Check that the pricing page is displayed with subscription tiers
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Free")
-	assert.Contains(t, w.Body.String(), "Monthly")
-	assert.Contains(t, w.Body.String(), "Yearly")
-	assert.Contains(t, w.Body.String(), "Lifetime")
+	assert.Contains(t, w.Body.String(), "Free Plan")
+	assert.Contains(t, w.Body.String(), "Liking It Plan")
+	assert.Contains(t, w.Body.String(), "Loving It Plan")
+	assert.Contains(t, w.Body.String(), "Supporter Plan")
 
 	// Check that the pricing information is displayed
 	assert.Contains(t, w.Body.String(), "$0")
-	assert.Contains(t, w.Body.String(), "$9.99")
-	assert.Contains(t, w.Body.String(), "$99.99")
-	assert.Contains(t, w.Body.String(), "$199.99")
+	assert.Contains(t, w.Body.String(), "$5")
+	assert.Contains(t, w.Body.String(), "$30")
+	assert.Contains(t, w.Body.String(), "$100")
 
 	// Check that the gun limits are displayed
 	assert.Contains(t, w.Body.String(), "2 guns")
@@ -95,6 +95,9 @@ func TestStripeWebhookHandling(t *testing.T) {
 	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
+	// Set test environment
+	t.Setenv("APP_ENV", "test")
+
 	// Create a test user
 	user := payment_test_utils.CreateTestUser(t, db)
 
@@ -108,6 +111,7 @@ func TestStripeWebhookHandling(t *testing.T) {
 
 	// Create a test webhook payload
 	webhookPayload := `{
+		"id": "evt_test123",
 		"type": "checkout.session.completed",
 		"data": {
 			"object": {
@@ -145,6 +149,9 @@ func TestPaymentSuccess(t *testing.T) {
 	db := payment_test_utils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(db)
 
+	// Set test environment
+	t.Setenv("APP_ENV", "test")
+
 	// Create a test user
 	user := payment_test_utils.CreateTestUser(t, db)
 
@@ -169,9 +176,9 @@ func TestPaymentSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Check that the user is redirected to the guns page
+	// Check that the user is redirected to the owner page
 	assert.Equal(t, http.StatusSeeOther, w.Code)
-	assert.Equal(t, "/owner/guns", w.Header().Get("Location"))
+	assert.Equal(t, "/owner", w.Header().Get("Location"))
 }
 
 // TestPaymentCancellation tests that payment cancellations are handled correctly

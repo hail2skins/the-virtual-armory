@@ -1,0 +1,56 @@
+package payment
+
+import (
+	"github.com/hail2skins/the-virtual-armory/internal/models"
+)
+
+// PaymentSuccess displays the payment success page
+templ PaymentSuccess(user *models.User, sessionID string) {
+	<html>
+		<head>
+			<title>Payment Successful - The Virtual Armory</title>
+			<meta charset="UTF-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+			<script>
+				// Check payment status on page load
+				window.onload = function() {
+					// Show success message
+					document.getElementById('success-message').classList.remove('hidden');
+					
+					// Redirect to guns page after 3 seconds
+					setTimeout(function() {
+						window.location.href = '/owner/guns';
+					}, 3000);
+				}
+			</script>
+		</head>
+		<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+			<div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+				<div class="mb-6">
+					<svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+					</svg>
+				</div>
+				
+				<h1 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+				<p class="text-gray-600 mb-6">Thank you for your subscription to The Virtual Armory.</p>
+				
+				<div id="success-message" class="hidden">
+					<div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+						<p class="text-green-700">Your subscription has been activated. You will be redirected to your guns page in a moment.</p>
+					</div>
+				</div>
+				
+				<div class="mt-6">
+					<a href="/owner/guns" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300">
+						Go to My Guns
+					</a>
+					<a href="/pricing" class="inline-block ml-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-300">
+						View Plans
+					</a>
+				</div>
+			</div>
+		</body>
+	</html>
+} 

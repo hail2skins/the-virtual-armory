@@ -30,19 +30,40 @@ func (c *GunController) Index(ctx *gin.Context) {
 	// Get the current user
 	user, err := auth.GetCurrentUser(ctx)
 	if err != nil {
-		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to get current user"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get current user"})
 		return
 	}
 
 	// Get all guns for the current user
-	guns, err := models.FindGunsByOwner(c.DB, user.ID)
-	if err != nil {
-		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve guns"})
+	var guns []models.Gun
+	if err := c.DB.Preload("WeaponType").Preload("Caliber").Preload("Manufacturer").Where("owner_id = ?", user.ID).Find(&guns).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get guns"})
 		return
 	}
 
+	// Check if the user has more guns than they can view
+	if !user.HasActiveSubscription() && len(guns) > 2 {
+		// Set the flag to show the limited view message
+		if len(guns) > 0 {
+			guns[0].HasMoreGuns = true
+			guns[0].TotalGuns = len(guns)
+		}
+		// Limit to only 2 guns
+		guns = guns[:2]
+	}
+
+	// Get flash messages from cookies
+	flashMessage, _ := ctx.Cookie("flash_message")
+	flashType, _ := ctx.Cookie("flash_type")
+
+	// Clear flash cookies if they exist
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
+	}
+
 	// Render the index template
-	component := gun.Index(guns)
+	component := gun.Index(guns, user, flashMessage, flashType)
 	component.Render(ctx.Request.Context(), ctx.Writer)
 }
 

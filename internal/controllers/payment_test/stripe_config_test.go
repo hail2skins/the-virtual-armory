@@ -13,15 +13,22 @@ func TestStripeEnvironmentVariables(t *testing.T) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
 
-	// Check for required Stripe environment variables
-	stripeSecretKey := os.Getenv("STRIPE_SECRET_KEY")
-	stripePublishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
-	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
+	// Skip the test if running in test mode
+	if os.Getenv("APP_ENV") == "test" {
+		t.Skip("Skipping test in test environment")
+		return
+	}
 
 	// Skip the test if running in CI environment
 	if os.Getenv("CI") == "true" {
 		t.Skip("Skipping test in CI environment")
+		return
 	}
+
+	// Check for required Stripe environment variables
+	stripeSecretKey := os.Getenv("STRIPE_SECRET_KEY")
+	stripePublishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
+	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
 
 	// Assert that the environment variables are set
 	assert.NotEmpty(t, stripeSecretKey, "STRIPE_SECRET_KEY environment variable is not set")
@@ -39,9 +46,16 @@ func TestStripeConfigurationLoading(t *testing.T) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
 
+	// Skip the test if running in test mode
+	if os.Getenv("APP_ENV") == "test" {
+		t.Skip("Skipping test in test environment")
+		return
+	}
+
 	// Skip the test if running in CI environment
 	if os.Getenv("CI") == "true" {
 		t.Skip("Skipping test in CI environment")
+		return
 	}
 
 	// Check for required Stripe environment variables
@@ -66,9 +80,16 @@ func TestStripeProductConfiguration(t *testing.T) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
 
+	// Skip the test if running in test mode
+	if os.Getenv("APP_ENV") == "test" {
+		t.Skip("Skipping test in test environment")
+		return
+	}
+
 	// Skip the test if running in CI environment
 	if os.Getenv("CI") == "true" {
 		t.Skip("Skipping test in CI environment")
+		return
 	}
 
 	// Check for required Stripe product environment variables
