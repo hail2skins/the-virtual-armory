@@ -2,6 +2,8 @@ package payment
 
 import (
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"os"
+	t "github.com/a-h/templ"
 )
 
 // Pricing displays the pricing page with subscription tiers
@@ -87,13 +89,13 @@ templ Pricing(user *models.User) {
 							</div>
 						</div>
 
-						<!-- Monthly Plan -->
+						<!-- Liking It Plan -->
 						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-100 transition-all duration-300 hover:shadow-2xl">
 							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Monthly</h3>
+								<h3 class="text-2xl font-bold text-gray-900">Liking It</h3>
 								<p class="mt-4 text-gray-500">Flexible option with no commitment</p>
 								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$9.99</span>
+									<span class="text-4xl font-extrabold text-gray-900">$5</span>
 									<span class="text-base font-medium text-gray-500">/month</span>
 								</p>
 								<ul role="list" class="mt-6 space-y-4">
@@ -122,17 +124,14 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<form action="/checkout" method="POST">
-										<input type="hidden" name="tier" value="monthly" />
-										<button type="submit" class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-											Subscribe
-										</button>
-									</form>
+									<a href={ t.URL(os.Getenv("STRIPE_LINK_MONTHLY")) } class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+										Subscribe
+									</a>
 								}
 							</div>
 						</div>
 
-						<!-- Yearly Plan -->
+						<!-- Loving It Plan -->
 						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-green-100 transition-all duration-300 hover:shadow-2xl">
 							<!-- Best Value Badge -->
 							<div class="absolute top-0 right-0 -mt-1 -mr-1 px-3 py-1 bg-green-500 text-white text-xs font-bold uppercase rounded-bl-lg">
@@ -140,13 +139,13 @@ templ Pricing(user *models.User) {
 							</div>
 							
 							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Yearly</h3>
+								<h3 class="text-2xl font-bold text-gray-900">Loving It</h3>
 								<p class="mt-4 text-gray-500">Our most popular option</p>
 								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$99.99</span>
+									<span class="text-4xl font-extrabold text-gray-900">$30</span>
 									<span class="text-base font-medium text-gray-500">/year</span>
 								</p>
-								<p class="mt-1 text-sm text-green-500">Save $19.89 compared to monthly</p>
+								<p class="mt-1 text-sm text-green-500">Save $30 compared to monthly</p>
 								<ul role="list" class="mt-6 space-y-4">
 									<li class="flex">
 										<span class="text-green-500 mr-2">✓</span>
@@ -173,23 +172,20 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<form action="/checkout" method="POST">
-										<input type="hidden" name="tier" value="yearly" />
-										<button type="submit" class="block w-full bg-green-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-											Subscribe
-										</button>
-									</form>
+									<a href={ t.URL(os.Getenv("STRIPE_LINK_YEARLY")) } class="block w-full bg-green-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+										Subscribe
+									</a>
 								}
 							</div>
 						</div>
 
-						<!-- Lifetime Plan -->
+						<!-- Supporter Plan -->
 						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-purple-100 transition-all duration-300 hover:shadow-2xl">
 							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Lifetime</h3>
+								<h3 class="text-2xl font-bold text-gray-900">Supporter</h3>
 								<p class="mt-4 text-gray-500">One-time payment, forever access</p>
 								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$199.99</span>
+									<span class="text-4xl font-extrabold text-gray-900">$100</span>
 									<span class="text-base font-medium text-gray-500">/lifetime</span>
 								</p>
 								<ul role="list" class="mt-6 space-y-4">
@@ -218,26 +214,23 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<form action="/checkout" method="POST">
-										<input type="hidden" name="tier" value="lifetime" />
-										<button type="submit" class="block w-full bg-purple-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-											Buy Lifetime
-										</button>
-									</form>
+									<a href={ t.URL(os.Getenv("STRIPE_LINK_LIFETIME")) } class="block w-full bg-purple-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+										Buy Lifetime
+									</a>
 								}
 							</div>
 						</div>
 					</div>
 
-					<!-- Premium Plan (Separate) -->
+					<!-- Big Baller Plan (Separate) -->
 					<div class="mt-12 max-w-lg mx-auto">
 						<div class="relative p-8 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
 							<div class="sm:flex sm:items-center sm:justify-between">
 								<div>
-									<h3 class="text-3xl font-bold text-white">Premium Lifetime</h3>
+									<h3 class="text-3xl font-bold text-white">Big Baller</h3>
 									<p class="mt-2 text-yellow-100">The ultimate package with premium support</p>
 									<p class="mt-4">
-										<span class="text-4xl font-extrabold text-white">$299.99</span>
+										<span class="text-4xl font-extrabold text-white">$1000</span>
 										<span class="text-xl font-medium text-yellow-100">/lifetime</span>
 									</p>
 								</div>
@@ -247,55 +240,31 @@ templ Pricing(user *models.User) {
 											Current Plan
 										</div>
 									} else {
-										<form action="/checkout" method="POST">
-											<input type="hidden" name="tier" value="premium_lifetime" />
-											<button type="submit" class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-center text-base font-semibold text-yellow-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-												Get Premium
-											</button>
-										</form>
+										<a href={ t.URL(os.Getenv("STRIPE_LINK_PREMIUM")) } class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-center text-base font-semibold text-yellow-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+											Get Premium
+										</a>
 									}
-								</div>
-							</div>
-							<div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-								<div class="flex">
-									<span class="text-white mr-2">✓</span>
-									<span class="text-white">Unlimited guns</span>
-								</div>
-								<div class="flex">
-									<span class="text-white mr-2">✓</span>
-									<span class="text-white">All features included</span>
-								</div>
-								<div class="flex">
-									<span class="text-white mr-2">✓</span>
-									<span class="text-white">Premium support</span>
-								</div>
-								<div class="flex">
-									<span class="text-white mr-2">✓</span>
-									<span class="text-white">Early access to features</span>
 								</div>
 							</div>
 						</div>
 					</div>
 
 					<!-- FAQ Section -->
-					<div class="mt-20">
-						<h2 class="text-3xl font-extrabold text-gray-900 text-center">Frequently Asked Questions</h2>
-						<div class="mt-12 max-w-3xl mx-auto">
-							<dl class="space-y-10">
-								<div>
-									<dt class="text-lg leading-6 font-medium text-gray-900">Can I upgrade or downgrade my plan?</dt>
-									<dd class="mt-2 text-base text-gray-500">Yes, you can change your plan at any time. When upgrading, you'll be charged the new rate immediately. When downgrading, your new rate will apply at the end of your current billing cycle.</dd>
-								</div>
-								<div>
-									<dt class="text-lg leading-6 font-medium text-gray-900">What happens if I cancel my subscription?</dt>
-									<dd class="mt-2 text-base text-gray-500">If you cancel, you'll still have access to your current plan until the end of your billing period. After that, your account will revert to the free tier with a limit of 2 guns.</dd>
-								</div>
-								<div>
-									<dt class="text-lg leading-6 font-medium text-gray-900">Is my payment information secure?</dt>
-									<dd class="mt-2 text-base text-gray-500">Yes, we use Stripe for payment processing. Your payment information is never stored on our servers and all transactions are securely processed.</dd>
-								</div>
-							</dl>
-						</div>
+					<div class="mt-12 max-w-3xl mx-auto">
+						<dl class="space-y-10">
+							<div>
+								<dt class="text-lg leading-6 font-medium text-gray-900">Can I upgrade or downgrade my plan?</dt>
+								<dd class="mt-2 text-base text-gray-500">Yes, you can change your plan at any time. When upgrading, you'll be charged the new rate immediately. When downgrading, your new rate will apply at the end of your current billing cycle.</dd>
+							</div>
+							<div>
+								<dt class="text-lg leading-6 font-medium text-gray-900">What happens if I cancel my subscription?</dt>
+								<dd class="mt-2 text-base text-gray-500">If you cancel, you'll still have access to your current plan until the end of your billing period. After that, your account will revert to the free tier with a limit of 2 guns.</dd>
+							</div>
+							<div>
+								<dt class="text-lg leading-6 font-medium text-gray-900">Is my payment information secure?</dt>
+								<dd class="mt-2 text-base text-gray-500">Yes, we use Stripe for payment processing. Your payment information is never stored on our servers and all transactions are securely processed.</dd>
+							</div>
+						</dl>
 					</div>
 
 					<!-- Contact Support -->
@@ -318,13 +287,13 @@ func formatPlanName(tier string) string {
 	case "free":
 		return "Free Tier"
 	case "monthly":
-		return "Monthly Subscription"
+		return "Liking It"
 	case "yearly":
-		return "Yearly Subscription"
+		return "Loving It"
 	case "lifetime":
-		return "Lifetime Access"
+		return "Supporter"
 	case "premium_lifetime":
-		return "Premium Lifetime"
+		return "Big Baller"
 	default:
 		return tier
 	}
