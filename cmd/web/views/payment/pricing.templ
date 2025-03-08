@@ -9,37 +9,30 @@ import (
 
 // getStripeLink returns the appropriate Stripe link based on the tier and environment
 func getStripeLink(tier string) t.SafeURL {
-	appEnv := os.Getenv("APP_ENV")
 	var url string
 	
-	if appEnv == "production" {
-		// Production links
-		switch tier {
-		case "monthly":
-			url = os.Getenv("STRIPE_LINK_MONTHLY")
-			if url == "" {
-				url = "/checkout?tier=monthly"
-			}
-		case "yearly":
-			url = os.Getenv("STRIPE_LINK_YEARLY")
-			if url == "" {
-				url = "/checkout?tier=yearly"
-			}
-		case "lifetime":
-			url = os.Getenv("STRIPE_LINK_LIFETIME")
-			if url == "" {
-				url = "/checkout?tier=lifetime"
-			}
-		case "premium_lifetime":
-			url = os.Getenv("STRIPE_LINK_PREMIUM")
-			if url == "" {
-				url = "/checkout?tier=premium_lifetime"
-			}
-		default:
-			url = "#"
+	switch tier {
+	case "monthly":
+		url = os.Getenv("STRIPE_LINK_MONTHLY")
+		if url == "" {
+			url = "/checkout?tier=monthly"
 		}
-	} else {
-		// Test links - use the checkout endpoint
+	case "yearly":
+		url = os.Getenv("STRIPE_LINK_YEARLY")
+		if url == "" {
+			url = "/checkout?tier=yearly"
+		}
+	case "lifetime":
+		url = os.Getenv("STRIPE_LINK_LIFETIME")
+		if url == "" {
+			url = "/checkout?tier=lifetime"
+		}
+	case "premium_lifetime":
+		url = os.Getenv("STRIPE_LINK_PREMIUM")
+		if url == "" {
+			url = "/checkout?tier=premium_lifetime"
+		}
+	default:
 		url = "/checkout?tier=" + tier
 	}
 	
@@ -170,12 +163,9 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<form method="POST" action="/checkout">
-									<input type="hidden" name="tier" value="monthly"/>
-									<button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200">
-										Subscribe Monthly
-									</button>
-								</form>
+								<a href={ getStripeLink("monthly") } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
+									Subscribe Monthly
+								</a>
 							}
 						</div>
 					</div>
@@ -218,12 +208,9 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<form method="POST" action="/checkout">
-									<input type="hidden" name="tier" value="yearly"/>
-									<button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200">
-										Subscribe Yearly
-									</button>
-								</form>
+								<a href={ getStripeLink("yearly") } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
+									Subscribe Yearly
+								</a>
 							}
 						</div>
 					</div>
@@ -251,7 +238,7 @@ templ Pricing(user *models.User) {
 							</li>
 							<li class="flex items-start">
 								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
-								<span class="text-sm text-gray-500">First for new feature accessm</span>
+								<span class="text-sm text-gray-500">First to access new features*</span>
 							</li>
 						</ul>
 						<div class="mt-8">
@@ -260,12 +247,9 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<form method="POST" action="/checkout">
-									<input type="hidden" name="tier" value="lifetime"/>
-									<button type="submit" class="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200">
-										Buy Lifetime
-									</button>
-								</form>
+								<a href={ getStripeLink("lifetime") } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
+									Buy Lifetime
+								</a>
 							}
 						</div>
 					</div>
@@ -295,7 +279,15 @@ templ Pricing(user *models.User) {
 								</li>
 								<li class="flex items-start">
 									<span class="text-white flex-shrink-0 mr-2">✓</span>
-									<span class="text-base font-medium text-white">If it grows and makers provide goodies, they go to you first.</span>
+									<span class="text-base font-medium text-white">Christmas cards. Seriously, send your address and they are yours.</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-white flex-shrink-0 mr-2">✓</span>
+									<span class="text-base font-medium text-white">If it grows and makers provide goodies, they go to you first. if we ever get spiff, you get spiff.</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-white flex-shrink-0 mr-2">✓</span>
+									<span class="text-base font-medium text-white">We do not recommend anyone buy this package. But, this investment would help us grow and you get any benefit we can provide.</span>
 								</li>
 							</ul>
 							<div class="mt-8">
@@ -304,12 +296,9 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<form method="POST" action="/checkout">
-										<input type="hidden" name="tier" value="premium_lifetime"/>
-										<button type="submit" class="w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 block">
-											Buy Premium Lifetime - $1000
-										</button>
-									</form>
+									<a href={ getStripeLink("premium_lifetime") } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
+										Buy Premium Lifetime - $1000
+									</a>
 								}
 							</div>
 						</div>
@@ -331,10 +320,10 @@ templ Pricing(user *models.User) {
 							</div>
 							<div class="pt-6">
 								<dt class="text-lg font-medium text-gray-900">
-									Can I upgrade or downgrade my plan?
+									Can I upgrade or cancel my plan?
 								</dt>
 								<dd class="mt-2 text-base text-gray-500">
-									Yes, you can upgrade your plan at any time. If you need to downgrade, please contact our support team.
+									Yes, you can upgrade your plan or cancel at any time and use the service for the amount of time you paid. There are no refunds issued for cancellation.
 								</dd>
 							</div>
 							<div class="pt-6">

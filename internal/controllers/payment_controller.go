@@ -84,6 +84,8 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 		productID = os.Getenv("STRIPE_PRICE_YEARLY")
 	case "lifetime":
 		productID = os.Getenv("STRIPE_PRICE_LIFETIME")
+	case "premium_lifetime":
+		productID = os.Getenv("STRIPE_PRICE_PREMIUM")
 	default:
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid subscription tier"})
 		return
@@ -108,6 +110,10 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 	case "lifetime":
 		unitAmount = 10000 // $100.00
 		productName = "Supporter Plan"
+		interval = ""
+	case "premium_lifetime":
+		unitAmount = 100000 // $1000.00
+		productName = "Big Baller Plan"
 		interval = ""
 	}
 
