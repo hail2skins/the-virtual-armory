@@ -4,6 +4,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"os"
 	t "github.com/a-h/templ"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 // getStripeLink returns the appropriate Stripe link based on the tier and environment
@@ -42,301 +43,14 @@ func getStripeLink(tier string) t.SafeURL {
 		url = "/checkout?tier=" + tier
 	}
 	
-	return t.URL(url)
-}
-
-// Pricing displays the pricing page with subscription tiers
-templ Pricing(user *models.User) {
-	<html>
-		<head>
-			<title>Pricing - The Virtual Armory</title>
-			<meta charset="UTF-8" />
-			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-		</head>
-		<body>
-			<div class="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen py-16">
-				<div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-					<!-- Header -->
-					<div class="text-center mb-16">
-						<h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">Choose Your Plan</h1>
-						<p class="mt-5 max-w-xl mx-auto text-xl text-gray-500">Select the subscription that best fits your collection needs.</p>
-					</div>
-
-					<!-- Current Plan Banner -->
-					if user != nil {
-						<div class="max-w-4xl mx-auto mb-12 rounded-lg overflow-hidden shadow-lg">
-							<div class={ "px-6 py-4 border-l-4 " + currentPlanBorderColor(user.SubscriptionTier) }>
-								<div class="flex flex-col md:flex-row md:items-center md:justify-between">
-									<div>
-										<h2 class="text-xl font-bold text-gray-800">Your Current Plan: { formatPlanName(user.SubscriptionTier) }</h2>
-										if !user.IsLifetimeSubscriber() && user.SubscriptionTier != "free" {
-											<p class="text-gray-600 mt-1">Expires on { user.SubscriptionExpiresAt.Format("January 2, 2006") }</p>
-										}
-									</div>
-									if user.SubscriptionTier != "free" {
-										<a href="/owner/payment-history" class="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-											View Payment History
-										</a>
-									}
-								</div>
-							</div>
-						</div>
-					}
-
-					<!-- Pricing Plans -->
-					<div class="mt-12 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-x-6">
-						<!-- Free Plan -->
-						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-2xl">
-							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Free</h3>
-								<p class="mt-4 text-gray-500">Basic access to get you started</p>
-								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$0</span>
-									<span class="text-base font-medium text-gray-500">/forever</span>
-								</p>
-								<ul role="list" class="mt-6 space-y-4">
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Store up to 2 guns</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Basic inventory features</span>
-									</li>
-									<li class="flex">
-										<span class="text-red-500 mr-2">✗</span>
-										<span class="text-gray-500">No photo storage</span>
-									</li>
-									<li class="flex">
-										<span class="text-red-500 mr-2">✗</span>
-										<span class="text-gray-500">No maintenance records</span>
-									</li>
-								</ul>
-							</div>
-
-							<div class="mt-8">
-								if user != nil && user.SubscriptionTier == "free" {
-									<div class="block w-full bg-gray-200 border border-gray-200 rounded-md py-2 text-center text-sm font-semibold text-gray-700">
-										Current Plan
-									</div>
-								} else {
-									<div class="block w-full bg-gray-100 border border-gray-200 rounded-md py-2 text-center text-sm font-semibold text-gray-500">
-										Free Forever
-									</div>
-								}
-							</div>
-						</div>
-
-						<!-- Liking It Plan -->
-						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-100 transition-all duration-300 hover:shadow-2xl">
-							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Liking It</h3>
-								<p class="mt-4 text-gray-500">Flexible option with no commitment</p>
-								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$5</span>
-									<span class="text-base font-medium text-gray-500">/month</span>
-								</p>
-								<ul role="list" class="mt-6 space-y-4">
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Store up to 10 guns</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Photo storage</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Maintenance records</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Cancel anytime</span>
-									</li>
-								</ul>
-							</div>
-
-							<div class="mt-8">
-								if user != nil && user.SubscriptionTier == "monthly" {
-									<div class="block w-full bg-indigo-100 border border-indigo-200 rounded-md py-2 text-center text-sm font-semibold text-indigo-700">
-										Current Plan
-									</div>
-								} else {
-									<form method="POST" action="/checkout">
-										<input type="hidden" name="tier" value="monthly" />
-										<button type="submit" class="block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-											Subscribe
-										</button>
-									</form>
-								}
-							</div>
-						</div>
-
-						<!-- Loving It Plan -->
-						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-green-100 transition-all duration-300 hover:shadow-2xl">
-							<!-- Best Value Badge -->
-							<div class="absolute top-0 right-0 -mt-1 -mr-1 px-3 py-1 bg-green-500 text-white text-xs font-bold uppercase rounded-bl-lg">
-								Best Value
-							</div>
-							
-							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Loving It</h3>
-								<p class="mt-4 text-gray-500">Our most popular option</p>
-								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$30</span>
-									<span class="text-base font-medium text-gray-500">/year</span>
-								</p>
-								<p class="mt-1 text-sm text-green-500">Save $30 compared to monthly</p>
-								<ul role="list" class="mt-6 space-y-4">
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Store up to 25 guns</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Photo storage</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Maintenance records</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Data export</span>
-									</li>
-								</ul>
-							</div>
-
-							<div class="mt-8">
-								if user != nil && user.SubscriptionTier == "yearly" {
-									<div class="block w-full bg-green-100 border border-green-200 rounded-md py-2 text-center text-sm font-semibold text-green-700">
-										Current Plan
-									</div>
-								} else {
-									<form method="POST" action="/checkout">
-										<input type="hidden" name="tier" value="yearly" />
-										<button type="submit" class="block w-full bg-green-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-											Subscribe
-										</button>
-									</form>
-								}
-							</div>
-						</div>
-
-						<!-- Supporter Plan -->
-						<div class="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-purple-100 transition-all duration-300 hover:shadow-2xl">
-							<div>
-								<h3 class="text-2xl font-bold text-gray-900">Supporter</h3>
-								<p class="mt-4 text-gray-500">One-time payment, forever access</p>
-								<p class="mt-8">
-									<span class="text-4xl font-extrabold text-gray-900">$100</span>
-									<span class="text-base font-medium text-gray-500">/lifetime</span>
-								</p>
-								<ul role="list" class="mt-6 space-y-4">
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Unlimited guns</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">All features included</span>
-									</li>
-									<li class="flex">
-										<span class="text-green-500 mr-2">✓</span>
-										<span class="text-gray-500">Never pay again</span>
-									</li>
-									<li class="flex">
-										<span class="text-red-500 mr-2">✗</span>
-										<span class="text-gray-500">No premium support</span>
-									</li>
-								</ul>
-							</div>
-
-							<div class="mt-8">
-								if user != nil && user.SubscriptionTier == "lifetime" {
-									<div class="block w-full bg-purple-100 border border-purple-200 rounded-md py-2 text-center text-sm font-semibold text-purple-700">
-										Current Plan
-									</div>
-								} else {
-									<form method="POST" action="/checkout">
-										<input type="hidden" name="tier" value="lifetime" />
-										<button type="submit" class="block w-full bg-purple-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-											Buy Lifetime
-										</button>
-									</form>
-								}
-							</div>
-						</div>
-					</div>
-
-					<!-- Big Baller Plan (Separate) -->
-					<div class="mt-12 max-w-lg mx-auto">
-						<div class="relative p-8 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
-							<div class="sm:flex sm:items-center sm:justify-between">
-								<div>
-									<h3 class="text-3xl font-bold text-white">Big Baller</h3>
-									<p class="mt-2 text-yellow-100">The ultimate package with premium support</p>
-									<p class="mt-4">
-										<span class="text-4xl font-extrabold text-white">$1000</span>
-										<span class="text-xl font-medium text-yellow-100">/lifetime</span>
-									</p>
-								</div>
-								<div class="mt-6 sm:mt-0">
-									if user != nil && user.SubscriptionTier == "premium_lifetime" {
-										<div class="inline-block bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg border border-yellow-200 rounded-md py-3 px-8 text-center text-base font-semibold text-white">
-											Current Plan
-										</div>
-									} else {
-										<form method="POST" action="/checkout">
-											<input type="hidden" name="tier" value="premium_lifetime" />
-											<button type="submit" class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-center text-base font-semibold text-yellow-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-												Get Premium
-											</button>
-										</form>
-									}
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- FAQ Section -->
-					<div class="mt-12 max-w-3xl mx-auto">
-						<dl class="space-y-10">
-							<div>
-								<dt class="text-lg leading-6 font-medium text-gray-900">Can I upgrade or downgrade my plan?</dt>
-								<dd class="mt-2 text-base text-gray-500">Yes, you can change your plan at any time. When upgrading, you'll be charged the new rate immediately. When downgrading, your new rate will apply at the end of your current billing cycle.</dd>
-							</div>
-							<div>
-								<dt class="text-lg leading-6 font-medium text-gray-900">What happens if I cancel my subscription?</dt>
-								<dd class="mt-2 text-base text-gray-500">If you cancel, you'll still have access to your current plan until the end of your billing period. After that, your account will revert to the free tier with a limit of 2 guns.</dd>
-							</div>
-							<div>
-								<dt class="text-lg leading-6 font-medium text-gray-900">Is my payment information secure?</dt>
-								<dd class="mt-2 text-base text-gray-500">Yes, we use Stripe for payment processing. Your payment information is never stored on our servers and all transactions are securely processed.</dd>
-							</div>
-						</dl>
-					</div>
-
-					<!-- Contact Support -->
-					<div class="mt-20 text-center">
-						<h3 class="text-2xl font-bold text-gray-800">Need Help Choosing?</h3>
-						<p class="mt-4 text-gray-600 max-w-2xl mx-auto">Our team is ready to help you select the right plan for your collection.</p>
-						<a href="/contact" class="mt-8 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-							Contact Support
-						</a>
-					</div>
-				</div>
-			</div>
-		</body>
-	</html>
+	return t.SafeURL(url)
 }
 
 // Helper functions
-func formatPlanName(tier string) string {
+func formatTierName(tier string) string {
 	switch tier {
 	case "free":
-		return "Free Tier"
+		return "Free"
 	case "monthly":
 		return "Liking It"
 	case "yearly":
@@ -364,5 +78,285 @@ func currentPlanBorderColor(tier string) string {
 		return "border-yellow-400 bg-yellow-50"
 	default:
 		return "border-gray-400 bg-gray-50"
+	}
+}
+
+// Pricing displays the pricing page with subscription tiers
+templ Pricing(user *models.User) {
+	@partials.BaseWithAuth(user != nil) {
+		<div class="bg-white py-12">
+			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<!-- Header -->
+				<div class="text-center mb-12">
+					<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+						Simple, transparent pricing
+					</h2>
+					<p class="mt-4 text-lg text-gray-600">
+						Choose the plan that works best for you
+					</p>
+				</div>
+
+				<!-- Pricing Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+					
+					<!-- Free Plan -->
+					<div class="border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
+						<h2 class="text-2xl font-semibold text-gray-900">Free</h2>
+						<p class="mt-4 text-sm text-gray-500">Basic access</p>
+						<p class="mt-8">
+							<span class="text-4xl font-extrabold text-gray-900">$0</span>
+							<span class="text-base font-medium text-gray-500">/forever</span>
+						</p>
+						<ul class="mt-6 space-y-3">
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Store up to 2 guns</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Store up to 4 ammunition*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Limited range days*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">No maintenance records*</span>
+							</li>
+						</ul>
+						<div class="mt-8">
+							if user != nil && user.SubscriptionTier == "free" {
+								<div class="bg-gray-200 border border-gray-300 text-gray-800 font-semibold py-2 px-4 rounded text-center">
+									Current Plan
+								</div>
+							} else {
+								<div class="text-gray-500 font-medium py-2 px-4 text-center">
+									Default Free Plan
+								</div>
+							}
+						</div>
+					</div>
+
+					<!-- Monthly Plan -->
+					<div class="border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
+						<h2 class="text-2xl font-semibold text-gray-900">Liking It</h2>
+						<p class="mt-4 text-sm text-gray-500">Flexible option</p>
+						<p class="mt-8">
+							<span class="text-4xl font-extrabold text-gray-900">$5</span>
+							<span class="text-base font-medium text-gray-500">/mo</span>
+						</p>
+						<ul class="mt-6 space-y-3">
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited guns/ammo*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited range days*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited maintenance records*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Cancel anytime</span>
+							</li>
+						</ul>
+						<div class="mt-8">
+							if user != nil && user.SubscriptionTier == "monthly" {
+								<div class="bg-indigo-100 border border-indigo-300 text-indigo-800 font-semibold py-2 px-4 rounded text-center">
+									Current Plan
+								</div>
+							} else {
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="monthly"/>
+									<button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200">
+										Subscribe Monthly
+									</button>
+								</form>
+							}
+						</div>
+					</div>
+
+					<!-- Yearly Plan -->
+					<div class="border border-gray-200 rounded-lg shadow-sm p-6 bg-white relative">
+						<!-- Popular badge -->
+						<div class="absolute top-0 right-0 -mt-2 -mr-2">
+							<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+								Popular
+							</span>
+						</div>
+						<h2 class="text-2xl font-semibold text-gray-900">Loving It</h2>
+						<p class="mt-4 text-sm text-gray-500">Best value</p>
+						<p class="mt-8">
+							<span class="text-4xl font-extrabold text-gray-900">$30</span>
+							<span class="text-base font-medium text-gray-500">/yr</span>
+						</p>
+						<ul class="mt-6 space-y-3">
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited guns/ammo*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited range days*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited maintenance records*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Cancel anytime</span>
+							</li>
+						</ul>
+						<div class="mt-8">
+							if user != nil && user.SubscriptionTier == "yearly" {
+								<div class="bg-green-100 border border-green-300 text-green-800 font-semibold py-2 px-4 rounded text-center">
+									Current Plan
+								</div>
+							} else {
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="yearly"/>
+									<button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200">
+										Subscribe Yearly
+									</button>
+								</form>
+							}
+						</div>
+					</div>
+
+					<!-- Lifetime Plan -->
+					<div class="border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
+						<h2 class="text-2xl font-semibold text-gray-900">Supporter</h2>
+						<p class="mt-4 text-sm text-gray-500">Forever access</p>
+						<p class="mt-8">
+							<span class="text-4xl font-extrabold text-gray-900">$100</span>
+							<span class="text-base font-medium text-gray-500">/lifetime</span>
+						</p>
+						<ul class="mt-6 space-y-3">
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited guns/ammo*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited range days*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">Unlimited maintenance records*</span>
+							</li>
+							<li class="flex items-start">
+								<span class="text-green-500 flex-shrink-0 mr-2">✓</span>
+								<span class="text-sm text-gray-500">First for new feature accessm</span>
+							</li>
+						</ul>
+						<div class="mt-8">
+							if user != nil && user.SubscriptionTier == "lifetime" {
+								<div class="bg-purple-100 border border-purple-300 text-purple-800 font-semibold py-2 px-4 rounded text-center">
+									Current Plan
+								</div>
+							} else {
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="lifetime"/>
+									<button type="submit" class="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200">
+										Buy Lifetime
+									</button>
+								</form>
+							}
+						</div>
+					</div>
+				</div>
+
+				<!-- Asterisk Key -->
+				<div class="text-center mt-6 mb-12">
+					<p class="text-sm text-gray-500">* = When available</p>
+				</div>
+
+				<!-- Two-column layout for Big Baller and FAQ -->
+				<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+					<!-- Premium Lifetime Plan (Big Baller) -->
+					<div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-lg overflow-hidden">
+						<div class="p-8">
+							<h2 class="text-3xl font-extrabold text-white">
+								Big Baller
+								<span class="block text-lg font-medium mt-1">You shouldn't have, but thanks.</span>
+							</h2>
+							<p class="mt-4 text-lg leading-6 text-white">
+								For our biggest supporters who want to help us grow.
+							</p>
+							<ul class="mt-8 space-y-4">
+								<li class="flex items-start">
+									<span class="text-white flex-shrink-0 mr-2">✓</span>
+									<span class="text-base font-medium text-white">Everything the site has.</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-white flex-shrink-0 mr-2">✓</span>
+									<span class="text-base font-medium text-white">If it grows and makers provide goodies, they go to you first.</span>
+								</li>
+							</ul>
+							<div class="mt-8">
+								if user != nil && user.SubscriptionTier == "premium_lifetime" {
+									<div class="w-full border-2 border-white text-white font-medium py-2 px-4 rounded text-center bg-white bg-opacity-20">
+										Current Plan
+									</div>
+								} else {
+									<form method="POST" action="/checkout">
+										<input type="hidden" name="tier" value="premium_lifetime"/>
+										<button type="submit" class="w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 block">
+											Buy Premium Lifetime - $1000
+										</button>
+									</form>
+								}
+							</div>
+						</div>
+					</div>
+
+					<!-- FAQ Section -->
+					<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8">
+						<h2 class="text-2xl font-extrabold text-gray-900 mb-6">
+							Frequently asked questions
+						</h2>
+						<dl class="space-y-6 divide-y divide-gray-200">
+							<div class="pt-6 first:pt-0">
+								<dt class="text-lg font-medium text-gray-900">
+									What's included in the free plan?
+								</dt>
+								<dd class="mt-2 text-base text-gray-500">
+									The free plan gives you basic access to track your firearms and accessories. You can add a limited number of items and access basic features.
+								</dd>
+							</div>
+							<div class="pt-6">
+								<dt class="text-lg font-medium text-gray-900">
+									Can I upgrade or downgrade my plan?
+								</dt>
+								<dd class="mt-2 text-base text-gray-500">
+									Yes, you can upgrade your plan at any time. If you need to downgrade, please contact our support team.
+								</dd>
+							</div>
+							<div class="pt-6">
+								<dt class="text-lg font-medium text-gray-900">
+									What payment methods do you accept?
+								</dt>
+								<dd class="mt-2 text-base text-gray-500">
+									We accept all major credit cards through our secure payment processor, Stripe.
+								</dd>
+							</div>
+							<div class="pt-6">
+								<dt class="text-lg font-medium text-gray-900">
+									Is my data secure?
+								</dt>
+								<dd class="mt-2 text-base text-gray-500">
+									Yes, we take security seriously. All data is encrypted and stored securely. We never share your personal information with third parties.
+								</dd>
+							</div>
+						</dl>
+					</div>
+				</div>
+			</div>
+		</div>
 	}
 } 

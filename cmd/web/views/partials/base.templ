@@ -8,20 +8,35 @@ templ Base() {
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
 			<title>The Virtual Armory</title>
 			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
 		</head>
 		<body class="bg-gray-100">
 			<header class="bg-blue-800 text-white p-4">
 				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-						</ul>
-					</nav>
+					<!-- Site name/logo placeholder -->
+					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
+					
+					<!-- Navigation bar -->
+					<div class="flex justify-between items-center">
+						<!-- Left side navigation -->
+						<nav>
+							<ul class="flex">
+								<li class="pl-0 pr-6"><a href="/" class="hover:underline font-medium">Home</a></li>
+								<li class="px-6"><a href="/about" class="hover:underline font-medium">About</a></li>
+								<li class="px-6"><a href="/contact" class="hover:underline font-medium">Contact</a></li>
+								<li class="px-6"><a href="/pricing" class="hover:underline font-medium">Pricing</a></li>
+							</ul>
+						</nav>
+						
+						<!-- Right side navigation -->
+						<nav>
+							<ul class="flex">
+								<li class="px-6"><a href="/login" class="hover:underline font-medium">Login</a></li>
+								<li class="px-6"><a href="/register" class="hover:underline font-medium">Register</a></li>
+							</ul>
+						</nav>
+					</div>
 				</div>
 			</header>
 			<main class="container mx-auto p-4">
@@ -44,7 +59,7 @@ templ BaseWithAuth(isLoggedIn bool) {
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
 			<title>The Virtual Armory</title>
 			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
 			<script>
 				// Function to get cookie value by name
@@ -98,20 +113,34 @@ templ BaseWithAuth(isLoggedIn bool) {
 		<body class="bg-gray-100">
 			<header class="bg-blue-800 text-white p-4">
 				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-							if isLoggedIn {
-								<li><a href="/logout" class="hover:underline">Logout</a></li>
-							} else {
-								<li><a href="/login" class="hover:underline">Login</a></li>
-								<li><a href="/register" class="hover:underline">Register</a></li>
-							}
-						</ul>
-					</nav>
+					<!-- Site name/logo placeholder -->
+					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
+					
+					<!-- Navigation bar -->
+					<div class="flex justify-between items-center">
+						<!-- Left side navigation -->
+						<nav>
+							<ul class="flex">
+								<li class="pl-0 pr-6"><a href="/" class="hover:underline font-medium">Home</a></li>
+								<li class="px-6"><a href="/about" class="hover:underline font-medium">About</a></li>
+								<li class="px-6"><a href="/contact" class="hover:underline font-medium">Contact</a></li>
+								<li class="px-6"><a href="/pricing" class="hover:underline font-medium">Pricing</a></li>
+							</ul>
+						</nav>
+						
+						<!-- Right side navigation -->
+						<nav>
+							<ul class="flex">
+								if isLoggedIn {
+									<li class="px-6"><a href="/owner" class="hover:underline font-medium">Profile</a></li>
+									<li class="px-6"><a href="/logout" class="hover:underline font-medium">Logout</a></li>
+								} else {
+									<li class="px-6"><a href="/login" class="hover:underline font-medium">Login</a></li>
+									<li class="px-6"><a href="/register" class="hover:underline font-medium">Register</a></li>
+								}
+							</ul>
+						</nav>
+					</div>
 				</div>
 			</header>
 			<main class="container mx-auto p-4">
