@@ -90,8 +90,18 @@ func (c *GunController) Show(ctx *gin.Context) {
 		return
 	}
 
-	// Render the show template
-	component := gun.Show(*gunItem)
+	// Get flash messages from cookies
+	flashMessage, _ := ctx.Cookie("flash_message")
+	flashType, _ := ctx.Cookie("flash_type")
+
+	// Clear flash cookies if they exist
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
+	}
+
+	// Render the show template with empty flash messages if none exist
+	component := gun.Show(*gunItem, flashMessage, flashType)
 	component.Render(ctx.Request.Context(), ctx.Writer)
 }
 
@@ -349,4 +359,63 @@ func (c *GunController) Delete(ctx *gin.Context) {
 
 	// Redirect to the guns index page
 	ctx.Redirect(http.StatusSeeOther, "/owner/guns")
+}
+
+func (c *GunController) SearchCalibers(ctx *gin.Context) {
+	query := ctx.Query("q")
+	var calibers []models.Caliber
+
+	// If query is empty, return a limited set of popular calibers
+	if query == "" {
+		// Return popular calibers
+		popularCalibers := []string{"22 Long Rifle", "380 ACP", "9mm Parabellum", "38 Special", "45 ACP", "12 Gauge"}
+		if err := c.DB.Where("caliber IN ?", popularCalibers).Find(&calibers).Error; err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"calibers": calibers})
+		return
+	}
+
+	// First try exact match on caliber or nickname
+	if err := c.DB.Where("caliber = ? OR nickname = ?", query, query).Find(&calibers).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// If no exact matches, try more specific matching
+	if len(calibers) == 0 {
+		// Try to match with a more flexible search
+		if err := c.DB.Where("caliber LIKE ? OR nickname = ?", query+"%", query).Find(&calibers).Error; err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// If still no matches, try even more flexible matching
+		if len(calibers) == 0 {
+			// Special case for common calibers
+			if query == "45" {
+				// For "45", specifically match "45 ACP"
+				if err := c.DB.Where("caliber = ?", "45 ACP").Find(&calibers).Error; err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			} else if query == "9" {
+				// For "9", specifically match "9mm Parabellum"
+				if err := c.DB.Where("caliber = ?", "9mm Parabellum").Find(&calibers).Error; err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			} else {
+				// For other cases, use more general matching
+				if err := c.DB.Where("caliber LIKE ? OR nickname LIKE ?", "%"+query+"%", "%"+query+"%").
+					Limit(5).Find(&calibers).Error; err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+		}
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"calibers": calibers})
 }

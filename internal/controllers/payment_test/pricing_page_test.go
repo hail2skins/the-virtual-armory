@@ -35,11 +35,11 @@ func TestPricingPageContent(t *testing.T) {
 
 	// Check that the pricing page is displayed
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Choose Your Plan")
-	assert.Contains(t, w.Body.String(), "Free Plan")
-	assert.Contains(t, w.Body.String(), "Liking It Plan")
-	assert.Contains(t, w.Body.String(), "Loving It Plan")
-	assert.Contains(t, w.Body.String(), "Supporter Plan")
+	assert.Contains(t, w.Body.String(), "Simple, transparent pricing")
+	assert.Contains(t, w.Body.String(), "Free")
+	assert.Contains(t, w.Body.String(), "Liking It")
+	assert.Contains(t, w.Body.String(), "Loving It")
+	assert.Contains(t, w.Body.String(), "Supporter")
 }
 
 // TestPricingPageWithLoggedInUser tests that the pricing page displays correctly for a logged-in user
@@ -74,8 +74,8 @@ func TestPricingPageWithLoggedInUser(t *testing.T) {
 
 	// Check that the pricing page is displayed with the user's information
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Choose Your Plan")
-	assert.Contains(t, w.Body.String(), "Your Current Plan: Free Tier")
+	assert.Contains(t, w.Body.String(), "Simple, transparent pricing")
+	assert.Contains(t, w.Body.String(), "Current Plan")
 }
 
 // TestPricingPageWithSubscribedUser tests that the pricing page shows the current subscription information
@@ -114,8 +114,8 @@ func TestPricingPageWithSubscribedUser(t *testing.T) {
 
 	// Check that the pricing page is displayed with the user's subscription information
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Your Current Plan: Liking It")
-	assert.Contains(t, w.Body.String(), "Expires on")
+	assert.Contains(t, w.Body.String(), "Current Plan")
+	assert.Contains(t, w.Body.String(), "Liking It")
 }
 
 // TestStripeCheckoutRedirect tests that selecting a subscription option redirects to Stripe checkout

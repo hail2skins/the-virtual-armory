@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 // formatDate formats a time.Time pointer to a string
@@ -18,132 +19,99 @@ func formatDate(t *time.Time) string {
 func formatSubscriptionTier(tier string) string {
 	switch tier {
 	case "free":
-		return "Free Tier"
+		return "Free"
 	case "monthly":
-		return "Liking It"
+		return "Monthly"
 	case "yearly":
-		return "Loving It"
+		return "Yearly"
 	case "lifetime":
-		return "Supporter"
+		return "Lifetime"
 	case "premium_lifetime":
-		return "Big Baller"
+		return "Premium Lifetime"
 	default:
 		return tier
 	}
 }
 
 templ Index(guns []models.Gun, user *models.User, flashMessage string, flashType string) {
-	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>The Virtual Armory - My Guns</title>
-			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script src="/assets/js/htmx.min.js"></script>
-		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
-				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-							<li><a href="/owner" class="hover:underline">My Profile</a></li>
-							<li><a href="/owner/guns" class="hover:underline font-bold">My Guns</a></li>
-							<li><a href="/pricing" class="hover:underline">Pricing</a></li>
-						</ul>
-					</nav>
+	@partials.BaseWithAuth(true) {
+		<div class="max-w-6xl mx-auto">
+			if flashMessage != "" {
+				<div class={`mb-4 p-4 rounded-md ${flashType == "success" ? "bg-green-500 text-white" : flashType == "error" ? "bg-red-500 text-white" : flashType == "warning" ? "bg-yellow-500 text-white" : "bg-blue-500 text-white"}`}>
+					<p>{ flashMessage }</p>
 				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				<div class="max-w-6xl mx-auto">
-					if flashMessage != "" {
-						<div class={`mb-4 p-4 rounded-md ${flashType == "success" ? "bg-green-500 text-white" : flashType == "error" ? "bg-red-500 text-white" : flashType == "warning" ? "bg-yellow-500 text-white" : "bg-blue-500 text-white"}`}>
-							<p>{ flashMessage }</p>
-						</div>
-					}
+			}
 
-					if user != nil {
-						<div class="mb-6 bg-white shadow-md rounded-lg p-4">
-							<div class="flex justify-between items-center">
-								<div>
-									<h3 class="text-lg font-semibold">Current Plan: { formatSubscriptionTier(user.SubscriptionTier) }</h3>
-									if !user.IsLifetimeSubscriber() && user.SubscriptionTier != "free" {
-										<p class="text-sm text-gray-600">Expires on { user.SubscriptionExpiresAt.Format("January 2, 2006") }</p>
-									}
-								</div>
-								<a href="/pricing" class="text-blue-600 hover:text-blue-800 text-sm">Change Plan</a>
-							</div>
+			if user != nil {
+				<div class="mb-6 bg-white shadow-md rounded-lg p-4">
+					<div class="flex justify-between items-center">
+						<div>
+							<h3 class="text-lg font-semibold">Current Plan: { formatSubscriptionTier(user.SubscriptionTier) }</h3>
+							if !user.IsLifetimeSubscriber() && user.SubscriptionTier != "free" {
+								<p class="text-sm text-gray-600">Expires on { user.SubscriptionExpiresAt.Format("January 2, 2006") }</p>
+							}
 						</div>
-					}
+						<a href="/pricing" class="text-blue-600 hover:text-blue-800 text-sm">Change Plan</a>
+					</div>
+				</div>
+			}
 
-					<div class="mb-6">
-						<a href="/owner" class="text-blue-600 hover:text-blue-800">← Back to My Profile</a>
-					</div>
-					<div class="flex justify-between items-center mb-6">
-						<h2 class="text-3xl font-bold">My Guns</h2>
-						<a href="/owner/guns/new" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Add New Gun</a>
-					</div>
-					if len(guns) == 0 {
-						<div class="bg-white shadow-md rounded-lg p-6 text-center">
-							<p class="text-lg text-gray-600">You haven't added any guns yet.</p>
-							<a href="/owner/guns/new" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Your First Gun</a>
-						</div>
-					} else {
-						<div class="bg-white shadow-md rounded-lg overflow-hidden">
-							<table class="min-w-full divide-y divide-gray-200">
-								<thead class="bg-gray-50">
-									<tr>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Caliber</th>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acquired</th>
-										<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-									</tr>
-								</thead>
-								<tbody class="bg-white divide-y divide-gray-200">
-									for _, gun := range guns {
-										<tr class="hover:bg-gray-50">
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ gun.Name }</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.WeaponType.Type }</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.Caliber.Caliber }</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.Manufacturer.Name }</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ formatDate(gun.Acquired) }</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-												<div class="flex space-x-2">
-													<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) } class="text-blue-600 hover:text-blue-900">View</a>
-													<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10) + "/edit") } class="text-indigo-600 hover:text-indigo-900">Edit</a>
-													<form method="POST" action={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10) + "/delete") } onsubmit="return confirm('Are you sure you want to delete this gun?');" class="inline">
-														<button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-													</form>
-												</div>
-											</td>
-										</tr>
-									}
-								</tbody>
-							</table>
-						</div>
-						if len(guns) > 0 && guns[0].HasMoreGuns {
-							<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-4">
-								<p class="font-bold">Limited View</p>
-								<p>You have { strconv.Itoa(guns[0].TotalGuns - 2) } more guns that are not displayed.</p>
-								<p>Please re-subscribe to see all your guns.</p>
-								<a href="/pricing" class="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">View Subscription Options</a>
-							</div>
-						}
-					}
+			<div class="mb-6">
+				<a href="/owner" class="text-blue-600 hover:text-blue-800">← Back to My Profile</a>
+			</div>
+			<div class="flex justify-between items-center mb-6">
+				<h2 class="text-3xl font-bold">My Guns</h2>
+				<a href="/owner/guns/new" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Add New Gun</a>
+			</div>
+			if len(guns) == 0 {
+				<div class="bg-white shadow-md rounded-lg p-6 text-center">
+					<p class="text-lg text-gray-600">You haven't added any guns yet.</p>
+					<a href="/owner/guns/new" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Your First Gun</a>
 				</div>
-			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+			} else {
+				<div class="bg-white shadow-md rounded-lg overflow-hidden">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Caliber</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acquired</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							for _, gun := range guns {
+								<tr class="hover:bg-gray-50">
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ gun.Name }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.WeaponType.Type }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.Caliber.Caliber }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ gun.Manufacturer.Name }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ formatDate(gun.Acquired) }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+										<div class="flex space-x-2">
+											<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) } class="text-blue-600 hover:text-blue-900">View</a>
+											<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10) + "/edit") } class="text-indigo-600 hover:text-indigo-900">Edit</a>
+											<form method="POST" action={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10) + "/delete") } onsubmit="return confirm('Are you sure you want to delete this gun?');" class="inline">
+												<button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
 				</div>
-			</footer>
-		</body>
-	</html>
+				if len(guns) > 0 && guns[0].HasMoreGuns {
+					<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-4">
+						<p class="font-bold">Limited View</p>
+						<p>You have { strconv.Itoa(guns[0].TotalGuns - 2) } more guns that are not displayed.</p>
+						<p>Please re-subscribe to see all your guns.</p>
+						<a href="/pricing" class="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">View Subscription Options</a>
+					</div>
+				}
+			}
+		</div>
+	}
 } 

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 // formatDateValue formats a time.Time pointer to a string suitable for date input value
@@ -15,143 +16,138 @@ func formatDateValue(t *time.Time) string {
 }
 
 templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Caliber, manufacturers []models.Manufacturer) {
-	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>The Virtual Armory - Edit { gun.Name }</title>
-			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script src="/assets/js/htmx.min.js"></script>
-			<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-			<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-			<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
-				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-							<li><a href="/owner" class="hover:underline">My Profile</a></li>
-							<li><a href="/owner/guns" class="hover:underline font-bold">My Guns</a></li>
-						</ul>
-					</nav>
-				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				<div class="max-w-3xl mx-auto">
-					<div class="mb-6">
-						<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) } class="text-blue-600 hover:text-blue-800">← Back to Gun Details</a>
-					</div>
-					<div class="bg-white shadow-md rounded-lg overflow-hidden">
-						<div class="p-6">
-							<h2 class="text-3xl font-bold mb-6">Edit { gun.Name }</h2>
-							<form method="POST" action={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) }>
-								<div class="mb-4">
-									<label for="name" class="block text-gray-700 font-bold mb-2">Name*</label>
-									<input type="text" id="name" name="name" value={ gun.Name } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-								</div>
-								<div class="mb-4">
-									<label for="weapon_type_id" class="block text-gray-700 font-bold mb-2">Weapon Type*</label>
-									<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-										for _, weaponType := range weaponTypes {
-											if weaponType.ID == gun.WeaponTypeID {
-												<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) } selected>
-													{ weaponType.Type }
-													if weaponType.Nickname != "" {
-														 ({ weaponType.Nickname })
-													}
-												</option>
-											} else {
-												<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) }>
-													{ weaponType.Type }
-													if weaponType.Nickname != "" {
-														 ({ weaponType.Nickname })
-													}
-												</option>
-											}
-										}
-									</select>
-								</div>
-								<div class="mb-4">
-									<label for="caliber_id" class="block text-gray-700 font-bold mb-2">Caliber*</label>
-									<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-										for _, caliber := range calibers {
-											if caliber.ID == gun.CaliberID {
-												<option value={ strconv.FormatUint(uint64(caliber.ID), 10) } selected>{ caliber.Caliber }</option>
-											} else {
-												<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>{ caliber.Caliber }</option>
-											}
-										}
-									</select>
-								</div>
-								<div class="mb-4">
-									<label for="manufacturer_id" class="block text-gray-700 font-bold mb-2">Manufacturer*</label>
-									<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-										for _, manufacturer := range manufacturers {
-											if manufacturer.ID == gun.ManufacturerID {
-												<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) } selected>
-													{ manufacturer.Name }
-													if manufacturer.Nickname != "" {
-														 ({ manufacturer.Nickname })
-													}
-												</option>
-											} else {
-												<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) }>
-													{ manufacturer.Name }
-													if manufacturer.Nickname != "" {
-														 ({ manufacturer.Nickname })
-													}
-												</option>
-											}
-										}
-									</select>
-								</div>
-								<div class="mb-6">
-									<label for="acquired" class="block text-gray-700 font-bold mb-2">Acquired Date</label>
-									<input type="date" id="acquired" name="acquired" value={ formatDateValue(gun.Acquired) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-									<p class="text-sm text-gray-500 mt-1">Optional. When did you acquire this gun?</p>
-								</div>
-								<div class="flex items-center justify-between">
-									<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-										Update Gun
-									</button>
-									<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) } class="text-gray-600 hover:text-gray-800">
-										Cancel
-									</a>
-								</div>
-							</form>
-							<div class="mt-8 pt-6 border-t border-gray-200">
-								<h3 class="text-lg font-semibold text-red-600 mb-4">Danger Zone</h3>
-								<form method="POST" action={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10) + "/delete") } onsubmit="return confirm('Are you sure you want to delete this gun? This action cannot be undone.');">
-									<button type="submit" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
-										Delete Gun
-									</button>
-								</form>
-							</div>
+	@partials.BaseWithAuth(true) {
+		<div class="max-w-3xl mx-auto">
+			<div class="mb-6">
+				<a href={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) } class="text-blue-600 hover:text-blue-800">← Back to Gun Details</a>
+			</div>
+			<div class="bg-white shadow-md rounded-lg overflow-hidden">
+				<div class="p-6">
+					<h2 class="text-3xl font-bold mb-6">Edit Gun</h2>
+					<form method="POST" action={ templ.SafeURL("/owner/guns/" + strconv.FormatUint(uint64(gun.ID), 10)) }>
+						<input type="hidden" name="_method" value="PUT"/>
+						<div class="mb-4">
+							<label for="name" class="block text-gray-700 font-bold mb-2">Name*</label>
+							<input type="text" id="name" name="name" value={ gun.Name } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
 						</div>
-					</div>
+						<div class="mb-4">
+							<label for="weapon_type_id" class="block text-gray-700 font-bold mb-2">Weapon Type*</label>
+							<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+								for _, weaponType := range weaponTypes {
+									if weaponType.ID == gun.WeaponTypeID {
+										<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) } selected>
+											{ weaponType.Type }
+											if weaponType.Nickname != "" {
+												 ({ weaponType.Nickname })
+											}
+										</option>
+									} else {
+										<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) }>
+											{ weaponType.Type }
+											if weaponType.Nickname != "" {
+												 ({ weaponType.Nickname })
+											}
+										</option>
+									}
+								}
+							</select>
+						</div>
+						<div class="mb-4">
+							<label for="caliber_id" class="block text-gray-700 font-bold mb-2">Caliber*</label>
+							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+								for _, caliber := range calibers {
+									if caliber.ID == gun.CaliberID {
+										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) } selected>{ caliber.Caliber }</option>
+									} else {
+										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>{ caliber.Caliber }</option>
+									}
+								}
+							</select>
+						</div>
+						<div class="mb-4">
+							<label for="manufacturer_id" class="block text-gray-700 font-bold mb-2">Manufacturer*</label>
+							<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+								for _, manufacturer := range manufacturers {
+									if manufacturer.ID == gun.ManufacturerID {
+										<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) } selected>
+											{ manufacturer.Name }
+											if manufacturer.Nickname != "" {
+												 ({ manufacturer.Nickname })
+											}
+										</option>
+									} else {
+										<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) }>
+											{ manufacturer.Name }
+											if manufacturer.Nickname != "" {
+												 ({ manufacturer.Nickname })
+											}
+										</option>
+									}
+								}
+							</select>
+						</div>
+						<div class="mb-6">
+							<label for="acquired" class="block text-gray-700 font-bold mb-2">Acquired Date</label>
+							<input type="date" id="acquired" name="acquired" value={ formatDateValue(gun.Acquired) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+							<p class="text-sm text-gray-500 mt-1">Optional. When did you acquire this gun?</p>
+						</div>
+						<div class="flex items-center justify-between">
+							<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+								Update Gun
+							</button>
+						</div>
+					</form>
 				</div>
-			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
-				</div>
-			</footer>
-			<script>
-				$(document).ready(function() {
-					$('.select2').select2({
-						width: '100%',
-						placeholder: "Search...",
-						allowClear: true
-					});
+			</div>
+		</div>
+		<script>
+			$(document).ready(function() {
+				// Initialize weapon type and manufacturer dropdowns with basic Select2
+				$('#weapon_type_id, #manufacturer_id').select2({
+					width: '100%',
+					placeholder: "Search...",
+					allowClear: true
 				});
-			</script>
-		</body>
-	</html>
+				
+				// Initialize caliber dropdown with AJAX
+				$('#caliber_id').select2({
+					width: '100%',
+					placeholder: "Search...",
+					allowClear: true,
+					minimumInputLength: 0,  // Allow searching with any number of characters
+					ajax: {
+						url: '/api/calibers/search',
+						dataType: 'json',
+						delay: 100,  // Reduce delay for faster response
+						data: function(params) {
+							// If params.term is undefined or empty, use an empty string
+							var searchTerm = params.term || "";
+							return {
+								q: searchTerm
+							};
+						},
+						processResults: function(data) {
+							return {
+								results: $.map(data.calibers, function(caliber) {
+									return {
+										id: caliber.ID,
+										text: caliber.Caliber
+									};
+								})
+							};
+						},
+						cache: true
+					}
+				});
+				
+				// Pre-select the current caliber
+				var currentCaliberId = $('#caliber_id').val();
+				if (currentCaliberId) {
+					var currentCaliberText = $('#caliber_id option:selected').text();
+					var initialCaliberOption = new Option(currentCaliberText, currentCaliberId, true, true);
+					$('#caliber_id').append(initialCaliberOption).trigger('change');
+				}
+			});
+		</script>
+	}
 } 

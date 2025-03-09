@@ -12,6 +12,13 @@ func RegisterGunRoutes(router *gin.Engine, db *gorm.DB, auth *auth.Auth) {
 	// Create the gun controller
 	gunController := controllers.NewGunController(db)
 
+	// API routes
+	apiGroup := router.Group("/api")
+	{
+		// Caliber search API
+		apiGroup.GET("/calibers/search", gunController.SearchCalibers)
+	}
+
 	// Owner routes (require authentication)
 	ownerGroup := router.Group("/owner")
 	ownerGroup.Use(auth.RequireAuth())

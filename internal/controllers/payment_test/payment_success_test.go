@@ -29,7 +29,6 @@ func TestPaymentSuccessRedirectToOwner(t *testing.T) {
 	// Set up the router
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(payment_test_utils.AuthMiddlewareMock(user))
 
 	// Set up the payment controller
 	paymentController := controllers.NewPaymentController(db)
@@ -37,6 +36,11 @@ func TestPaymentSuccessRedirectToOwner(t *testing.T) {
 
 	// Create a test request with a test session ID
 	req, _ := http.NewRequest("GET", "/payment/success?session_id=cs_test_123", nil)
+
+	// Set the required cookies for authentication
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
 	resp := httptest.NewRecorder()
 
 	// Serve the request

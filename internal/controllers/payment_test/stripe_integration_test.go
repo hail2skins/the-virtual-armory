@@ -134,8 +134,8 @@ func TestEnhancedPricingPageFeatures(t *testing.T) {
 	// Check that the pricing page is displayed with enhanced features
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	// Check for recommended plan highlight
-	assert.Contains(t, w.Body.String(), "Best Value")
+	// Check for popular badge
+	assert.Contains(t, w.Body.String(), "Popular")
 
 	// Check for current plan indicator
 	assert.Contains(t, w.Body.String(), "Current Plan")

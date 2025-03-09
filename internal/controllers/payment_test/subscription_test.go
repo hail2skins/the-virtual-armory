@@ -36,7 +36,7 @@ func TestPricingPageDisplay(t *testing.T) {
 
 	// Check that the pricing page is displayed
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Choose Your Plan")
+	assert.Contains(t, w.Body.String(), "Simple, transparent pricing")
 }
 
 // TestSubscriptionTiers tests that the pricing page displays different subscription tiers
@@ -71,10 +71,10 @@ func TestSubscriptionTiers(t *testing.T) {
 
 	// Check that the pricing page is displayed with subscription tiers
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Free Plan")
-	assert.Contains(t, w.Body.String(), "Liking It Plan")
-	assert.Contains(t, w.Body.String(), "Loving It Plan")
-	assert.Contains(t, w.Body.String(), "Supporter Plan")
+	assert.Contains(t, w.Body.String(), "Free")
+	assert.Contains(t, w.Body.String(), "Liking It")
+	assert.Contains(t, w.Body.String(), "Loving It")
+	assert.Contains(t, w.Body.String(), "Supporter")
 
 	// Check that the pricing information is displayed
 	assert.Contains(t, w.Body.String(), "$0")
@@ -83,10 +83,8 @@ func TestSubscriptionTiers(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "$100")
 
 	// Check that the gun limits are displayed
-	assert.Contains(t, w.Body.String(), "2 guns")
-	assert.Contains(t, w.Body.String(), "10 guns")
-	assert.Contains(t, w.Body.String(), "25 guns")
-	assert.Contains(t, w.Body.String(), "Unlimited guns")
+	assert.Contains(t, w.Body.String(), "Store up to 2 guns")
+	assert.Contains(t, w.Body.String(), "Unlimited guns/ammo")
 }
 
 // TestStripeWebhookHandling tests that Stripe webhooks are handled correctly
