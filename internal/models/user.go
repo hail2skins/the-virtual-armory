@@ -36,6 +36,9 @@ type User struct {
 	AttemptCount int
 	LastAttempt  time.Time
 	Locked       time.Time
+
+	// For soft deletion
+	SoftDeleted bool `gorm:"default:false"`
 }
 
 // GetPID gets the user's primary ID
@@ -197,4 +200,19 @@ func (u *User) HasActiveSubscription() bool {
 // IsLifetimeSubscriber checks if the user has a lifetime subscription
 func (u *User) IsLifetimeSubscriber() bool {
 	return u.SubscriptionTier == "lifetime" || u.SubscriptionTier == "premium_lifetime"
+}
+
+// IsSoftDeleted checks if the user has been soft deleted
+func (u *User) IsSoftDeleted() bool {
+	return !u.DeletedAt.Time.IsZero()
+}
+
+// SoftDelete marks the user as soft deleted
+func (u *User) SoftDelete() {
+	u.DeletedAt = gorm.DeletedAt{Time: time.Now(), Valid: true}
+}
+
+// Reactivate reactivates a soft deleted user
+func (u *User) Reactivate() {
+	u.DeletedAt = gorm.DeletedAt{Time: time.Time{}, Valid: false}
 }

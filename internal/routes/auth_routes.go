@@ -25,11 +25,17 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth, emailService email.
 	router.POST("/resend-verification", authController.ResendVerification)
 	router.GET("/verify/:token", authController.VerifyEmail)
 
+	// Account reactivation routes
+	router.GET("/reactivate", authController.ReactivateAccount)
+	router.POST("/reactivate", authController.ProcessReactivation)
+
 	// Protected routes (require authentication)
 	protected := router.Group("/")
 	protected.Use(auth.RequireAuth())
 	{
 		protected.GET("/owner", authController.Profile)
+		protected.GET("/delete-account", authController.DeleteAccount)
+		protected.POST("/delete-account", authController.ProcessDeleteAccount)
 	}
 
 	// Admin routes (require admin privileges)

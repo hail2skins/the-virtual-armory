@@ -51,22 +51,28 @@ func TestCaliberSearch(t *testing.T) {
 		expectedCount  int
 	}{
 		{
-			name:           "Search for 45 should find .45 ACP",
+			name:           "Search for 45 should find 45 ACP",
 			query:          "45",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 		},
 		{
-			name:           "Search for .45 should find .45 ACP",
+			name:           "Search for .45 should find 45 ACP",
 			query:          ".45",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 		},
 		{
-			name:           "Search for 9 should find 9mm Parabellum",
+			name:           "Search for 9 should find 9mm Parabellum and 9×19mm",
 			query:          "9",
 			expectedStatus: http.StatusOK,
-			expectedCount:  1,
+			expectedCount:  2,
+		},
+		{
+			name:           "Search for nonexistent caliber should return empty array",
+			query:          "nonexistent",
+			expectedStatus: http.StatusOK,
+			expectedCount:  0,
 		},
 	}
 

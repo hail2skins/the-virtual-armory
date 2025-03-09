@@ -3,6 +3,7 @@ package testutils
 import (
 	"log"
 
+	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -26,6 +27,9 @@ func SetupTestDB() (*gorm.DB, error) {
 		log.Printf("Failed to connect to test database: %v", err)
 		return nil, err
 	}
+
+	// Also set the database.TestDB variable
+	database.TestDB = TestDB
 
 	// Auto migrate the schema
 	err = TestDB.AutoMigrate(

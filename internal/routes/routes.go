@@ -54,6 +54,9 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *co
 	// Register auth routes
 	RegisterAuthRoutes(r, authInstance, emailService, cfg)
 
+	// Register user routes
+	RegisterUserRoutes(r, db, authInstance, emailService)
+
 	// Register manufacturer routes
 	RegisterManufacturerRoutes(r, authInstance)
 

@@ -117,6 +117,16 @@ templ Profile(user *models.User, guns []models.Gun, flashMessage string, flashTy
 							</div>
 						</div>
 						<div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+							<h3 class="font-bold text-lg mb-2">Account Management</h3>
+							<div class="space-y-2">
+								<a href="/profile" class="block bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-center">
+									Manage Profile
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="bg-blue-50 p-4 rounded-lg shadow-sm">
 							<h3 class="font-bold text-lg mb-2">Payment History</h3>
 							<a href="/owner/payment-history" class="block bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-center">
 								Payment History

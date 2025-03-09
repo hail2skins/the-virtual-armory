@@ -394,8 +394,8 @@ func (c *GunController) SearchCalibers(ctx *gin.Context) {
 		// If still no matches, try even more flexible matching
 		if len(calibers) == 0 {
 			// Special case for common calibers
-			if query == "45" {
-				// For "45", specifically match "45 ACP"
+			if query == "45" || query == ".45" {
+				// For "45" or ".45", specifically match "45 ACP"
 				if err := c.DB.Where("caliber = ?", "45 ACP").Find(&calibers).Error; err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 					return
