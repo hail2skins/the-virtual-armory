@@ -3,6 +3,7 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/home"
@@ -24,22 +25,36 @@ func (h *HomeController) Index(c *gin.Context) {
 		isLoggedIn = true
 	}
 
-	// Check for flash messages and clear them
-	if _, err := c.Cookie("flash_message"); err == nil {
-		c.SetCookie("flash_message", "", -1, "/", "", false, true)
-	}
+	// Get flash message from cookie
+	flashMessage, _ := c.Cookie("flash_message")
+	flashType, _ := c.Cookie("flash_type")
 
-	if _, err := c.Cookie("flash_type"); err == nil {
-		c.SetCookie("flash_type", "", -1, "/", "", false, true)
+	// Log the flash message for debugging
+	if flashMessage != "" {
+		log.Printf("Home page flash message found: %s (type: %s)", flashMessage, flashType)
+
+		// URL decode the flash message
+		flashMessage = strings.Replace(flashMessage, "+", " ", -1)
 	}
 
 	// Render the home page
 	component := home.Index(isLoggedIn)
+	if flashMessage != "" {
+		// If we have a flash message, use the version of the template that accepts flash messages
+		component = home.IndexWithFlash(isLoggedIn, flashMessage, flashType)
+	}
+
 	err := component.Render(c.Request.Context(), c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf("Error rendering index page: %v", err)
 		return
+	}
+
+	// Clear flash cookies after rendering
+	if flashMessage != "" {
+		c.SetCookie("flash_message", "", -1, "/", "", false, true)
+		c.SetCookie("flash_type", "", -1, "/", "", false, true)
 	}
 }
 

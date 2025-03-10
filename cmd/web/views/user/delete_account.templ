@@ -23,8 +23,8 @@ templ DeleteAccount(user *models.User) {
 				</p>
 				
 				<ul class="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-					<li>Remove all your personal information from our system</li>
-					<li>Delete all your guns and associated data</li>
+					<li>Remove your access to the system</li>
+					<li>Remove access to any data in our system</li>
 					<li>Cancel any active subscriptions</li>
 					<li>Prevent you from accessing your account in the future</li>
 				</ul>
@@ -32,19 +32,25 @@ templ DeleteAccount(user *models.User) {
 				<p class="text-gray-700 font-medium">
 					If you want to temporarily stop using The Virtual Armory, consider just logging out instead.
 				</p>
+				
+				<p class="text-gray-700 mt-4">
+					<span class="font-medium">Note:</span> If you ever want to return, you can register again with the same email address to reactivate your account.
+				</p>
 			</div>
 			
 			<div class="bg-white shadow-md rounded-lg overflow-hidden">
 				<div class="p-6">
 					<h3 class="text-lg font-semibold mb-4">Confirm Account Deletion</h3>
 					
-					<form method="POST" action="/profile/delete">
+					<form method="POST" action="/profile/delete" id="deleteAccountForm" class="space-y-6">
 						<div class="mb-6">
-							<label class="block text-gray-700 font-bold mb-2">
+							<label class="block text-gray-700 font-bold mb-2" for="confirm_text">
 								Type "DELETE" to confirm
+								<span class="text-red-600">*</span>
 							</label>
 							<input 
 								type="text" 
+								id="confirm_text"
 								name="confirm_text" 
 								class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" 
 								required
@@ -53,11 +59,13 @@ templ DeleteAccount(user *models.User) {
 						</div>
 						
 						<div class="mb-6">
-							<label class="block text-gray-700 font-bold mb-2">
+							<label class="block text-gray-700 font-bold mb-2" for="password">
 								Enter your password
+								<span class="text-red-600">*</span>
 							</label>
 							<input 
 								type="password" 
+								id="password"
 								name="password" 
 								class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" 
 								required
@@ -81,5 +89,47 @@ templ DeleteAccount(user *models.User) {
 				</div>
 			</div>
 		</div>
+		
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const form = document.getElementById('deleteAccountForm');
+				
+				form.addEventListener('submit', function(event) {
+					const confirmText = document.getElementById('confirm_text').value;
+					const password = document.getElementById('password').value;
+					let hasErrors = false;
+					
+					// Clear any previous error messages
+					const errorElements = document.querySelectorAll('.error-message');
+					errorElements.forEach(el => el.remove());
+					
+					// Validate confirmation text
+					if (confirmText !== 'DELETE') {
+						hasErrors = true;
+						const confirmField = document.getElementById('confirm_text');
+						const errorElement = document.createElement('p');
+						errorElement.className = 'text-red-600 text-sm mt-1 error-message';
+						errorElement.textContent = 'Please type DELETE exactly as shown (all uppercase)';
+						confirmField.parentNode.appendChild(errorElement);
+						confirmField.classList.add('border-red-500');
+					}
+					
+					// Validate password
+					if (password === '') {
+						hasErrors = true;
+						const passwordField = document.getElementById('password');
+						const errorElement = document.createElement('p');
+						errorElement.className = 'text-red-600 text-sm mt-1 error-message';
+						errorElement.textContent = 'Please enter your password';
+						passwordField.parentNode.appendChild(errorElement);
+						passwordField.classList.add('border-red-500');
+					}
+					
+					if (hasErrors) {
+						event.preventDefault();
+					}
+				});
+			});
+		</script>
 	}
 } 

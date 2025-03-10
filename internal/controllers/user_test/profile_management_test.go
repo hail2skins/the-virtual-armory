@@ -267,7 +267,7 @@ func TestDeleteAccount(t *testing.T) {
 
 	// Create form data
 	form := url.Values{}
-	form.Add("confirmation", "DELETE")
+	form.Add("confirm_text", "DELETE")
 	form.Add("password", "password123") // Use the plain text password that was hashed
 
 	// Create a test request
@@ -397,4 +397,158 @@ func setupRouterWithEmailService(db *gorm.DB, emailService email.EmailService) (
 	router.POST("/profile/reactivate", userController.ReactivateAccount)
 
 	return router, userController
+}
+
+// TestDeleteAccountSuccess tests that a user can successfully delete their account
+func TestDeleteAccountSuccess(t *testing.T) {
+	// Set up test database with a user
+	db, user := setupTestDB(t)
+	defer testutils.CleanupTestDB(db)
+
+	// Set up router
+	router, _ := setupRouter(db)
+
+	// Create form data
+	form := url.Values{}
+	form.Add("confirm_text", "DELETE")
+	form.Add("password", "password123") // This matches the password set in setupTestDB
+
+	// Create a test request
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/profile/delete", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Set cookies to simulate authentication
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
+	// Serve the request
+	router.ServeHTTP(w, req)
+
+	// Assert response (should redirect to home page)
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.Equal(t, "/", w.Header().Get("Location"))
+
+	// Verify the user was soft-deleted in the database
+	var deletedUser models.User
+	err := db.Unscoped().First(&deletedUser, user.ID).Error
+	assert.NoError(t, err)
+	assert.False(t, deletedUser.DeletedAt.Time.IsZero(), "DeletedAt should not be a zero time value")
+}
+
+// TestDeleteAccountInvalidConfirmation tests that account deletion fails with invalid confirmation text
+func TestDeleteAccountInvalidConfirmation(t *testing.T) {
+	// Set up test database with a user
+	db, user := setupTestDB(t)
+	defer testutils.CleanupTestDB(db)
+
+	// Set up router
+	router, _ := setupRouter(db)
+
+	// Create form data with wrong confirmation text
+	form := url.Values{}
+	form.Add("confirm_text", "delete") // lowercase, should be "DELETE"
+	form.Add("password", "password123")
+
+	// Create a test request
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/profile/delete", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Set cookies to simulate authentication
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
+	// Serve the request
+	router.ServeHTTP(w, req)
+
+	// Assert response (should render the delete account page with an error)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Delete Your Account") // Page title
+	// The error message is set as a flash cookie, not directly in the HTML
+	// So we don't check for it in the body
+
+	// Verify the user was NOT deleted in the database
+	var existingUser models.User
+	err := db.First(&existingUser, user.ID).Error
+	assert.NoError(t, err)
+	assert.True(t, existingUser.DeletedAt.Time.IsZero(), "User should not be deleted")
+}
+
+// TestDeleteAccountInvalidPassword tests that account deletion fails with invalid password
+func TestDeleteAccountInvalidPassword(t *testing.T) {
+	// Set up test database with a user
+	db, user := setupTestDB(t)
+	defer testutils.CleanupTestDB(db)
+
+	// Set up router
+	router, _ := setupRouter(db)
+
+	// Create form data with wrong password
+	form := url.Values{}
+	form.Add("confirm_text", "DELETE")
+	form.Add("password", "wrongpassword")
+
+	// Create a test request
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/profile/delete", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Set cookies to simulate authentication
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
+	// Serve the request
+	router.ServeHTTP(w, req)
+
+	// Assert response (should render the delete account page with an error)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Delete Your Account") // Page title
+	// The error message is set as a flash cookie, not directly in the HTML
+	// So we don't check for it in the body
+
+	// Verify the user was NOT deleted in the database
+	var existingUser models.User
+	err := db.First(&existingUser, user.ID).Error
+	assert.NoError(t, err)
+	assert.True(t, existingUser.DeletedAt.Time.IsZero(), "User should not be deleted")
+}
+
+// TestDeleteAccountEmptyFields tests that account deletion fails when fields are empty
+func TestDeleteAccountEmptyFields(t *testing.T) {
+	// Set up test database with a user
+	db, user := setupTestDB(t)
+	defer testutils.CleanupTestDB(db)
+
+	// Set up router
+	router, _ := setupRouter(db)
+
+	// Create form data with empty fields
+	form := url.Values{}
+	form.Add("confirm_text", "")
+	form.Add("password", "")
+
+	// Create a test request
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/profile/delete", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Set cookies to simulate authentication
+	req.AddCookie(&http.Cookie{Name: "is_logged_in", Value: "true"})
+	req.AddCookie(&http.Cookie{Name: "user_email", Value: user.Email})
+
+	// Serve the request
+	router.ServeHTTP(w, req)
+
+	// Assert response (should render the delete account page with errors)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Delete Your Account") // Page title
+	// The error messages are set as flash cookies, not directly in the HTML
+	// So we don't check for them in the body
+
+	// Verify the user was NOT deleted in the database
+	var existingUser models.User
+	err := db.First(&existingUser, user.ID).Error
+	assert.NoError(t, err)
+	assert.True(t, existingUser.DeletedAt.Time.IsZero(), "User should not be deleted")
 }

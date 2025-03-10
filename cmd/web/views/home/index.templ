@@ -6,7 +6,17 @@ import (
 
 // Index renders the home page
 templ Index(isLoggedIn bool) {
+	@IndexWithFlash(isLoggedIn, "", "")
+}
+
+// IndexWithFlash renders the home page with flash messages
+templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 	@partials.BaseWithAuth(isLoggedIn) {
+		if flashMessage != "" {
+			<div class={getFlashClass(flashType)} role="alert">
+				<span class="block sm:inline">{flashMessage}</span>
+			</div>
+		}
 		<div class="bg-white p-6 rounded-lg shadow-md">
 			<h2 class="text-2xl font-bold mb-4">Welcome to The Virtual Armory</h2>
 			<p class="mb-4">Your digital home for tracking your firearms collection.</p>
@@ -31,6 +41,20 @@ templ Index(isLoggedIn bool) {
 				</div>
 			}
 		</div>
+	}
+}
+
+// Helper function to get the CSS class for flash messages
+func getFlashClass(flashType string) string {
+	switch flashType {
+	case "success":
+		return "mb-6 p-4 rounded-md bg-green-500 text-white text-center"
+	case "error":
+		return "mb-6 p-4 rounded-md bg-red-500 text-white text-center"
+	case "warning":
+		return "mb-6 p-4 rounded-md bg-yellow-500 text-white text-center"
+	default:
+		return "mb-6 p-4 rounded-md bg-blue-500 text-white text-center"
 	}
 }
 

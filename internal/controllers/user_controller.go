@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"crypto/rand"
@@ -10,8 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	userviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/user"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/flash"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/services/email"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -143,8 +146,7 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 			if err != nil {
 				// Log the error but don't fail the update
 				// We'll just redirect to the profile page with a warning
-				ctx.SetCookie("flash_message", "Profile updated but failed to send verification email. Please contact support.", 3600, "/", "", false, true)
-				ctx.SetCookie("flash_type", "warning", 3600, "/", "", false, true)
+				flash.SetMessage(ctx, "Profile updated but failed to send verification email. Please contact support.", "warning")
 				ctx.Redirect(http.StatusFound, "/profile")
 				return
 			}
@@ -161,8 +163,7 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 			return
 		} else {
 			// Set a warning message
-			ctx.SetCookie("flash_message", "Profile updated but email verification is not configured. Please contact support.", 3600, "/", "", false, true)
-			ctx.SetCookie("flash_type", "warning", 3600, "/", "", false, true)
+			flash.SetMessage(ctx, "Profile updated but email verification is not configured. Please contact support.", "warning")
 			ctx.Redirect(http.StatusFound, "/profile")
 			return
 		}
@@ -177,8 +178,7 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 			return
 		}
 		// Set a success message
-		ctx.SetCookie("flash_message", "Profile updated successfully.", 3600, "/", "", false, true)
-		ctx.SetCookie("flash_type", "success", 3600, "/", "", false, true)
+		flash.SetMessage(ctx, "Profile updated successfully.", "success")
 
 		// Redirect to the profile page
 		ctx.Redirect(http.StatusFound, "/profile")
@@ -214,7 +214,7 @@ func (c *UserController) ShowDeleteAccount(ctx *gin.Context) {
 	component.Render(ctx.Request.Context(), ctx.Writer)
 }
 
-// DeleteAccount handles the form submission to delete the user's account
+// DeleteAccount handles the deletion of a user account
 func (c *UserController) DeleteAccount(ctx *gin.Context) {
 	// Get the current user
 	user, err := c.getCurrentUser(ctx)
@@ -223,41 +223,62 @@ func (c *UserController) DeleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	// Get the form data
-	confirmation := ctx.PostForm("confirmation")
+	// Get form data
+	confirmation := ctx.PostForm("confirm_text")
 	password := ctx.PostForm("password")
 
-	// Validate the form data
-	if confirmation != "DELETE" {
-		ctx.HTML(http.StatusBadRequest, "user/delete_account.html", gin.H{
-			"User":  user,
-			"Error": "Please type DELETE to confirm",
-		})
-		return
+	// Create a list of validation errors
+	var errors []string
+
+	// Validate the confirmation text
+	if confirmation == "" {
+		errors = append(errors, "Please type DELETE to confirm account deletion")
+	} else if confirmation != "DELETE" {
+		errors = append(errors, "Please type DELETE exactly as shown (all uppercase)")
 	}
 
-	// In a real application, you would verify the password here
-	// For simplicity, we're just checking if it's not empty
+	// Validate the password
 	if password == "" {
-		ctx.HTML(http.StatusBadRequest, "user/delete_account.html", gin.H{
-			"User":  user,
-			"Error": "Password is required",
-		})
+		errors = append(errors, "Please enter your password")
+	} else {
+		// Verify the password
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+		if err != nil {
+			errors = append(errors, "Invalid password")
+		}
+	}
+
+	// If there are validation errors, show them
+	if len(errors) > 0 {
+		// Join all errors with line breaks for the flash message
+		errorMessage := strings.Join(errors, "<br>")
+
+		// Set flash message
+		flash.SetMessage(ctx, errorMessage, "error")
+
+		// Render the delete account page
+		component := userviews.DeleteAccount(user)
+		component.Render(ctx.Request.Context(), ctx.Writer)
 		return
 	}
 
 	// Soft-delete the user
 	if err := c.DB.Delete(user).Error; err != nil {
-		ctx.HTML(http.StatusInternalServerError, "user/delete_account.html", gin.H{
-			"User":  user,
-			"Error": "Failed to delete account",
-		})
+		// Render the delete account page with an error message
+		flash.SetMessage(ctx, "Failed to delete account: "+err.Error(), "error")
+		component := userviews.DeleteAccount(user)
+		component.Render(ctx.Request.Context(), ctx.Writer)
 		return
 	}
 
-	// Clear the session
-	// In a real application, you would use your session management system
-	// For simplicity, we're just redirecting to the home page
+	// Clear the session cookies
+	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
+	ctx.SetCookie("user_email", "", -1, "/", "", false, true)
+
+	// Set a success message
+	flash.SetMessage(ctx, "Sorry to see you go. Your account has been deleted.", "success")
+
+	// Redirect to the home page
 	ctx.Redirect(http.StatusFound, "/")
 }
 

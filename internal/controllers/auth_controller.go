@@ -14,6 +14,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/config"
 	"github.com/hail2skins/the-virtual-armory/internal/database"
+	"github.com/hail2skins/the-virtual-armory/internal/flash"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/hail2skins/the-virtual-armory/internal/services/email"
 	"golang.org/x/crypto/bcrypt"
@@ -167,8 +168,7 @@ func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 	ctx.SetCookie("user_email", email, 3600, "/", "", false, true)
 
 	// Set a welcome back message
-	ctx.SetCookie("flash_message", "Welcome back!", 3600, "/", "", false, true)
-	ctx.SetCookie("flash_type", "success", 3600, "/", "", false, true)
+	flash.SetMessage(ctx, "Welcome back!", "success")
 
 	// Redirect to the owner page
 	ctx.Redirect(http.StatusSeeOther, "/owner")
@@ -323,8 +323,7 @@ func (c *AuthController) VerifyEmail(ctx *gin.Context) {
 	}
 
 	// Set a success message and redirect to login page
-	ctx.SetCookie("flash_message", "Your email has been verified. You can now log in.", 3600, "/", "", false, true)
-	ctx.SetCookie("flash_type", "success", 3600, "/", "", false, true)
+	flash.SetMessage(ctx, "Your email has been verified. You can now log in.", "success")
 	ctx.Redirect(http.StatusSeeOther, "/login?verified=true")
 }
 
@@ -333,18 +332,18 @@ func (c *AuthController) VerificationPending(ctx *gin.Context) {
 	// Get the pending email from the cookie if it exists
 	pendingEmail, err := ctx.Cookie("pending_email")
 	isEmailChange := err == nil && pendingEmail != ""
-	
+
 	// If this is an email change, clear the pending email cookie after using it
 	if isEmailChange {
 		ctx.SetCookie("pending_email", "", -1, "/", "", false, true)
 	}
-	
+
 	// For tests, we need to handle the case where the template is not available
 	if ctx.GetHeader("X-Test") == "true" {
 		ctx.String(http.StatusOK, "Verification Pending Page")
 		return
 	}
-	
+
 	// Render the verification pending page with the appropriate parameters
 	component := authviews.VerificationPending(isEmailChange, pendingEmail)
 	component.Render(ctx, ctx.Writer)
@@ -425,9 +424,9 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
 	ctx.SetCookie("user_email", "", -1, "/", "", false, true)
 
-	// Set a flash message cookie
-	ctx.SetCookie("flash_message", "You have been successfully logged out", 5, "/", "", false, false)
-	ctx.SetCookie("flash_type", "success", 5, "/", "", false, false)
+	// Set a flash message with a MaxAge of 5 seconds for test compatibility
+	// but still ensure it's visible on the home page
+	flash.SetMessageWithMaxAge(ctx, "You have been successfully logged out", "success", 5)
 
 	ctx.Redirect(http.StatusSeeOther, "/")
 }
@@ -492,6 +491,9 @@ func (c *AuthController) ProcessDeleteAccount(ctx *gin.Context) {
 	// Log the user out
 	ctx.SetCookie("is_logged_in", "", -1, "/", "", false, true)
 	ctx.SetCookie("user_email", "", -1, "/", "", false, true)
+
+	// Set a flash message for account deletion
+	flash.SetMessage(ctx, "Sorry to see you go. Your account has been deleted.", "success")
 
 	// Redirect to the home page
 	ctx.Redirect(http.StatusSeeOther, "/")
@@ -582,8 +584,7 @@ func (c *AuthController) ProcessReactivation(ctx *gin.Context) {
 	ctx.SetCookie("user_email", email, 3600, "/", "", false, true)
 
 	// Set flash message
-	ctx.SetCookie("flash_message", "Your account has been successfully reactivated!", 3600, "/", "", false, false)
-	ctx.SetCookie("flash_type", "success", 3600, "/", "", false, false)
+	flash.SetMessage(ctx, "Your account has been successfully reactivated!", "success")
 
 	// Redirect to owner page
 	ctx.Redirect(http.StatusSeeOther, "/owner")

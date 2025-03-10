@@ -76,20 +76,27 @@ templ BaseWithAuth(isLoggedIn bool) {
 					const flashType = getCookie('flash_type') || 'info';
 					
 					if (flashMessage) {
+						// Clear the flash cookies immediately
+						document.cookie = "flash_message=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+						document.cookie = "flash_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+						
+						// Decode the URI component to handle special characters
+						const decodedMessage = decodeURIComponent(flashMessage).replace(/\+/g, ' ');
+						
 						const flashContainer = document.createElement('div');
-						let bgColor = 'bg-blue-100 border-blue-400 text-blue-700';
+						let cssClass = 'mb-6 p-4 rounded-md bg-blue-500 text-white text-center';
 						
 						if (flashType === 'success') {
-							bgColor = 'bg-green-100 border-green-400 text-green-700';
+							cssClass = 'mb-6 p-4 rounded-md bg-green-500 text-white text-center';
 						} else if (flashType === 'error') {
-							bgColor = 'bg-red-100 border-red-400 text-red-700';
+							cssClass = 'mb-6 p-4 rounded-md bg-red-500 text-white text-center';
 						} else if (flashType === 'warning') {
-							bgColor = 'bg-yellow-100 border-yellow-400 text-yellow-700';
+							cssClass = 'mb-6 p-4 rounded-md bg-yellow-500 text-white text-center';
 						}
 						
-						flashContainer.className = `${bgColor} px-4 py-3 rounded relative mb-4 border`;
+						flashContainer.className = cssClass;
 						flashContainer.setAttribute('role', 'alert');
-						flashContainer.innerHTML = `<span class="block sm:inline">${flashMessage}</span>`;
+						flashContainer.innerHTML = `<span class="block sm:inline">${decodedMessage}</span>`;
 						
 						// Insert at the beginning of the main content
 						const mainContent = document.querySelector('main');
@@ -153,4 +160,17 @@ templ BaseWithAuth(isLoggedIn bool) {
 			</footer>
 		</body>
 	</html>
+}
+
+func getFlashClass(flashType string) string {
+	switch flashType {
+	case "success":
+		return "mb-6 p-4 rounded-md bg-green-500 text-white text-center"
+	case "error":
+		return "mb-6 p-4 rounded-md bg-red-500 text-white text-center"
+	case "warning":
+		return "mb-6 p-4 rounded-md bg-yellow-500 text-white text-center"
+	default:
+		return "mb-6 p-4 rounded-md bg-blue-500 text-white text-center"
+	}
 } 
