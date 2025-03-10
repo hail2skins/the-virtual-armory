@@ -19,13 +19,13 @@ templ formatSubscriptionTier(tier string) {
 	if tier == "free" {
 		{ "Free Tier" }
 	} else if tier == "monthly" {
-		{ "Monthly Subscription" }
+		{ "Liking It" }
 	} else if tier == "yearly" {
-		{ "Yearly Subscription" }
+		{ "Loving It" }
 	} else if tier == "lifetime" {
-		{ "Lifetime Subscription" }
+		{ "Supporter" }
 	} else if tier == "premium_lifetime" {
-		{ "Premium Lifetime Subscription" }
+		{ "Big Baller" }
 	} else {
 		{ "Unknown Tier" }
 	}
@@ -131,57 +131,93 @@ templ PaymentHistory(user *models.User, payments []models.Payment, flashMessage 
 							<h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Subscription Benefits</h4>
 							<ul class="space-y-3">
 								if user.SubscriptionTier == "free" {
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Store up to 2 guns in your virtual armory</span>
+										<span>Store up to 2 guns</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Basic inventory management</span>
+										<span>Store up to 4 ammunition*</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Limited range days*</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>No maintenance records*</span>
 									</li>
 								} else if user.SubscriptionTier == "monthly" {
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Store up to 10 guns in your virtual armory</span>
+										<span>Unlimited guns/ammo*</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Photo storage for your collection</span>
+										<span>Unlimited range days*</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Maintenance records</span>
+										<span>Unlimited maintenance records*</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Cancel anytime</span>
 									</li>
 								} else if user.SubscriptionTier == "yearly" {
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Store up to 25 guns in your virtual armory</span>
+										<span>Unlimited guns/ammo*</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Photo storage for your collection</span>
+										<span>Unlimited range days*</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Maintenance records and data export</span>
+										<span>Unlimited maintenance records*</span>
 									</li>
-								} else {
-									<li class="flex items-center text-gray-700">
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>Unlimited guns in your virtual armory</span>
+										<span>Cancel anytime</span>
 									</li>
-									<li class="flex items-center text-gray-700">
+								} else if user.SubscriptionTier == "lifetime" {
+									<li class="flex items-start text-gray-700">
 										<span class="text-green-500 mr-2">✓</span>
-										<span>All premium features included</span>
+										<span>Unlimited guns/ammo*</span>
 									</li>
-									if user.SubscriptionTier == "premium_lifetime" {
-										<li class="flex items-center text-gray-700">
-											<span class="text-green-500 mr-2">✓</span>
-											<span>Premium support and early access to new features</span>
-										</li>
-									}
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Unlimited range days*</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Unlimited maintenance records*</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>First to access new features*</span>
+									</li>
+								} else if user.SubscriptionTier == "premium_lifetime" {
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Everything the site has</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Christmas cards. Seriously, send your address and they are yours.</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>If it grows and makers provide goodies, they go to you first.</span>
+									</li>
+									<li class="flex items-start text-gray-700">
+										<span class="text-green-500 mr-2">✓</span>
+										<span>Premium support and early access to new features</span>
+									</li>
 								}
 							</ul>
+							<div class="mt-4 text-sm text-gray-500">* = When available</div>
 						</div>
 					</div>
 				</div>

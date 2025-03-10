@@ -95,6 +95,33 @@ func currentPlanBorderColor(tier string) string {
 	}
 }
 
+// canSubscribeToTier checks if a user can subscribe to a specific tier based on their current subscription
+func canSubscribeToTier(user *models.User, tier string) bool {
+	if user == nil {
+		return true // Guest users can subscribe to any tier
+	}
+
+	// Users can always upgrade to a higher tier
+	switch user.SubscriptionTier {
+	case "free":
+		return true // Free users can subscribe to any tier
+	case "monthly":
+		// Monthly users can upgrade to yearly, lifetime, or premium_lifetime
+		return tier != "monthly"
+	case "yearly":
+		// Yearly users can upgrade to lifetime or premium_lifetime
+		return tier != "monthly" && tier != "yearly"
+	case "lifetime":
+		// Lifetime users can only upgrade to premium_lifetime
+		return tier == "premium_lifetime"
+	case "premium_lifetime":
+		// Premium lifetime users cannot subscribe to any other tier
+		return false
+	default:
+		return true
+	}
+}
+
 // Pricing displays the pricing page with subscription tiers
 templ Pricing(user *models.User) {
 	@partials.BaseWithAuth(user != nil) {
@@ -183,6 +210,14 @@ templ Pricing(user *models.User) {
 								<div class="bg-indigo-100 border border-indigo-300 text-indigo-800 font-semibold py-2 px-4 rounded text-center">
 									Current Plan
 								</div>
+							} else if user != nil && !canSubscribeToTier(user, "monthly") {
+								<div class="block w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded cursor-not-allowed text-center">
+									Already subscribed to a higher tier
+								</div>
+							} else if user == nil {
+								<a href={ getLoginURL() } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
+									Login to Subscribe
+								</a>
 							} else {
 								<a href={ getStripeLink("monthly", user.ID) } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
 									Subscribe Monthly
@@ -228,6 +263,14 @@ templ Pricing(user *models.User) {
 								<div class="bg-green-100 border border-green-300 text-green-800 font-semibold py-2 px-4 rounded text-center">
 									Current Plan
 								</div>
+							} else if user != nil && !canSubscribeToTier(user, "yearly") {
+								<div class="block w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded cursor-not-allowed text-center">
+									Already subscribed to a higher tier
+								</div>
+							} else if user == nil {
+								<a href={ getLoginURL() } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
+									Login to Subscribe
+								</a>
 							} else {
 								<a href={ getStripeLink("yearly", user.ID) } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
 									Subscribe Yearly
@@ -267,6 +310,14 @@ templ Pricing(user *models.User) {
 								<div class="bg-purple-100 border border-purple-300 text-purple-800 font-semibold py-2 px-4 rounded text-center">
 									Current Plan
 								</div>
+							} else if user != nil && !canSubscribeToTier(user, "lifetime") {
+								<div class="block w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded cursor-not-allowed text-center">
+									Already subscribed to a higher tier
+								</div>
+							} else if user == nil {
+								<a href={ getLoginURL() } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
+									Login to Subscribe
+								</a>
 							} else {
 								<a href={ getStripeLink("lifetime", user.ID) } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
 									Buy Lifetime
@@ -316,6 +367,10 @@ templ Pricing(user *models.User) {
 									<div class="w-full border-2 border-white text-white font-medium py-2 px-4 rounded text-center bg-white bg-opacity-20">
 										Current Plan
 									</div>
+								} else if user == nil {
+									<a href={ getLoginURL() } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
+										Login to Subscribe
+									</a>
 								} else {
 									<a href={ getStripeLink("premium_lifetime", user.ID) } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
 										Buy Premium Lifetime - $1000

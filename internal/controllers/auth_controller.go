@@ -287,8 +287,6 @@ func (c *AuthController) ProcessRegister(ctx *gin.Context) {
 		if err != nil {
 			// Log the error but don't fail the registration
 			log.Printf("Error sending verification email: %v", err)
-		} else {
-			log.Printf("Verification email sent to %s", email)
 		}
 	}
 
