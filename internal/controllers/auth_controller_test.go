@@ -13,6 +13,7 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/config"
 	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"github.com/hail2skins/the-virtual-armory/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
@@ -32,6 +33,12 @@ func (m *MockEmailService) IsConfigured() bool {
 
 // SendVerificationEmail sends a verification email
 func (m *MockEmailService) SendVerificationEmail(email, token string) error {
+	args := m.Called(email, token)
+	return args.Error(0)
+}
+
+// SendPasswordResetEmail sends a password reset email
+func (m *MockEmailService) SendPasswordResetEmail(email, token string) error {
 	args := m.Called(email, token)
 	return args.Error(0)
 }
@@ -64,6 +71,7 @@ func setupTestRouter(t *testing.T, db *gorm.DB) (*gin.Engine, *AuthController) {
 		IsConfiguredValue: true,
 	}
 	mockEmailService.On("SendVerificationEmail", mock.Anything, mock.Anything).Return(nil)
+	mockEmailService.On("SendPasswordResetEmail", mock.Anything, mock.Anything).Return(nil)
 
 	// Create an auth instance
 	authInstance, err := auth.New()
@@ -599,4 +607,74 @@ func TestLogout(t *testing.T) {
 	assert.NotNil(t, flashTypeCookie, "flash_type cookie should be present")
 	assert.Equal(t, "success", flashTypeCookie.Value)
 	assert.Equal(t, 5, flashTypeCookie.MaxAge)
+}
+
+// TestPasswordRecovery tests the password recovery functionality
+func TestPasswordRecovery(t *testing.T) {
+	// Setup
+	gin.SetMode(gin.TestMode)
+	testutils.SetupTestDB()
+
+	// Create a test user
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	user := models.User{
+		Email:     "test@example.com",
+		Password:  string(hashedPassword),
+		Confirmed: true,
+	}
+	database.TestDB.Create(&user)
+
+	// Setup router with controllers
+	router := gin.Default()
+	mockEmailService := &MockEmailService{IsConfiguredValue: true}
+	mockEmailService.On("SendPasswordResetEmail", mock.Anything, mock.Anything).Return(nil)
+
+	cfg := &config.Config{
+		AppBaseURL: "http://localhost:8080",
+	}
+
+	authController := NewAuthController(nil, mockEmailService, cfg)
+
+	// Setup routes
+	router.GET("/recover", authController.Recover)
+	router.POST("/recover", authController.ProcessRecover)
+	router.GET("/login", authController.Login)
+
+	// Test 1: GET /recover should return the recovery form
+	req, _ := http.NewRequest("GET", "/recover", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Recover Password")
+
+	// Test 2: POST /recover with valid email should send recovery email and redirect to login with flash message
+	formData := "email=test@example.com"
+	req, _ = http.NewRequest("POST", "/recover", strings.NewReader(formData))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t, "/login", w.Header().Get("Location"))
+
+	// Check that flash message cookies were set
+	var flashMessageCookie, flashTypeCookie *http.Cookie
+	for _, cookie := range w.Result().Cookies() {
+		switch cookie.Name {
+		case "flash_message":
+			flashMessageCookie = cookie
+		case "flash_type":
+			flashTypeCookie = cookie
+		}
+	}
+
+	assert.NotNil(t, flashMessageCookie, "flash_message cookie should be present")
+	assert.Contains(t, flashMessageCookie.Value, "recovery")
+
+	assert.NotNil(t, flashTypeCookie, "flash_type cookie should be present")
+	assert.Equal(t, "success", flashTypeCookie.Value)
+
+	// Verify that the email service was called
+	mockEmailService.AssertCalled(t, "SendPasswordResetEmail", "test@example.com", mock.Anything)
 }

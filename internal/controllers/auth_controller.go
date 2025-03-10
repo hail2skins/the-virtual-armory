@@ -47,8 +47,27 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	component := authviews.LoginForm("", "")
+	// Get flash message from cookie
+	flashMessage, _ := ctx.Cookie("flash_message")
+	flashType, _ := ctx.Cookie("flash_type")
+
+	// Log the flash message for debugging
+	if flashMessage != "" {
+		log.Printf("Login page flash message found: %s (type: %s)", flashMessage, flashType)
+
+		// URL decode the flash message
+		flashMessage = strings.Replace(flashMessage, "+", " ", -1)
+	}
+
+	// Render the login form with flash message
+	component := authviews.LoginFormWithFlash("", "", flashMessage, flashType)
 	component.Render(ctx, ctx.Writer)
+
+	// Clear flash cookies after rendering
+	if flashMessage != "" {
+		ctx.SetCookie("flash_message", "", -1, "/", "", false, false)
+		ctx.SetCookie("flash_type", "", -1, "/", "", false, false)
+	}
 }
 
 // Register handles the registration page
@@ -412,8 +431,62 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 
 // ProcessRecover handles the password recovery form submission
 func (c *AuthController) ProcessRecover(ctx *gin.Context) {
-	// This would normally be handled by Authboss
-	// For now, we'll just redirect to the login page
+	// Get the email from the form
+	email := ctx.PostForm("email")
+
+	// Validate form data
+	if email == "" {
+		component := authviews.RecoverForm()
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Get the database connection
+	db := database.GetDB()
+	if db == nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Database connection failed"})
+		return
+	}
+
+	// Check if the user exists
+	var user models.User
+	result := db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		// Don't reveal that the email doesn't exist for security reasons
+		// Just redirect to login with a generic message
+		flash.SetMessage(ctx, "If your email exists in our system, you will receive password recovery instructions", "success")
+		ctx.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// Generate a recovery token
+	token, err := generateToken(32)
+	if err != nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Error generating recovery token"})
+		return
+	}
+
+	// Set token expiry (24 hours from now)
+	tokenExpiry := time.Now().Add(24 * time.Hour)
+
+	// Save the token to the user record
+	user.RecoverToken = token
+	user.RecoverTokenExpiry = tokenExpiry
+	db.Save(&user)
+
+	// Send recovery email
+	recoveryLink := c.config.AppBaseURL + "/reset-password/" + token
+	if c.EmailService.IsConfigured() {
+		err = c.EmailService.SendPasswordResetEmail(email, recoveryLink)
+		if err != nil {
+			log.Printf("Error sending recovery email: %v", err)
+		}
+	} else {
+		log.Printf("Email service not configured. Recovery link: %s", recoveryLink)
+	}
+
+	// Set flash message and redirect to login
+	flash.SetMessage(ctx, "Password recovery instructions have been sent to your email", "success")
 	ctx.Redirect(http.StatusSeeOther, "/login")
 }
 
@@ -588,6 +661,117 @@ func (c *AuthController) ProcessReactivation(ctx *gin.Context) {
 
 	// Redirect to owner page
 	ctx.Redirect(http.StatusSeeOther, "/owner")
+}
+
+// ResetPassword handles the password reset page
+func (c *AuthController) ResetPassword(ctx *gin.Context) {
+	// Get the token from the URL
+	token := ctx.Param("token")
+
+	// Validate the token
+	if token == "" {
+		ctx.Redirect(http.StatusSeeOther, "/recover")
+		return
+	}
+
+	// Get the database connection
+	db := database.GetDB()
+	if db == nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Database connection failed"})
+		return
+	}
+
+	// Find the user with this token
+	var user models.User
+	result := db.Where("recover_token = ?", token).First(&user)
+	if result.Error != nil {
+		// Token not found or invalid
+		flash.SetMessage(ctx, "Invalid or expired password reset link", "error")
+		ctx.Redirect(http.StatusSeeOther, "/recover")
+		return
+	}
+
+	// Check if the token has expired
+	if user.RecoverTokenExpiry.Before(time.Now()) {
+		flash.SetMessage(ctx, "Password reset link has expired", "error")
+		ctx.Redirect(http.StatusSeeOther, "/recover")
+		return
+	}
+
+	// Render the reset password form
+	component := authviews.ResetPasswordForm(token, "")
+	component.Render(ctx, ctx.Writer)
+}
+
+// ProcessResetPassword handles the password reset form submission
+func (c *AuthController) ProcessResetPassword(ctx *gin.Context) {
+	// Get the token from the URL
+	token := ctx.Param("token")
+
+	// Get form data
+	password := ctx.PostForm("password")
+	confirmPassword := ctx.PostForm("confirm_password")
+
+	// Validate form data
+	if password == "" || confirmPassword == "" {
+		component := authviews.ResetPasswordForm(token, "Please fill in all fields")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	if password != confirmPassword {
+		component := authviews.ResetPasswordForm(token, "Passwords do not match")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Validate password strength
+	if len(password) < 8 {
+		component := authviews.ResetPasswordForm(token, "Password must be at least 8 characters long")
+		component.Render(ctx, ctx.Writer)
+		return
+	}
+
+	// Get the database connection
+	db := database.GetDB()
+	if db == nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Database connection failed"})
+		return
+	}
+
+	// Find the user with this token
+	var user models.User
+	result := db.Where("recover_token = ?", token).First(&user)
+	if result.Error != nil {
+		// Token not found or invalid
+		flash.SetMessage(ctx, "Invalid or expired password reset link", "error")
+		ctx.Redirect(http.StatusSeeOther, "/recover")
+		return
+	}
+
+	// Check if the token has expired
+	if user.RecoverTokenExpiry.Before(time.Now()) {
+		flash.SetMessage(ctx, "Password reset link has expired", "error")
+		ctx.Redirect(http.StatusSeeOther, "/recover")
+		return
+	}
+
+	// Hash the new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Error hashing password"})
+		return
+	}
+
+	// Update the user's password and clear the recovery token
+	user.Password = string(hashedPassword)
+	user.RecoverToken = ""
+	user.RecoverTokenExpiry = time.Time{}
+	db.Save(&user)
+
+	// Set flash message and redirect to login
+	flash.SetMessage(ctx, "Your password has been reset successfully. You can now log in with your new password.", "success")
+	ctx.Redirect(http.StatusSeeOther, "/login")
 }
 
 // Helper function to generate a random token

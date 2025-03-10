@@ -89,3 +89,44 @@ func (s *MailJetService) SendVerificationEmail(email, token string) error {
 	log.Printf("Verification email sent to %s", email)
 	return nil
 }
+
+// SendPasswordResetEmail sends a password reset email with a custom link
+func (s *MailJetService) SendPasswordResetEmail(email, resetLink string) error {
+	if !s.isConfigured {
+		log.Println("MailJet not configured. Skipping password reset email.")
+		return nil
+	}
+
+	messagesInfo := []mailjet.InfoMessagesV31{
+		{
+			From: &mailjet.RecipientV31{
+				Email: s.senderEmail,
+				Name:  s.senderName,
+			},
+			To: &mailjet.RecipientsV31{
+				mailjet.RecipientV31{
+					Email: email,
+				},
+			},
+			Subject:  "Reset Your Password - The Virtual Armory",
+			TextPart: fmt.Sprintf("Click the following link to reset your password: %s", resetLink),
+			HTMLPart: fmt.Sprintf(`
+				<h3>Reset Your Password</h3>
+				<p>Click the following link to reset your password:</p>
+				<p><a href="%s">Reset Password</a></p>
+				<p>If you did not request a password reset, please ignore this email.</p>
+				<p>This link will expire in 24 hours.</p>
+			`, resetLink),
+		},
+	}
+
+	messages := mailjet.MessagesV31{Info: messagesInfo}
+	_, err := s.client.SendMailV31(&messages)
+	if err != nil {
+		log.Printf("Error sending password reset email: %v", err)
+		return err
+	}
+
+	log.Printf("Password reset email sent to %s", email)
+	return nil
+}

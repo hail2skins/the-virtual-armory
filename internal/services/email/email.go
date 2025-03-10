@@ -7,4 +7,7 @@ type EmailService interface {
 
 	// SendVerificationEmail sends a verification email
 	SendVerificationEmail(email, token string) error
+
+	// SendPasswordResetEmail sends a password reset email with a custom link
+	SendPasswordResetEmail(email, resetLink string) error
 }

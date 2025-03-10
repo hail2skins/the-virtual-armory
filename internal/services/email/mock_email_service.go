@@ -7,6 +7,11 @@ type MockEmailService struct {
 	SendVerificationEmailToken  string
 	SendVerificationEmailError  error
 
+	SendPasswordResetEmailCalled bool
+	SendPasswordResetEmailEmail  string
+	SendPasswordResetEmailLink   string
+	SendPasswordResetEmailError  error
+
 	IsConfiguredCalled bool
 	IsConfiguredResult bool
 }
@@ -17,6 +22,14 @@ func (m *MockEmailService) SendVerificationEmail(email, token string) error {
 	m.SendVerificationEmailEmail = email
 	m.SendVerificationEmailToken = token
 	return m.SendVerificationEmailError
+}
+
+// SendPasswordResetEmail is a mock implementation that records the call
+func (m *MockEmailService) SendPasswordResetEmail(email, resetLink string) error {
+	m.SendPasswordResetEmailCalled = true
+	m.SendPasswordResetEmailEmail = email
+	m.SendPasswordResetEmailLink = resetLink
+	return m.SendPasswordResetEmailError
 }
 
 // IsConfigured is a mock implementation that returns a predefined result

@@ -24,6 +24,8 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth, emailService email.
 	router.GET("/verification-pending", authController.VerificationPending)
 	router.POST("/resend-verification", authController.ResendVerification)
 	router.GET("/verify/:token", authController.VerifyEmail)
+	router.GET("/reset-password/:token", authController.ResetPassword)
+	router.POST("/reset-password/:token", authController.ProcessResetPassword)
 
 	// Account reactivation routes
 	router.GET("/reactivate", authController.ReactivateAccount)
