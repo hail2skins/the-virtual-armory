@@ -27,6 +27,8 @@ tmp/
 
 # Project build
 main
+app
+the-virtual-armory
 *templ.go
 
 # OS X generated file

@@ -8,8 +8,16 @@ import (
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 )
 
+// MockUser is used for testing
+var MockUser *models.User
+
 // GetCurrentUser retrieves the current user from the context
 func GetCurrentUser(ctx *gin.Context) (*models.User, error) {
+	// If we're in a test environment and MockUser is set, return it
+	if MockUser != nil {
+		return MockUser, nil
+	}
+
 	// Check for the is_logged_in cookie first (our simplified auth)
 	cookie, err := ctx.Cookie("is_logged_in")
 	if err == nil && cookie == "true" {
