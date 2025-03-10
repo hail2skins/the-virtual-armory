@@ -34,11 +34,11 @@ func TestSetMessage(t *testing.T) {
 	// Assert that the cookies were set correctly
 	assert.NotNil(t, flashMessageCookie, "flash_message cookie should be present")
 	assert.Equal(t, "Test+message", flashMessageCookie.Value)
-	assert.Equal(t, 3600, flashMessageCookie.MaxAge)
+	assert.Equal(t, 5, flashMessageCookie.MaxAge)
 
 	assert.NotNil(t, flashTypeCookie, "flash_type cookie should be present")
 	assert.Equal(t, "success", flashTypeCookie.Value)
-	assert.Equal(t, 3600, flashTypeCookie.MaxAge)
+	assert.Equal(t, 5, flashTypeCookie.MaxAge)
 }
 
 func TestSetMessageWithMaxAge(t *testing.T) {

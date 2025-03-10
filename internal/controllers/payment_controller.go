@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	paymentViews "github.com/hail2skins/the-virtual-armory/cmd/web/views/payment"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/flash"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/checkout/session"
@@ -590,8 +591,7 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 
 		// Set a success message with cookies that are accessible to JavaScript
 		// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
-		ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 60, "/", "", false, false)
-		ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+		flash.SetMessage(ctx, "Your payment was successful! Thank you for your subscription.", "success")
 
 		// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 		// Redirect to the owner page
@@ -697,8 +697,7 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 
 	// Set a success message with cookies that are accessible to JavaScript
 	// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
-	ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 60, "/", "", false, false)
-	ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+	flash.SetMessage(ctx, "Your payment was successful! Thank you for your subscription.", "success")
 
 	// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 	// Redirect to the owner page
@@ -715,8 +714,7 @@ func (c *PaymentController) HandlePaymentCancellation(ctx *gin.Context) {
 	}
 
 	// Set a message
-	ctx.SetCookie("flash_message", "Your payment was cancelled. If you have any questions, please contact support.", 5, "/", "", false, true)
-	ctx.SetCookie("flash_type", "info", 5, "/", "", false, true)
+	flash.SetMessage(ctx, "Your payment was cancelled. If you have any questions, please contact support.", "info")
 
 	// Redirect to the pricing page
 	ctx.Redirect(http.StatusSeeOther, "/pricing")
@@ -757,8 +755,7 @@ func (c *PaymentController) ShowPaymentHistory(ctx *gin.Context) {
 
 	// Clear flash cookies after rendering
 	if flashMessage != "" {
-		ctx.SetCookie("flash_message", "", -1, "/", "", false, false)
-		ctx.SetCookie("flash_type", "", -1, "/", "", false, false)
+		flash.ClearMessage(ctx)
 	}
 }
 
@@ -774,16 +771,14 @@ func (c *PaymentController) ShowCancelConfirmation(ctx *gin.Context) {
 	// Check if the user has an active subscription
 	if user.SubscriptionTier == "free" || user.IsLifetimeSubscriber() {
 		// Redirect to payment history if the user doesn't have a recurring subscription
-		ctx.SetCookie("flash_message", "You don't have an active recurring subscription to cancel.", 5, "/", "", false, true)
-		ctx.SetCookie("flash_type", "error", 5, "/", "", false, true)
+		flash.SetMessage(ctx, "You don't have an active recurring subscription to cancel.", "error")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
 
 	// Check if the subscription is already canceled
 	if user.SubscriptionCanceled {
-		ctx.SetCookie("flash_message", "Your subscription is already scheduled for cancellation.", 5, "/", "", false, true)
-		ctx.SetCookie("flash_type", "info", 5, "/", "", false, true)
+		flash.SetMessage(ctx, "Your subscription is already scheduled for cancellation.", "info")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
@@ -805,16 +800,14 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 	// Check if the user has an active subscription
 	if user.SubscriptionTier == "free" || user.IsLifetimeSubscriber() {
 		// Redirect to payment history if the user doesn't have a recurring subscription
-		ctx.SetCookie("flash_message", "You don't have an active recurring subscription to cancel.", 5, "/", "", false, true)
-		ctx.SetCookie("flash_type", "error", 5, "/", "", false, true)
+		flash.SetMessage(ctx, "You don't have an active recurring subscription to cancel.", "error")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
 
 	// Check if the subscription is already canceled
 	if user.SubscriptionCanceled {
-		ctx.SetCookie("flash_message", "Your subscription is already scheduled for cancellation.", 5, "/", "", false, true)
-		ctx.SetCookie("flash_type", "info", 5, "/", "", false, true)
+		flash.SetMessage(ctx, "Your subscription is already scheduled for cancellation.", "info")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
@@ -824,15 +817,13 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 		// In test mode, just mark the subscription as canceled
 		if err := c.DB.Model(user).Update("subscription_canceled", true).Error; err != nil {
 			log.Printf("Failed to cancel subscription for user %d in test mode: %v", user.ID, err)
-			ctx.SetCookie("flash_message", "Failed to cancel subscription. Please try again.", 60, "/", "", false, false)
-			ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+			flash.SetMessage(ctx, "Failed to cancel subscription. Please try again.", "error")
 			ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 			return
 		}
 
 		// Set success message
-		ctx.SetCookie("flash_message", "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", 60, "/", "", false, false)
-		ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+		flash.SetMessage(ctx, "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", "success")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
@@ -854,8 +845,7 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 
 		if subscription == nil {
 			log.Printf("Failed to find subscription for user %d with customer ID %s", user.ID, user.StripeCustomerID)
-			ctx.SetCookie("flash_message", "Failed to find your subscription. Please contact support.", 60, "/", "", false, false)
-			ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+			flash.SetMessage(ctx, "Failed to find your subscription. Please contact support.", "error")
 			ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 			return
 		}
@@ -876,8 +866,7 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to cancel subscription for user %d: %v", user.ID, err)
-		ctx.SetCookie("flash_message", "Failed to cancel subscription with Stripe. Please try again.", 60, "/", "", false, false)
-		ctx.SetCookie("flash_type", "error", 60, "/", "", false, false)
+		flash.SetMessage(ctx, "Failed to cancel subscription with Stripe. Please try again.", "error")
 		ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 		return
 	}
@@ -888,7 +877,6 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 	}
 
 	// Set success message
-	ctx.SetCookie("flash_message", "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", 60, "/", "", false, false)
-	ctx.SetCookie("flash_type", "success", 60, "/", "", false, false)
+	flash.SetMessage(ctx, "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", "success")
 	ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
 }

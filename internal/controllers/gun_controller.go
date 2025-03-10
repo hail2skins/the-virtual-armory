@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/gun"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
+	"github.com/hail2skins/the-virtual-armory/internal/flash"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"gorm.io/gorm"
 )
@@ -57,10 +58,7 @@ func (c *GunController) Index(ctx *gin.Context) {
 	flashType, _ := ctx.Cookie("flash_type")
 
 	// Clear flash cookies if they exist
-	if flashMessage != "" {
-		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
-		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
-	}
+	flash.ClearMessage(ctx)
 
 	// Render the index template
 	component := gun.Index(guns, user, flashMessage, flashType)
@@ -95,10 +93,7 @@ func (c *GunController) Show(ctx *gin.Context) {
 	flashType, _ := ctx.Cookie("flash_type")
 
 	// Clear flash cookies if they exist
-	if flashMessage != "" {
-		ctx.SetCookie("flash_message", "", -1, "/", "", false, true)
-		ctx.SetCookie("flash_type", "", -1, "/", "", false, true)
-	}
+	flash.ClearMessage(ctx)
 
 	// Render the show template with empty flash messages if none exist
 	component := gun.Show(*gunItem, flashMessage, flashType)
@@ -174,8 +169,7 @@ func (c *GunController) Create(ctx *gin.Context) {
 
 		// If the user already has 2 guns, redirect to the pricing page
 		if count >= 2 {
-			ctx.SetCookie("flash_message", "You've reached the limit of 2 guns for the free tier. Please upgrade your subscription to add more guns.", 5, "/", "", false, true)
-			ctx.SetCookie("flash_type", "warning", 5, "/", "", false, true)
+			flash.SetMessage(ctx, "You've reached the limit of 2 guns for the free tier. Please upgrade your subscription to add more guns.", "error")
 			ctx.Redirect(http.StatusSeeOther, "/pricing")
 			return
 		}

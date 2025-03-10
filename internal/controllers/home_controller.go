@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/home"
+	"github.com/hail2skins/the-virtual-armory/internal/flash"
 )
 
 // HomeController handles all home-related routes
@@ -53,8 +54,7 @@ func (h *HomeController) Index(c *gin.Context) {
 
 	// Clear flash cookies after rendering
 	if flashMessage != "" {
-		c.SetCookie("flash_message", "", -1, "/", "", false, true)
-		c.SetCookie("flash_type", "", -1, "/", "", false, true)
+		flash.ClearMessage(c)
 	}
 }
 

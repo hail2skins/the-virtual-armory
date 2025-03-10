@@ -188,41 +188,5 @@ templ Profile(user *models.User, guns []models.Gun, flashMessage string, flashTy
 }
 
 templ flashMessage() {
-	<script>
-		// Function to get cookie by name
-		function getCookie(name) {
-			const value = `; ${document.cookie}`;
-			const parts = value.split(`; ${name}=`);
-			if (parts.length === 2) return parts.pop().split(';').shift();
-			return null;
-		}
-		
-		// Check for flash message on page load
-		document.addEventListener('DOMContentLoaded', function() {
-			const flashMessage = getCookie('flash_message');
-			const flashType = getCookie('flash_type') || 'info';
-			
-			if (flashMessage) {
-				// Create flash message element
-				const flashDiv = document.createElement('div');
-				flashDiv.className = `mb-6 p-4 rounded-md ${flashType === 'success' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'}`;
-				flashDiv.innerHTML = `<p>${flashMessage}</p>`;
-				
-				// Insert at the top of the main content
-				const mainContent = document.querySelector('main .max-w-6xl');
-				mainContent.insertBefore(flashDiv, mainContent.firstChild);
-				
-				// Clear the cookies
-				document.cookie = 'flash_message=; Max-Age=-99999999; Path=/;';
-				document.cookie = 'flash_type=; Max-Age=-99999999; Path=/;';
-				
-				// Auto-hide after 5 seconds
-				setTimeout(() => {
-					flashDiv.style.transition = 'opacity 1s';
-					flashDiv.style.opacity = '0';
-					setTimeout(() => flashDiv.remove(), 1000);
-				}, 5000);
-			}
-		});
-	</script>
+	<!-- Flash messages are now handled by the base template -->
 } 
