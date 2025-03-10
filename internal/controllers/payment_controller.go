@@ -249,58 +249,128 @@ func handleCheckoutSessionCompleted(c *PaymentController, ctx *gin.Context, even
 	var session stripe.CheckoutSession
 	err := json.Unmarshal(event.Data.Raw, &session)
 	if err != nil {
-		log.Printf("Error parsing checkout.session.completed event: %v", err)
+		log.Printf("Error parsing checkout.session.completed webhook: %v", err)
 		return
 	}
 
-	// Get the user ID and subscription tier from the metadata
-	userIDStr, ok := session.Metadata["user_id"]
-	if !ok {
-		log.Printf("Missing user_id in metadata for session %s", session.ID)
+	// Log the event for monitoring
+	logWebhookEvent("checkout.session.completed", event.ID, session.ClientReferenceID, "processing", "")
+
+	// Get the user ID from the metadata or client reference ID
+	var userID string
+	if session.Metadata != nil {
+		userID = session.Metadata["user_id"]
+	}
+
+	// If user_id is not in metadata, try to get it from client_reference_id
+	if userID == "" && session.ClientReferenceID != "" {
+		userID = session.ClientReferenceID
+		log.Printf("Using client_reference_id as user_id: %s", userID)
+	}
+
+	if userID == "" {
+		log.Printf("Missing user_id in metadata and client_reference_id for session %s", session.ID)
 		return
 	}
 
-	subscriptionTier, ok := session.Metadata["subscription_tier"]
-	if !ok {
-		log.Printf("Missing subscription_tier in metadata for session %s", session.ID)
-		return
-	}
-
-	// Convert user ID to uint
-	userID, err := strconv.ParseUint(userIDStr, 10, 64)
+	// Convert userID string to uint
+	userIDUint, err := strconv.ParseUint(userID, 10, 64)
 	if err != nil {
-		log.Printf("Invalid user_id in metadata for session %s: %v", session.ID, err)
+		log.Printf("Invalid user_id format: %v", err)
 		return
 	}
 
 	// Find the user in the database
 	var user models.User
-	if err := c.DB.First(&user, userID).Error; err != nil {
-		log.Printf("Failed to find user %s for session %s: %v", userIDStr, session.ID, err)
+	if err := c.DB.First(&user, userIDUint).Error; err != nil {
+		log.Printf("Failed to find user %s for session %s: %v", userID, session.ID, err)
 		return
+	}
+
+	// Get subscription tier from metadata or from the line items
+	var subscriptionTier string
+	if session.Metadata != nil && session.Metadata["subscription_tier"] != "" {
+		subscriptionTier = session.Metadata["subscription_tier"]
+	} else {
+		// Try to determine the tier from the amount
+		if session.AmountTotal >= 100000 {
+			// $1000 is premium lifetime (Big Baller)
+			subscriptionTier = "premium_lifetime"
+			log.Printf("Determined premium_lifetime subscription from amount: %d", session.AmountTotal)
+		} else if session.AmountTotal >= 10000 {
+			// $100 is lifetime (Supporter)
+			subscriptionTier = "lifetime"
+			log.Printf("Determined lifetime subscription from amount: %d", session.AmountTotal)
+		} else if session.AmountTotal >= 3000 {
+			// $30 is yearly (Loving It)
+			subscriptionTier = "yearly"
+			log.Printf("Determined yearly subscription from amount: %d", session.AmountTotal)
+		} else {
+			// $5 is monthly (Liking It)
+			subscriptionTier = "monthly"
+			log.Printf("Determined monthly subscription from amount: %d", session.AmountTotal)
+		}
+		log.Printf("Determined subscription tier from session: %s", subscriptionTier)
 	}
 
 	// Set expiration date based on subscription tier
 	var expirationDate time.Time
-	switch subscriptionTier {
-	case "monthly":
-		expirationDate = time.Now().AddDate(0, 1, 0) // 1 month from now
-	case "yearly":
-		expirationDate = time.Now().AddDate(1, 0, 0) // 1 year from now
-	case "lifetime", "premium_lifetime":
-		expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
-	default:
-		expirationDate = time.Now() // No subscription
+
+	// Check if user has an existing subscription that hasn't expired yet
+	hasExistingTime := user.HasActiveSubscription() && !user.IsLifetimeSubscriber()
+
+	// If the user has an existing subscription, add time to it instead of replacing
+	if hasExistingTime && user.SubscriptionTier == subscriptionTier {
+		// If it's the same tier, just keep the existing expiration date
+		expirationDate = user.SubscriptionExpiresAt
+		log.Printf("Keeping existing expiration date for user %d: %s", user.ID, expirationDate)
+	} else if hasExistingTime && subscriptionTier == "yearly" && user.SubscriptionTier == "monthly" {
+		// If upgrading from monthly to yearly, add 1 year to the existing expiration date
+		expirationDate = user.SubscriptionExpiresAt.AddDate(1, 0, 0)
+		log.Printf("Upgrading from monthly to yearly for user %d, new expiration: %s", user.ID, expirationDate)
+	} else if subscriptionTier == "premium_lifetime" && user.SubscriptionTier == "lifetime" {
+		// If upgrading from lifetime to premium lifetime, keep the same expiration date (already set to 100 years)
+		expirationDate = user.SubscriptionExpiresAt
+		log.Printf("Upgrading from lifetime to premium lifetime for user %d, keeping expiration: %s", user.ID, expirationDate)
+	} else if subscriptionTier == "lifetime" || subscriptionTier == "premium_lifetime" {
+		// For lifetime subscriptions, always set to 100 years from now regardless of previous tier
+		expirationDate = time.Now().AddDate(100, 0, 0)
+		log.Printf("Setting lifetime subscription expiration for user %d to %s", user.ID, expirationDate)
+	} else {
+		// Start from now for new subscriptions or downgrades
+		expirationDate = time.Now()
+
+		// Add time based on the new subscription tier
+		switch subscriptionTier {
+		case "monthly":
+			expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
+			log.Printf("Setting monthly subscription expiration for user %d to %s", user.ID, expirationDate)
+		case "yearly":
+			expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
+			log.Printf("Setting yearly subscription expiration for user %d to %s", user.ID, expirationDate)
+		case "lifetime", "premium_lifetime":
+			expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
+			log.Printf("Setting lifetime subscription expiration for user %d to %s", user.ID, expirationDate)
+		default:
+			log.Printf("Unknown subscription tier: %s, defaulting to monthly", subscriptionTier)
+			expirationDate = expirationDate.AddDate(0, 1, 0) // Default to 1 month
+		}
 	}
 
-	// If this is a subscription (not a one-time payment), store the subscription ID
+	// Get or create Stripe customer ID
 	var stripeCustomerID string
-	if session.Subscription != nil && session.Customer != nil {
-		// Update the user's Stripe customer ID if available
+	if session.Customer != nil {
 		stripeCustomerID = session.Customer.ID
-	} else if os.Getenv("APP_ENV") == "test" {
-		// In test mode, use a dummy customer ID
-		stripeCustomerID = "cus_test_" + userIDStr
+	}
+
+	if stripeCustomerID == "" {
+		// If no customer ID in the session, use the one from the user if available
+		if user.StripeCustomerID != "" {
+			stripeCustomerID = user.StripeCustomerID
+		} else if os.Getenv("APP_ENV") == "test" {
+			// In test mode, use a dummy customer ID
+			stripeCustomerID = "cus_test_" + userID
+		}
 	}
 
 	// Update the user's subscription
@@ -308,13 +378,14 @@ func handleCheckoutSessionCompleted(c *PaymentController, ctx *gin.Context, even
 		"subscription_tier":       subscriptionTier,
 		"subscription_expires_at": expirationDate,
 		"stripe_customer_id":      stripeCustomerID,
+		"subscription_canceled":   false, // Reset the canceled flag when resubscribing
 	}).Error; err != nil {
-		log.Printf("Failed to update user %s for session %s: %v", userIDStr, session.ID, err)
+		log.Printf("Failed to update user %s for session %s: %v", userID, session.ID, err)
 		return
 	}
 
-	// Create a payment record
-	var amount int64 = 0
+	// Calculate the amount based on the subscription tier
+	var amount int64
 	if session.AmountTotal > 0 {
 		amount = session.AmountTotal
 	} else if os.Getenv("APP_ENV") == "test" {
@@ -325,19 +396,20 @@ func handleCheckoutSessionCompleted(c *PaymentController, ctx *gin.Context, even
 		case "yearly":
 			amount = 3000 // $30.00
 		case "lifetime":
-			amount = 10000 // $100.00
+			amount = 15000 // $150.00
 		case "premium_lifetime":
-			amount = 100000 // $1000.00
+			amount = 30000 // $300.00
 		}
 	}
 
+	// Create a payment record
 	payment := models.Payment{
-		UserID:      uint(userID),
+		UserID:      uint(userIDUint),
 		Amount:      amount,
 		Currency:    string(session.Currency),
 		PaymentType: "subscription",
 		Status:      "succeeded",
-		Description: subscriptionTier + " Subscription",
+		Description: strings.Title(subscriptionTier) + " Subscription",
 		StripeID:    session.ID,
 	}
 
@@ -346,8 +418,9 @@ func handleCheckoutSessionCompleted(c *PaymentController, ctx *gin.Context, even
 		return
 	}
 
-	logWebhookEvent("checkout.session.completed", session.ID, userIDStr, "success",
-		fmt.Sprintf("User %s subscribed to %s tier", userIDStr, subscriptionTier))
+	log.Printf("Created payment record for subscription: %s", subscriptionTier)
+	logWebhookEvent("checkout.session.completed", session.ID, userID, "success",
+		fmt.Sprintf("User %s subscribed to %s tier", userID, subscriptionTier))
 }
 
 // handleSubscriptionCreated processes a new subscription
@@ -387,18 +460,13 @@ func handleSubscriptionUpdated(c *PaymentController, ctx *gin.Context, event str
 		return
 	}
 
-	// Update the subscription expiration date based on the current period end
-	expirationDate := time.Unix(subscription.CurrentPeriodEnd, 0)
-
-	// Update the user's subscription expiration
-	if err := c.DB.Model(&user).Update("subscription_expires_at", expirationDate).Error; err != nil {
-		log.Printf("Failed to update subscription expiration for user %d: %v", user.ID, err)
-		return
-	}
+	// We'll skip updating the subscription expiration date here
+	// since we already set it correctly in handleCheckoutSessionCompleted
+	log.Printf("Skipping subscription expiration update for subscription.updated event (user %d)", user.ID)
 
 	// Log the event
 	logWebhookEvent("customer.subscription.updated", subscription.ID, fmt.Sprintf("%d", user.ID), "success",
-		fmt.Sprintf("Subscription updated for user %d, new expiration: %s", user.ID, expirationDate))
+		fmt.Sprintf("Subscription updated for user %d (expiration already set by checkout.session.completed)", user.ID))
 }
 
 // handleSubscriptionDeleted processes a cancelled subscription
@@ -447,35 +515,36 @@ func handleInvoicePaid(c *PaymentController, ctx *gin.Context, event stripe.Even
 		return
 	}
 
-	// If this is a subscription invoice, update the expiration date
-	if invoice.Subscription != nil && invoice.PeriodEnd > 0 {
-		// Use the period end from the invoice directly
-		expirationDate := time.Unix(invoice.PeriodEnd, 0)
-		if err := c.DB.Model(&user).Update("subscription_expires_at", expirationDate).Error; err != nil {
-			log.Printf("Failed to update subscription expiration for user %d: %v", user.ID, err)
-		} else {
-			log.Printf("Updated subscription expiration for user %d to %s", user.ID, expirationDate)
-		}
+	// Determine the subscription tier from the invoice amount
+	var subscriptionTier string
+
+	// Check the invoice amount to determine the tier
+	if invoice.AmountPaid >= 100000 {
+		// $1000 is premium lifetime (Big Baller)
+		subscriptionTier = "premium_lifetime"
+		log.Printf("Determined premium_lifetime subscription from invoice amount: %d", invoice.AmountPaid)
+	} else if invoice.AmountPaid >= 10000 {
+		// $100 is lifetime (Supporter)
+		subscriptionTier = "lifetime"
+		log.Printf("Determined lifetime subscription from invoice amount: %d", invoice.AmountPaid)
+	} else if invoice.AmountPaid >= 3000 {
+		// $30 is yearly (Loving It)
+		subscriptionTier = "yearly"
+		log.Printf("Determined yearly subscription from invoice amount: %d", invoice.AmountPaid)
+	} else {
+		// $5 is monthly (Liking It)
+		subscriptionTier = "monthly"
+		log.Printf("Determined monthly subscription from invoice amount: %d", invoice.AmountPaid)
 	}
 
-	// Create a payment record
-	payment := models.Payment{
-		UserID:      user.ID,
-		Amount:      invoice.AmountPaid,
-		Currency:    string(invoice.Currency),
-		PaymentType: "invoice",
-		Status:      "succeeded",
-		Description: "Invoice Payment",
-		StripeID:    invoice.ID,
-	}
-
-	if err := models.CreatePayment(c.DB, &payment); err != nil {
-		log.Printf("Failed to create payment record for invoice %s: %v", invoice.ID, err)
-	}
+	// For invoice.paid events, we'll skip creating a payment record
+	// since we already created one in handleCheckoutSessionCompleted
+	log.Printf("Skipping payment record creation for invoice.paid event (user %d, tier %s)", user.ID, subscriptionTier)
 
 	// Log the event
 	logWebhookEvent("invoice.paid", invoice.ID, fmt.Sprintf("%d", user.ID), "success",
-		fmt.Sprintf("Invoice paid for user %d, amount: %d %s", user.ID, invoice.AmountPaid, invoice.Currency))
+		fmt.Sprintf("Invoice paid for user %d, amount: %d %s, tier: %s (payment record already created by checkout.session.completed)",
+			user.ID, invoice.AmountPaid, string(invoice.Currency), subscriptionTier))
 }
 
 // handleInvoicePaymentFailed processes a failed invoice payment
@@ -536,52 +605,79 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 		// Just log the success and redirect
 		log.Printf("Test payment success for user %d, session %s", user.ID, sessionID)
 
-		// Extract the tier from the session ID or use a default
-		tier := "monthly" // Default to monthly in test mode
-
-		// Set expiration date based on subscription tier
-		var expirationDate time.Time
-
-		// Check if user has an existing subscription that hasn't expired yet
-		hasExistingTime := user.HasActiveSubscription() && !user.IsLifetimeSubscriber()
-
-		// If the user has an existing subscription, add time to it instead of replacing
-		if hasExistingTime {
-			// Start from the current expiration date
-			expirationDate = user.SubscriptionExpiresAt
+		// Extract the tier from the session ID (for test purposes)
+		var tier string
+		if strings.Contains(sessionID, "monthly") {
+			tier = "monthly"
+		} else if strings.Contains(sessionID, "yearly") {
+			tier = "yearly"
+		} else if strings.Contains(sessionID, "premium") {
+			tier = "premium_lifetime"
+		} else if strings.Contains(sessionID, "lifetime") {
+			tier = "lifetime"
 		} else {
-			// Start from now
-			expirationDate = time.Now()
+			// Default to monthly if not specified
+			tier = "monthly"
 		}
 
-		// Add time based on the new subscription tier
-		switch tier {
-		case "monthly":
-			expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
-		case "yearly":
-			expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
-		case "lifetime", "premium_lifetime":
-			expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
+		// Calculate expiration date based on tier
+		var expirationDate time.Time
+		hasExistingTime := !user.SubscriptionExpiresAt.IsZero() && user.SubscriptionExpiresAt.After(time.Now())
+
+		if hasExistingTime && tier == user.SubscriptionTier {
+			// If the tier hasn't changed, keep the existing expiration date
+			expirationDate = user.SubscriptionExpiresAt
+		} else if hasExistingTime && tier == "yearly" && user.SubscriptionTier == "monthly" {
+			// If upgrading from monthly to yearly, add 1 year to the existing expiration date
+			expirationDate = user.SubscriptionExpiresAt.AddDate(1, 0, 0)
+		} else if tier == "premium_lifetime" && user.SubscriptionTier == "lifetime" {
+			// If upgrading from lifetime to premium lifetime, keep the same expiration date
+			expirationDate = user.SubscriptionExpiresAt
+		} else if tier == "lifetime" || tier == "premium_lifetime" {
+			// For lifetime subscriptions, set to 100 years from now
+			expirationDate = time.Now().AddDate(100, 0, 0)
+		} else {
+			// Start from now for new subscriptions or downgrades
+			expirationDate = time.Now()
+
+			// Add time based on the new subscription tier
+			switch tier {
+			case "monthly":
+				expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
+			case "yearly":
+				expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
+			}
 		}
 
 		// Update the user's subscription
 		if err := c.DB.Model(user).Updates(map[string]interface{}{
 			"subscription_tier":       tier,
 			"subscription_expires_at": expirationDate,
-			"stripe_customer_id":      "cus_test_" + strconv.FormatUint(uint64(user.ID), 10),
-			"subscription_canceled":   false, // Reset the canceled flag when resubscribing
+			"subscription_canceled":   false,
 		}).Error; err != nil {
 			log.Printf("Failed to update user %d subscription in test mode: %v", user.ID, err)
 		}
 
 		// Create a payment record
+		var amount int64
+		switch tier {
+		case "monthly":
+			amount = 500 // $5.00
+		case "yearly":
+			amount = 3000 // $30.00
+		case "lifetime":
+			amount = 15000 // $150.00
+		case "premium_lifetime":
+			amount = 30000 // $300.00
+		}
+
 		payment := models.Payment{
 			UserID:      user.ID,
-			Amount:      500, // $5.00 for monthly
+			Amount:      amount,
 			Currency:    "usd",
 			PaymentType: "subscription",
 			Status:      "succeeded",
-			Description: tier + " Subscription",
+			Description: strings.Title(tier) + " Subscription",
 			StripeID:    sessionID,
 		}
 
@@ -589,11 +685,9 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 			log.Printf("Failed to create payment record in test mode: %v", err)
 		}
 
-		// Set a success message with cookies that are accessible to JavaScript
-		// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
+		// Set a success message
 		flash.SetMessage(ctx, "Your payment was successful! Thank you for your subscription.", "success")
 
-		// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 		// Redirect to the owner page
 		ctx.Redirect(http.StatusSeeOther, "/owner")
 		return
@@ -618,88 +712,13 @@ func (c *PaymentController) HandlePaymentSuccess(ctx *gin.Context) {
 		return
 	}
 
-	// Get the subscription tier from the metadata
-	tier, ok := s.Metadata["subscription_tier"]
-	if !ok {
-		log.Printf("Missing subscription_tier in metadata for session %s", s.ID)
-		tier = "monthly" // Default to monthly if not specified
-	}
-
-	// Set expiration date based on subscription tier
-	var expirationDate time.Time
-
-	// Check if user has an existing subscription that hasn't expired yet
-	hasExistingTime := user.HasActiveSubscription() && !user.IsLifetimeSubscriber()
-
-	// If the user has an existing subscription, add time to it instead of replacing
-	if hasExistingTime {
-		// Start from the current expiration date
-		expirationDate = user.SubscriptionExpiresAt
-	} else {
-		// Start from now
-		expirationDate = time.Now()
-	}
-
-	// Add time based on the new subscription tier
-	switch tier {
-	case "monthly":
-		expirationDate = expirationDate.AddDate(0, 1, 0) // Add 1 month
-	case "yearly":
-		expirationDate = expirationDate.AddDate(1, 0, 0) // Add 1 year
-	case "lifetime", "premium_lifetime":
-		expirationDate = time.Now().AddDate(100, 0, 0) // 100 years from now (effectively lifetime)
-	}
-
-	// Update the user's subscription
-	if err := c.DB.Model(user).Updates(map[string]interface{}{
-		"subscription_tier":       tier,
-		"subscription_expires_at": expirationDate,
-		"stripe_customer_id":      s.Customer.ID,
-		"subscription_canceled":   false, // Reset the canceled flag when resubscribing
-	}).Error; err != nil {
-		log.Printf("Failed to update user %d subscription: %v", user.ID, err)
-	}
-
-	// Create a payment record
-	var amount int64 = 0
-	if s.AmountTotal > 0 {
-		amount = s.AmountTotal
-	} else {
-		// Use default amounts if not available
-		switch tier {
-		case "monthly":
-			amount = 500 // $5.00
-		case "yearly":
-			amount = 3000 // $30.00
-		case "lifetime":
-			amount = 10000 // $100.00
-		case "premium_lifetime":
-			amount = 100000 // $1000.00
-		}
-	}
-
-	payment := models.Payment{
-		UserID:      user.ID,
-		Amount:      amount,
-		Currency:    string(s.Currency),
-		PaymentType: "subscription",
-		Status:      "succeeded",
-		Description: tier + " Subscription",
-		StripeID:    s.ID,
-	}
-
-	if err := models.CreatePayment(c.DB, &payment); err != nil {
-		log.Printf("Failed to create payment record: %v", err)
-	}
-
 	// Log the successful payment
 	log.Printf("Payment success for user %d, session %s", user.ID, sessionID)
 
-	// Set a success message with cookies that are accessible to JavaScript
-	// MaxAge: 60 seconds, Path: /, Secure: false, HttpOnly: false
-	flash.SetMessage(ctx, "Your payment was successful! Thank you for your subscription.", "success")
+	// Set a success message
+	ctx.SetCookie("flash_message", "Your payment was successful! Thank you for your subscription.", 5, "/", "", false, true)
+	ctx.SetCookie("flash_type", "success", 5, "/", "", false, true)
 
-	// NEVER CHANGE THIS REDIRECT - IT MUST ALWAYS GO TO /owner
 	// Redirect to the owner page
 	ctx.Redirect(http.StatusSeeOther, "/owner")
 }
@@ -879,4 +898,68 @@ func (c *PaymentController) CancelSubscription(ctx *gin.Context) {
 	// Set success message
 	flash.SetMessage(ctx, "Your subscription has been canceled. You will continue to have access until "+user.SubscriptionExpiresAt.Format("January 2, 2006")+".", "success")
 	ctx.Redirect(http.StatusSeeOther, "/owner/payment-history")
+}
+
+// HandleCheckoutRedirect handles GET requests to /checkout and redirects to the appropriate Stripe payment link
+func (c *PaymentController) HandleCheckoutRedirect(ctx *gin.Context) {
+	// Get the subscription tier from the query parameters
+	tier := ctx.Query("tier")
+	if tier == "" {
+		ctx.Redirect(http.StatusSeeOther, "/pricing")
+		return
+	}
+
+	// Check if user is logged in
+	_, err := auth.GetCurrentUser(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// Get the appropriate Stripe payment link
+	var paymentLink string
+	switch tier {
+	case "monthly":
+		paymentLink = os.Getenv("STRIPE_LINK_MONTHLY")
+	case "yearly":
+		paymentLink = os.Getenv("STRIPE_LINK_YEARLY")
+	case "lifetime":
+		paymentLink = os.Getenv("STRIPE_LINK_LIFETIME")
+	case "premium_lifetime":
+		paymentLink = os.Getenv("STRIPE_LINK_PREMIUM")
+	default:
+		ctx.Redirect(http.StatusSeeOther, "/pricing")
+		return
+	}
+
+	// If the payment link is not set, fall back to the POST checkout endpoint
+	if paymentLink == "" {
+		// Render a form that submits to the POST /checkout endpoint
+		html := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Redirecting to Checkout</title>
+			<script>
+				document.addEventListener('DOMContentLoaded', function() {
+					document.getElementById('checkout-form').submit();
+				});
+			</script>
+		</head>
+		<body>
+			<form id="checkout-form" method="POST" action="/checkout">
+				<input type="hidden" name="tier" value="` + tier + `">
+				<p>Redirecting to checkout...</p>
+				<button type="submit">Click here if you are not redirected automatically</button>
+			</form>
+		</body>
+		</html>
+		`
+		ctx.Header("Content-Type", "text/html")
+		ctx.String(http.StatusOK, html)
+		return
+	}
+
+	// Redirect to the Stripe payment link
+	ctx.Redirect(http.StatusSeeOther, paymentLink)
 }

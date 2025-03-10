@@ -29,6 +29,18 @@ func GetWebhookStats() WebhookStats {
 	return webhookStats
 }
 
+// ResetWebhookStats resets all webhook statistics to zero
+func ResetWebhookStats() {
+	webhookStats.mu.Lock()
+	defer webhookStats.mu.Unlock()
+
+	webhookStats.TotalRequests = 0
+	webhookStats.SuccessfulRequests = 0
+	webhookStats.FailedRequests = 0
+	webhookStats.LastError = ""
+	// Don't reset time fields to zero as they would be invalid
+}
+
 // WebhookMonitor middleware tracks webhook health and metrics
 func WebhookMonitor() gin.HandlerFunc {
 	return func(c *gin.Context) {

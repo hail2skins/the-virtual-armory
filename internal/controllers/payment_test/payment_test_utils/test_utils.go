@@ -21,8 +21,21 @@ type TestRenderer struct{}
 
 // Instance implements the HTMLRender interface
 func (r *TestRenderer) Instance(name string, data interface{}) render.Render {
+	// Try to extract content from the data map
+	var content string
+	if dataMap, ok := data.(gin.H); ok {
+		if contentVal, exists := dataMap["content"]; exists {
+			content = fmt.Sprintf("%v", contentVal)
+		}
+	}
+
+	// If no content was found, use a default template
+	if content == "" {
+		content = "Mock template"
+	}
+
 	return &render.HTML{
-		Template: template.Must(template.New("").Parse("<html>Mock template</html>")),
+		Template: template.Must(template.New("").Parse("<html>" + content + "</html>")),
 		Data:     data,
 	}
 }

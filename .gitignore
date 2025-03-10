@@ -39,3 +39,6 @@ the-virtual-armory
 cmd/web/assets/css/output.css
 tailwindcss
 
+# Cursor instructions
+cursor.md
+

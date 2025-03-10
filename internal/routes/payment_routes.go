@@ -35,7 +35,8 @@ func RegisterPaymentRoutes(r *gin.Engine, db *gorm.DB, authInstance *auth.Auth) 
 	authorized := r.Group("/")
 	authorized.Use(authInstance.RequireAuth())
 	{
-		// Checkout route
+		// Checkout routes
+		authorized.GET("/checkout", paymentController.HandleCheckoutRedirect)
 		authorized.POST("/checkout", paymentController.CreateCheckoutSession)
 
 		// Payment history route

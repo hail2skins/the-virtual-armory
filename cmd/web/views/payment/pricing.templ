@@ -5,38 +5,59 @@ import (
 	"os"
 	t "github.com/a-h/templ"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+	"strconv"
+	"strings"
 )
 
-// getStripeLink returns the appropriate Stripe link based on the tier and environment
-func getStripeLink(tier string) t.SafeURL {
+// getStripeLink returns the appropriate Stripe payment link based on the subscription tier
+func getStripeLink(tier string, userID uint) t.SafeURL {
+	// Convert userID to string
+	userIDStr := strconv.FormatUint(uint64(userID), 10)
+	
+	// Get the appropriate URL from environment variables
 	var url string
 	
 	switch tier {
 	case "monthly":
 		url = os.Getenv("STRIPE_LINK_MONTHLY")
 		if url == "" {
-			url = "/checkout?tier=monthly"
+			url = "https://buy.stripe.com/test_8wMaGJ3Ht0Uy1LW000" // Fallback URL
 		}
 	case "yearly":
 		url = os.Getenv("STRIPE_LINK_YEARLY")
 		if url == "" {
-			url = "/checkout?tier=yearly"
+			url = "https://buy.stripe.com/test_28o3cj9ZR0Uy8ik000" // Fallback URL
 		}
 	case "lifetime":
 		url = os.Getenv("STRIPE_LINK_LIFETIME")
 		if url == "" {
-			url = "/checkout?tier=lifetime"
+			url = "https://buy.stripe.com/test_5kA6or9ZR4eK6ac000" // Fallback URL
 		}
 	case "premium_lifetime":
 		url = os.Getenv("STRIPE_LINK_PREMIUM")
 		if url == "" {
-			url = "/checkout?tier=premium_lifetime"
+			url = "https://buy.stripe.com/test_28o7sv3Ht8v0fKM000" // Fallback URL
 		}
 	default:
-		url = "/checkout?tier=" + tier
+		url = os.Getenv("STRIPE_LINK_MONTHLY") // Default to monthly
+		if url == "" {
+			url = "https://buy.stripe.com/test_8wMaGJ3Ht0Uy1LW000" // Fallback URL
+		}
 	}
 	
-	return t.SafeURL(url)
+	// Append client_reference_id to the URL
+	if strings.Contains(url, "?") {
+		url += "&client_reference_id=" + userIDStr
+	} else {
+		url += "?client_reference_id=" + userIDStr
+	}
+	
+	return t.URL(url)
+}
+
+// getLoginURL returns the login URL for guests
+func getLoginURL() t.SafeURL {
+	return t.URL("/login")
 }
 
 // Helper functions
@@ -163,7 +184,7 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<a href={ getStripeLink("monthly") } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
+								<a href={ getStripeLink("monthly", user.ID) } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
 									Subscribe Monthly
 								</a>
 							}
@@ -208,7 +229,7 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<a href={ getStripeLink("yearly") } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
+								<a href={ getStripeLink("yearly", user.ID) } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
 									Subscribe Yearly
 								</a>
 							}
@@ -247,7 +268,7 @@ templ Pricing(user *models.User) {
 									Current Plan
 								</div>
 							} else {
-								<a href={ getStripeLink("lifetime") } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
+								<a href={ getStripeLink("lifetime", user.ID) } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
 									Buy Lifetime
 								</a>
 							}
@@ -296,7 +317,7 @@ templ Pricing(user *models.User) {
 										Current Plan
 									</div>
 								} else {
-									<a href={ getStripeLink("premium_lifetime") } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
+									<a href={ getStripeLink("premium_lifetime", user.ID) } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
 										Buy Premium Lifetime - $1000
 									</a>
 								}
