@@ -126,19 +126,6 @@ func (c *AuthController) Profile(ctx *gin.Context) {
 	component.Render(ctx.Request.Context(), ctx.Writer)
 }
 
-// AdminDashboard handles the admin dashboard page
-func (c *AuthController) AdminDashboard(ctx *gin.Context) {
-	// Check if the user has admin privileges
-	// user, err := c.Auth.CurrentUser(ctx.Request)
-	// if err != nil || user == nil {
-	//     ctx.AbortWithStatus(http.StatusForbidden)
-	//     return
-	// }
-
-	component := authviews.AdminDashboard()
-	component.Render(ctx, ctx.Writer)
-}
-
 // ProcessLogin handles the login form submission
 func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 	// Get the email from the form

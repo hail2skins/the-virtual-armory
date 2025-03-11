@@ -46,11 +46,4 @@ func RegisterAuthRoutes(router *gin.Engine, auth *auth.Auth, emailService email.
 		protected.GET("/delete-account", authController.DeleteAccount)
 		protected.POST("/delete-account", authController.ProcessDeleteAccount)
 	}
-
-	// Admin routes (require admin privileges)
-	admin := router.Group("/admin")
-	admin.Use(auth.RequireAdmin())
-	{
-		admin.GET("/dashboard", authController.AdminDashboard)
-	}
 }

@@ -57,13 +57,13 @@ make run
 To create an admin user, run:
 
 ```bash
-go run cmd/scripts/create_admin.go -email <email> -password<password>
+go run cmd/scripts/main.go create-admin -email <email> -password <password>
 ```
 
 For example:
 
 ```bash
-go run cmd/scripts/create_admin.go -emailadmin@example.com -password password123
+go run cmd/scripts/main.go create-admin -email admin@example.com -password password123
 ```
 
 ## Authentication

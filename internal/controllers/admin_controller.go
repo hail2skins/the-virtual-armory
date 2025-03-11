@@ -90,3 +90,9 @@ func (c *AdminController) ErrorMetrics(ctx *gin.Context) {
 	// Render the template
 	admin.ErrorMetrics(data).Render(ctx.Request.Context(), ctx.Writer)
 }
+
+// Dashboard renders the admin dashboard page
+func (c *AdminController) Dashboard(ctx *gin.Context) {
+	component := admin.Dashboard()
+	component.Render(ctx.Request.Context(), ctx.Writer)
+}

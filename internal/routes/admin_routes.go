@@ -55,6 +55,7 @@ func RegisterAdminRoutes(router *gin.Engine, adminController *controllers.AdminC
 	adminGroup.Use(authInstance.RequireAdmin())
 
 	// Register admin routes
+	adminGroup.GET("/dashboard", adminController.Dashboard)
 	adminGroup.GET("/error-metrics", adminController.ErrorMetrics)
 }
 
