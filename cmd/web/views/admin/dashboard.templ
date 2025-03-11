@@ -3,7 +3,26 @@ package admin
 import (
 	"fmt"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+	"time"
 )
+
+// min returns the smaller of x or y
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+// UserData represents a user for display in the dashboard
+type UserData struct {
+	ID               uint
+	Email            string
+	CreatedAt        time.Time
+	LastLogin        time.Time
+	SubscriptionTier string
+	IsDeleted        bool
+}
 
 type DashboardData struct {
 	TotalUsers                int64
@@ -22,6 +41,12 @@ type DashboardData struct {
 	LifetimeGrowthRate        float64
 	PremiumSubscribers        int64
 	PremiumGrowthRate         float64
+	RecentUsers               []UserData
+	CurrentPage               int
+	TotalPages                int
+	PerPage                   int
+	SortBy                    string
+	SortOrder                 string
 }
 
 templ Dashboard(data DashboardData) {
@@ -84,51 +109,165 @@ templ Dashboard(data DashboardData) {
 				
 				<div class="mb-8">
 					<h2 class="text-xl font-semibold mb-4">Recent Users</h2>
-					<div class="overflow-x-auto">
+					<div class="flex justify-between items-center mb-4">
+						<div class="flex items-center">
+							<span class="mr-2">Show:</span>
+							<select id="perPage" class="border rounded px-2 py-1 text-sm" hx-get="/admin/dashboard" hx-target="#usersTable" hx-swap="outerHTML" hx-trigger="change">
+								if data.PerPage == 10 {
+									<option value="10" selected>10</option>
+								} else {
+									<option value="10">10</option>
+								}
+								if data.PerPage == 25 {
+									<option value="25" selected>25</option>
+								} else {
+									<option value="25">25</option>
+								}
+								if data.PerPage == 50 {
+									<option value="50" selected>50</option>
+								} else {
+									<option value="50">50</option>
+								}
+								if data.PerPage == 100 {
+									<option value="100" selected>100</option>
+								} else {
+									<option value="100">100</option>
+								}
+							</select>
+						</div>
+					</div>
+					<div class="overflow-x-auto" id="usersTable">
 						<table class="min-w-full bg-white">
 							<thead class="bg-gray-100">
 								<tr>
-									<th class="py-3 px-4 text-left">Email</th>
-									<th class="py-3 px-4 text-left">Registered</th>
-									<th class="py-3 px-4 text-left">Last Login</th>
-									<th class="py-3 px-4 text-left">Status</th>
+									<th class="py-3 px-4 text-left">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?sortBy=email&sortOrder=%s&page=%d&perPage=%d", 
+                                            getSortOrder(data.SortBy, "email", data.SortOrder), 
+                                            data.CurrentPage, 
+                                            data.PerPage)) } class="flex items-center">
+											Email
+											@sortIcon(data.SortBy, "email", data.SortOrder)
+										</a>
+									</th>
+									<th class="py-3 px-4 text-left">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?sortBy=created_at&sortOrder=%s&page=%d&perPage=%d", 
+                                            getSortOrder(data.SortBy, "created_at", data.SortOrder), 
+                                            data.CurrentPage, 
+                                            data.PerPage)) } class="flex items-center">
+											Registered
+											@sortIcon(data.SortBy, "created_at", data.SortOrder)
+										</a>
+									</th>
+									<th class="py-3 px-4 text-left">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?sortBy=last_login&sortOrder=%s&page=%d&perPage=%d", 
+                                            getSortOrder(data.SortBy, "last_login", data.SortOrder), 
+                                            data.CurrentPage, 
+                                            data.PerPage)) } class="flex items-center">
+											Last Login
+											@sortIcon(data.SortBy, "last_login", data.SortOrder)
+										</a>
+									</th>
+									<th class="py-3 px-4 text-left">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?sortBy=subscription_tier&sortOrder=%s&page=%d&perPage=%d", 
+                                            getSortOrder(data.SortBy, "subscription_tier", data.SortOrder), 
+                                            data.CurrentPage, 
+                                            data.PerPage)) } class="flex items-center">
+											Subscribed
+											@sortIcon(data.SortBy, "subscription_tier", data.SortOrder)
+										</a>
+									</th>
+									<th class="py-3 px-4 text-left">
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?sortBy=deleted&sortOrder=%s&page=%d&perPage=%d", 
+                                            getSortOrder(data.SortBy, "deleted", data.SortOrder), 
+                                            data.CurrentPage, 
+                                            data.PerPage)) } class="flex items-center">
+											Deleted
+											@sortIcon(data.SortBy, "deleted", data.SortOrder)
+										</a>
+									</th>
 									<th class="py-3 px-4 text-left">Actions</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-gray-200">
-								<tr>
-									<td class="py-3 px-4">user1@example.com</td>
-									<td class="py-3 px-4">Jan 15, 2023</td>
-									<td class="py-3 px-4">Today</td>
-									<td class="py-3 px-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span></td>
-									<td class="py-3 px-4">
-										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
-										<a href="#" class="text-red-600 hover:underline">Delete</a>
-									</td>
-								</tr>
-								<tr>
-									<td class="py-3 px-4">user2@example.com</td>
-									<td class="py-3 px-4">Feb 2, 2023</td>
-									<td class="py-3 px-4">Yesterday</td>
-									<td class="py-3 px-4"><span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span></td>
-									<td class="py-3 px-4">
-										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
-										<a href="#" class="text-red-600 hover:underline">Delete</a>
-									</td>
-								</tr>
-								<tr>
-									<td class="py-3 px-4">user3@example.com</td>
-									<td class="py-3 px-4">Mar 10, 2023</td>
-									<td class="py-3 px-4">3 days ago</td>
-									<td class="py-3 px-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Inactive</span></td>
-									<td class="py-3 px-4">
-										<a href="#" class="text-blue-600 hover:underline mr-3">Edit</a>
-										<a href="#" class="text-red-600 hover:underline">Delete</a>
-									</td>
-								</tr>
+								for _, user := range data.RecentUsers {
+									<tr>
+										<td class="py-3 px-4">{ user.Email }</td>
+										<td class="py-3 px-4">{ user.CreatedAt.Format("Jan 2, 2006") }</td>
+										<td class="py-3 px-4">
+											if user.LastLogin.IsZero() {
+												<span>Never</span>
+											} else {
+												<span>{ user.LastLogin.Format("Jan 2, 2006") }</span>
+											}
+										</td>
+										<td class="py-3 px-4">
+											if user.SubscriptionTier == "free" {
+												<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Free</span>
+											} else if user.SubscriptionTier == "monthly" {
+												<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Monthly</span>
+											} else if user.SubscriptionTier == "yearly" {
+												<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Yearly</span>
+											} else if user.SubscriptionTier == "lifetime" {
+												<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Lifetime</span>
+											} else if user.SubscriptionTier == "premium" {
+												<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Premium</span>
+											}
+										</td>
+										<td class="py-3 px-4">
+											if user.IsDeleted {
+												<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Yes</span>
+											} else {
+												<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">No</span>
+											}
+										</td>
+										<td class="py-3 px-4">
+											<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%d/edit", user.ID)) } class="text-blue-600 hover:underline mr-3">Edit</a>
+											if !user.IsDeleted {
+												<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%d/delete", user.ID)) } class="text-red-600 hover:underline">Delete</a>
+											} else {
+												<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%d/restore", user.ID)) } class="text-green-600 hover:underline">Restore</a>
+											}
+										</td>
+									</tr>
+								}
+								if len(data.RecentUsers) == 0 {
+									<tr>
+										<td colspan="6" class="py-3 px-4 text-center">No users found</td>
+									</tr>
+								}
 							</tbody>
 						</table>
 					</div>
+					
+					if data.TotalPages > 1 {
+						<div class="mt-4 flex justify-between items-center">
+							<div class="flex space-x-1">
+								if data.CurrentPage > 1 {
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?page=%d&perPage=%d&sortBy=%s&sortOrder=%s", data.CurrentPage-1, data.PerPage, data.SortBy, data.SortOrder)) } class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Previous</a>
+								} else {
+									<span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Previous</span>
+								}
+								
+								for i := 1; i <= data.TotalPages; i++ {
+									if i == data.CurrentPage {
+										<span class="px-3 py-1 bg-blue-500 text-white rounded">{ fmt.Sprint(i) }</span>
+									} else {
+										<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?page=%d&perPage=%d&sortBy=%s&sortOrder=%s", i, data.PerPage, data.SortBy, data.SortOrder)) } class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">{ fmt.Sprint(i) }</a>
+									}
+								}
+								
+								if data.CurrentPage < data.TotalPages {
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/dashboard?page=%d&perPage=%d&sortBy=%s&sortOrder=%s", data.CurrentPage+1, data.PerPage, data.SortBy, data.SortOrder)) } class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Next</a>
+								} else {
+									<span class="px-3 py-1 bg-gray-100 text-gray-400 rounded cursor-not-allowed">Next</span>
+								}
+							</div>
+							<div class="text-sm text-gray-500">
+								Showing { fmt.Sprint((data.CurrentPage-1)*data.PerPage + 1) } to { fmt.Sprint(min((data.CurrentPage)*data.PerPage, int(data.TotalUsers))) } of { fmt.Sprint(data.TotalUsers) } users
+							</div>
+						</div>
+					}
+					
 					<div class="mt-4 text-right">
 						<a href="/admin/users" class="text-blue-600 hover:underline">View All Users →</a>
 					</div>
@@ -163,4 +302,29 @@ templ Dashboard(data DashboardData) {
 			</div>
 		</div>
 	}
+}
+
+// Helper functions for sorting
+func getSortOrder(currentSortBy, targetSortBy, currentSortOrder string) string {
+    if currentSortBy == targetSortBy {
+        if currentSortOrder == "asc" {
+            return "desc"
+        }
+        return "asc"
+    }
+    return "asc"
+}
+
+templ sortIcon(currentSortBy, targetSortBy, currentSortOrder string) {
+    if currentSortBy == targetSortBy {
+        if currentSortOrder == "asc" {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+        } else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        }
+    }
 } 

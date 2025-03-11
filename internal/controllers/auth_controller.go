@@ -166,6 +166,10 @@ func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 		return
 	}
 
+	// Update the LastAttempt field to track the last successful login
+	user.LastAttempt = time.Now()
+	db.Save(&user)
+
 	// This would normally be handled by Authboss
 	// For now, we'll simulate a successful login by setting session cookies
 	ctx.SetCookie("is_logged_in", "true", 3600, "/", "", false, true)

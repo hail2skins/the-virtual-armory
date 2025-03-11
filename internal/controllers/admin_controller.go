@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"fmt"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -97,6 +100,46 @@ func (c *AdminController) ErrorMetrics(ctx *gin.Context) {
 func (c *AdminController) Dashboard(ctx *gin.Context) {
 	// Get current time
 	now := time.Now()
+
+	// Get pagination parameters
+	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	perPage, err := strconv.Atoi(ctx.DefaultQuery("perPage", "10"))
+	if err != nil {
+		perPage = 10
+	}
+	// Limit perPage to valid options
+	validPerPage := map[int]bool{10: true, 25: true, 50: true, 100: true}
+	if !validPerPage[perPage] {
+		perPage = 10
+	}
+
+	// Get sorting parameters
+	sortBy := ctx.DefaultQuery("sortBy", "created_at")
+	sortOrder := ctx.DefaultQuery("sortOrder", "desc")
+
+	// Validate sortBy
+	validSortFields := map[string]string{
+		"email":             "email",
+		"created_at":        "created_at",
+		"last_login":        "last_attempt", // Map last_login to last_attempt
+		"subscription_tier": "subscription_tier",
+		"deleted":           "deleted_at", // Map deleted to deleted_at
+	}
+
+	dbSortField, ok := validSortFields[sortBy]
+	if !ok {
+		dbSortField = "created_at"
+		sortBy = "created_at"
+	}
+
+	// Validate sortOrder
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "desc"
+	}
 
 	// Calculate start of current month and previous month
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -346,6 +389,48 @@ func (c *AdminController) Dashboard(ctx *gin.Context) {
 		premiumGrowthRate = -100 // If there were premium subscribers last month but none this month, that's -100% growth
 	}
 
+	// Get recent users with pagination and sorting
+	var users []models.User
+	offset := (page - 1) * perPage
+
+	// Create the base query
+	query := database.GetDB().Model(&models.User{}).Unscoped() // Unscoped to include soft-deleted users
+
+	// Apply sorting
+	query = query.Order(fmt.Sprintf("%s %s", dbSortField, sortOrder))
+
+	// Get total count for pagination
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error counting users")
+		return
+	}
+
+	// Apply pagination
+	if err := query.Limit(perPage).Offset(offset).Find(&users).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching users")
+		return
+	}
+
+	// Convert users to UserData for the template
+	recentUsers := make([]admin.UserData, len(users))
+	for i, user := range users {
+		recentUsers[i] = admin.UserData{
+			ID:               user.ID,
+			Email:            user.Email,
+			CreatedAt:        user.CreatedAt,
+			LastLogin:        user.LastAttempt,
+			SubscriptionTier: user.SubscriptionTier,
+			IsDeleted:        !user.DeletedAt.Time.IsZero(),
+		}
+	}
+
+	// Calculate total pages
+	totalPages := int(math.Ceil(float64(totalCount) / float64(perPage)))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
 	data := admin.DashboardData{
 		TotalUsers:                 totalUsers,
 		UserGrowthRate:             userGrowthRate,
@@ -363,6 +448,12 @@ func (c *AdminController) Dashboard(ctx *gin.Context) {
 		LifetimeGrowthRate:         lifetimeGrowthRate,
 		PremiumSubscribers:         premiumSubscribers,
 		PremiumGrowthRate:          premiumGrowthRate,
+		RecentUsers:                recentUsers,
+		CurrentPage:                page,
+		TotalPages:                 totalPages,
+		PerPage:                    perPage,
+		SortBy:                     sortBy,
+		SortOrder:                  sortOrder,
 	}
 
 	component := admin.Dashboard(data)

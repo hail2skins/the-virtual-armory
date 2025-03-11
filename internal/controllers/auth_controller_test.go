@@ -85,11 +85,7 @@ func setupTestRouter(t *testing.T, db *gorm.DB) (*gin.Engine, *AuthController) {
 	}
 
 	// Create an auth controller
-	authController := &AuthController{
-		Auth:         authInstance,
-		EmailService: mockEmailService,
-		config:       testConfig,
-	}
+	authController := NewAuthController(authInstance, mockEmailService, testConfig)
 
 	return router, authController
 }
@@ -423,6 +419,12 @@ func TestLoginSuccess(t *testing.T) {
 	assert.Equal(t, "true", isLoggedInCookie.Value)
 	assert.NotNil(t, userEmailCookie, "user_email cookie should be set")
 	assert.Equal(t, "test%40example.com", userEmailCookie.Value)
+
+	// Check that the LastAttempt field was updated
+	var updatedUser models.User
+	db.First(&updatedUser, user.ID)
+	assert.False(t, updatedUser.LastAttempt.IsZero(), "LastAttempt should not be zero")
+	assert.WithinDuration(t, time.Now(), updatedUser.LastAttempt, 5*time.Second, "LastAttempt should be set to a recent time")
 }
 
 // TestLoginInvalidPassword tests login with an invalid password

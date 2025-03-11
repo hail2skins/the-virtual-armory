@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
@@ -641,4 +642,201 @@ func TestAdminDashboardPremiumSubscribersMetrics(t *testing.T) {
 	body := rr.Body.String()
 	assert.Contains(t, body, "Premium Subscribers", "Should show Premium Subscribers section")
 	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for premium subscribers")
+}
+
+// TestAdminDashboardRecentUsersTable tests that the admin dashboard shows the recent users table
+func TestAdminDashboardRecentUsersTable(t *testing.T) {
+	// Setup test router
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with different subscription tiers
+	// Create 15 users to test pagination (default is 10 per page)
+	additionalUsers := []models.User{
+		{Email: "user1@test.com", Password: "password", SubscriptionTier: "free"},
+		{Email: "user2@test.com", Password: "password", SubscriptionTier: "monthly"},
+		{Email: "user3@test.com", Password: "password", SubscriptionTier: "yearly"},
+		{Email: "user4@test.com", Password: "password", SubscriptionTier: "lifetime"},
+		{Email: "user5@test.com", Password: "password", SubscriptionTier: "premium"},
+		{Email: "user6@test.com", Password: "password", SubscriptionTier: "free"},
+		{Email: "user7@test.com", Password: "password", SubscriptionTier: "monthly"},
+		{Email: "user8@test.com", Password: "password", SubscriptionTier: "yearly"},
+		{Email: "user9@test.com", Password: "password", SubscriptionTier: "lifetime"},
+		{Email: "user10@test.com", Password: "password", SubscriptionTier: "premium"},
+		{Email: "user11@test.com", Password: "password", SubscriptionTier: "free"},
+		{Email: "user12@test.com", Password: "password", SubscriptionTier: "monthly"},
+		{Email: "user13@test.com", Password: "password", SubscriptionTier: "yearly"},
+		{Email: "user14@test.com", Password: "password", SubscriptionTier: "lifetime"},
+		{Email: "user15@test.com", Password: "password", SubscriptionTier: "premium"},
+	}
+
+	// Create a soft-deleted user
+	deletedUser := models.User{
+		Email:            "deleted@test.com",
+		Password:         "password",
+		SubscriptionTier: "free",
+	}
+	err := db.Create(&deletedUser).Error
+	require.NoError(t, err)
+
+	// Soft delete the user
+	err = db.Delete(&deletedUser).Error
+	require.NoError(t, err)
+
+	// Create the users in the database with staggered creation times
+	for i, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+
+		// Update the CreatedAt field to simulate users created at different times
+		createdAt := time.Now().Add(time.Duration(-(i + 1)) * time.Hour)
+		err = db.Model(&user).Update("created_at", createdAt).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain the Recent Users table
+	body := rr.Body.String()
+
+	// Check for table headers
+	assert.Contains(t, body, "Email", "Should show Email column")
+	assert.Contains(t, body, "Registered", "Should show Registered column")
+	assert.Contains(t, body, "Last Login", "Should show Last Login column")
+	assert.Contains(t, body, "Subscribed", "Should show Subscribed column")
+	assert.Contains(t, body, "Deleted", "Should show Deleted column")
+
+	// Check for pagination controls
+	assert.Contains(t, body, "Show:", "Should show pagination controls")
+	assert.Contains(t, body, "value=\"10\"", "Should have option for 10 users per page")
+	assert.Contains(t, body, "value=\"25\"", "Should have option for 25 users per page")
+	assert.Contains(t, body, "value=\"50\"", "Should have option for 50 users per page")
+	assert.Contains(t, body, "value=\"100\"", "Should have option for 100 users per page")
+
+	// Check for View All Users link
+	assert.Contains(t, body, "View All Users", "Should show View All Users link")
+	assert.Contains(t, body, "href=\"/admin/users\"", "Should link to /admin/users")
+
+	// Check for user data
+	assert.Contains(t, body, "user1@test.com", "Should show user1@test.com")
+	assert.Contains(t, body, "Free", "Should show Free subscription tier")
+	assert.Contains(t, body, "Monthly", "Should show Monthly subscription tier")
+	assert.Contains(t, body, "Yearly", "Should show Yearly subscription tier")
+	assert.Contains(t, body, "Lifetime", "Should show Lifetime subscription tier")
+	assert.Contains(t, body, "Premium", "Should show Premium subscription tier")
+
+	// Test pagination by requesting page 2
+	req, err = http.NewRequest("GET", "/admin/dashboard?page=2&perPage=10", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr = httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain users from page 2
+	body = rr.Body.String()
+	assert.Contains(t, body, "user11@test.com", "Should show user11@test.com on page 2")
+
+	// Test sorting by subscription tier
+	req, err = http.NewRequest("GET", "/admin/dashboard?sortBy=subscription_tier&sortOrder=asc", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr = httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// Test for deleted users
+	req, err = http.NewRequest("GET", "/admin/dashboard?sortBy=deleted&sortOrder=desc", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr = httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain the deleted user
+	body = rr.Body.String()
+	assert.Contains(t, body, "deleted@test.com", "Should show deleted@test.com")
+	assert.Contains(t, body, "Yes", "Should show Yes for deleted status")
 }
