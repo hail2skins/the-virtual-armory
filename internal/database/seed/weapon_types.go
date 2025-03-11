@@ -11,35 +11,32 @@ import (
 func SeedWeaponTypes(db *gorm.DB) {
 	// Define common weapon types
 	weaponTypes := []models.WeaponType{
-		// Handguns (pistols & revolvers)
-		{Type: "Handgun", Nickname: "Pistol"},
-		{Type: "Revolver", Nickname: "Revolver"},
+		// Catch-all option
+		{Type: "Other", Nickname: "Other", Popularity: 999},
 
-		// Long guns
-		{Type: "Shotgun", Nickname: "Shotgun"},
-		{Type: "Rifle", Nickname: "Rifle"},
+		// Most popular weapon types with high popularity values
+		{Type: "Handgun", Nickname: "Pistol", Popularity: 100},
+		{Type: "Semi-Automatic Rifle", Nickname: "AR", Popularity: 90},
+		{Type: "Shotgun", Nickname: "Shotgun", Popularity: 85},
+		{Type: "Revolver", Nickname: "Revolver", Popularity: 80},
+		{Type: "Rifle", Nickname: "Rifle", Popularity: 75},
 
-		// Subcategories of rifles
-		{Type: "Semi-Automatic Rifle", Nickname: "AR"},
-		{Type: "Carbine", Nickname: "Carbine"},
-		{Type: "Sniper Rifle", Nickname: "Sniper"},
-		{Type: "Designated Marksman Rifle", Nickname: "DMR"},
+		// Medium popularity weapon types
+		{Type: "Carbine", Nickname: "Carbine", Popularity: 60},
+		{Type: "Bolt-Action Rifle", Nickname: "Bolt Rifle", Popularity: 55},
+		{Type: "Semi-Automatic Shotgun", Nickname: "Semi-Auto Shotgun", Popularity: 50},
+		{Type: "Pump-Action Shotgun", Nickname: "Pump Shotgun", Popularity: 45},
+		{Type: "Lever-Action Rifle", Nickname: "Lever Rifle", Popularity: 40},
 
-		// Machine and Automatic Weapons
-		{Type: "Machine Gun", Nickname: "MG"},
-		{Type: "Submachine Gun", Nickname: "SMG"},
-		{Type: "Personal Defense Weapon", Nickname: "PDW"},
-
-		// Other specialist types
-		{Type: "Anti-Materiel Rifle", Nickname: "AMR"},
-		{Type: "Battle Rifle", Nickname: "Battle Rifle"},       // Typically more robust than standard rifles.
-		{Type: "Precision Rifle", Nickname: "Precision Rifle"}, // For highly accurate rifles.
-		{Type: "Lever-Action Rifle", Nickname: "Lever Rifle"},
-		{Type: "Bolt-Action Rifle", Nickname: "Bolt Rifle"},
-		{Type: "Semi-Automatic Rifle", Nickname: "Semi-Auto Rifle"},
-		{Type: "Semi-Automatic Shotgun", Nickname: "Semi-Auto Shotgun"},
-		{Type: "Pump-Action Shotgun", Nickname: "Pump Shotgun"},
-		// Add additional categories as desired.
+		// Less common weapon types with lower popularity
+		{Type: "Sniper Rifle", Nickname: "Sniper", Popularity: 35},
+		{Type: "Designated Marksman Rifle", Nickname: "DMR", Popularity: 30},
+		{Type: "Submachine Gun", Nickname: "SMG", Popularity: 25},
+		{Type: "Personal Defense Weapon", Nickname: "PDW", Popularity: 20},
+		{Type: "Machine Gun", Nickname: "MG", Popularity: 15},
+		{Type: "Anti-Materiel Rifle", Nickname: "AMR", Popularity: 10},
+		{Type: "Battle Rifle", Nickname: "Battle Rifle", Popularity: 25},
+		{Type: "Precision Rifle", Nickname: "Precision Rifle", Popularity: 30},
 	}
 
 	// Loop through each weapon type
@@ -57,7 +54,12 @@ func SeedWeaponTypes(db *gorm.DB) {
 				log.Printf("Seeded weapon type: %s", wt.Type)
 			}
 		} else {
-			log.Printf("Weapon type %s already exists - skipping", wt.Type)
+			// Update the popularity for existing weapon types
+			if err := db.Model(&models.WeaponType{}).Where("type = ?", wt.Type).Update("popularity", wt.Popularity).Error; err != nil {
+				log.Printf("Error updating popularity for weapon type %s: %v", wt.Type, err)
+			} else {
+				log.Printf("Updated popularity for weapon type: %s", wt.Type)
+			}
 		}
 	}
 }

@@ -8,12 +8,13 @@ import (
 
 // WeaponType represents a type of weapon (e.g., handgun, rifle, shotgun)
 type WeaponType struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Type      string         `gorm:"not null;unique" json:"type"`
-	Nickname  string         `json:"nickname"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	Type       string         `gorm:"not null;unique" json:"type"`
+	Nickname   string         `json:"nickname"`
+	Popularity int            `gorm:"default:0" json:"popularity"` // Higher values appear first in dropdowns
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // TableName specifies the table name for the WeaponType model

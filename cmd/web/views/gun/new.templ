@@ -39,7 +39,12 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
 								<option value="">Select a caliber</option>
 								for _, caliber := range calibers {
-									<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>{ caliber.Caliber }</option>
+									<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>
+										{ caliber.Caliber }
+										if caliber.Nickname != "" && caliber.Nickname != caliber.Caliber {
+											 ({ caliber.Nickname })
+										}
+									</option>
 								}
 							</select>
 						</div>
@@ -100,9 +105,13 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 						processResults: function(data) {
 							return {
 								results: $.map(data.calibers, function(caliber) {
+									var text = caliber.Caliber;
+									if (caliber.Nickname && caliber.Nickname !== caliber.Caliber) {
+										text += ' (' + caliber.Nickname + ')';
+									}
 									return {
 										id: caliber.ID,
-										text: caliber.Caliber
+										text: text
 									};
 								})
 							};

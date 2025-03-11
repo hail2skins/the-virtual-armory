@@ -107,17 +107,20 @@ func (c *GunController) New(ctx *gin.Context) {
 	var calibers []models.Caliber
 	var manufacturers []models.Manufacturer
 
-	if err := c.DB.Order("type").Find(&weaponTypes).Error; err != nil {
+	// Get weapon types sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, type").Find(&weaponTypes).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve weapon types"})
 		return
 	}
 
-	if err := c.DB.Order("caliber").Find(&calibers).Error; err != nil {
+	// Get calibers sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, caliber").Find(&calibers).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve calibers"})
 		return
 	}
 
-	if err := c.DB.Order("name").Find(&manufacturers).Error; err != nil {
+	// Get manufacturers sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, name").Find(&manufacturers).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve manufacturers"})
 		return
 	}
@@ -232,17 +235,20 @@ func (c *GunController) Edit(ctx *gin.Context) {
 	var calibers []models.Caliber
 	var manufacturers []models.Manufacturer
 
-	if err := c.DB.Order("type").Find(&weaponTypes).Error; err != nil {
+	// Get weapon types sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, type").Find(&weaponTypes).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve weapon types"})
 		return
 	}
 
-	if err := c.DB.Order("caliber").Find(&calibers).Error; err != nil {
+	// Get calibers sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, caliber").Find(&calibers).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve calibers"})
 		return
 	}
 
-	if err := c.DB.Order("name").Find(&manufacturers).Error; err != nil {
+	// Get manufacturers sorted by popularity (descending) and then alphabetically
+	if err := c.DB.Order("popularity DESC, name").Find(&manufacturers).Error; err != nil {
 		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Failed to retrieve manufacturers"})
 		return
 	}
@@ -359,14 +365,14 @@ func (c *GunController) SearchCalibers(ctx *gin.Context) {
 	query := ctx.Query("q")
 	var calibers []models.Caliber
 
-	// If query is empty, return a limited set of popular calibers
+	// If query is empty, return calibers sorted by popularity
 	if query == "" {
-		// Return popular calibers
-		popularCalibers := []string{"22 Long Rifle", "380 ACP", "9mm Parabellum", "38 Special", "45 ACP", "12 Gauge"}
-		if err := c.DB.Where("caliber IN ?", popularCalibers).Find(&calibers).Error; err != nil {
+		// Get calibers sorted by popularity (descending) and then alphabetically
+		if err := c.DB.Order("popularity DESC, caliber").Limit(15).Find(&calibers).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
 		ctx.JSON(http.StatusOK, gin.H{"calibers": calibers})
 		return
 	}
@@ -403,7 +409,7 @@ func (c *GunController) SearchCalibers(ctx *gin.Context) {
 			} else {
 				// For other cases, use more general matching
 				if err := c.DB.Where("caliber LIKE ? OR nickname LIKE ?", "%"+query+"%", "%"+query+"%").
-					Limit(5).Find(&calibers).Error; err != nil {
+					Order("popularity DESC, caliber").Limit(10).Find(&calibers).Error; err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 					return
 				}

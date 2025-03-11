@@ -57,9 +57,19 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
 								for _, caliber := range calibers {
 									if caliber.ID == gun.CaliberID {
-										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) } selected>{ caliber.Caliber }</option>
+										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) } selected>
+											{ caliber.Caliber }
+											if caliber.Nickname != "" && caliber.Nickname != caliber.Caliber {
+												 ({ caliber.Nickname })
+											}
+										</option>
 									} else {
-										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>{ caliber.Caliber }</option>
+										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>
+											{ caliber.Caliber }
+											if caliber.Nickname != "" && caliber.Nickname != caliber.Caliber {
+												 ({ caliber.Nickname })
+											}
+										</option>
 									}
 								}
 							</select>
@@ -129,9 +139,13 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 						processResults: function(data) {
 							return {
 								results: $.map(data.calibers, function(caliber) {
+									var text = caliber.Caliber;
+									if (caliber.Nickname && caliber.Nickname !== caliber.Caliber) {
+										text += ' (' + caliber.Nickname + ')';
+									}
 									return {
 										id: caliber.ID,
-										text: caliber.Caliber
+										text: text
 									};
 								})
 							};

@@ -7,9 +7,10 @@ import (
 // Manufacturer represents a firearm manufacturer in the system
 type Manufacturer struct {
 	gorm.Model
-	Name     string `gorm:"not null"`
-	Nickname string
-	Country  string `gorm:"not null"`
+	Name       string `gorm:"not null"`
+	Nickname   string
+	Country    string `gorm:"not null"`
+	Popularity int    `gorm:"default:0"` // Higher values appear first in dropdowns
 }
 
 // GetID returns the manufacturer's ID
