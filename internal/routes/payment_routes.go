@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/controllers"
@@ -13,11 +15,18 @@ func RegisterPaymentRoutes(r *gin.Engine, db *gorm.DB, authInstance *auth.Auth) 
 	// Create payment controller
 	paymentController := controllers.NewPaymentController(db)
 
+	// Create rate limiter for webhooks
+	webhookLimiter := middleware.NewRateLimiter()
+
 	// Public routes
 	r.GET("/pricing", paymentController.ShowPricingPage)
 
-	// Webhook route for Stripe (public) with monitoring middleware
-	r.POST("/webhook", middleware.WebhookMonitor(), paymentController.HandleStripeWebhook)
+	// Webhook route for Stripe (public) with monitoring and rate limiting middleware
+	r.POST("/webhook",
+		middleware.WebhookMonitor(),
+		webhookLimiter.RateLimit(10, time.Minute),
+		paymentController.HandleStripeWebhook,
+	)
 
 	// Webhook health check endpoint (admin only)
 	admin := r.Group("/admin")

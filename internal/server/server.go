@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/config"
+	"github.com/hail2skins/the-virtual-armory/internal/middleware"
 	"github.com/hail2skins/the-virtual-armory/internal/routes"
 	"gorm.io/gorm"
 )
@@ -24,6 +25,9 @@ type Server struct {
 // New creates a new server instance
 func New(cfg *config.Config, auth *auth.Auth, db *gorm.DB) *Server {
 	router := gin.Default()
+
+	// Add our error handling middleware
+	router.Use(middleware.ErrorHandler())
 
 	// Create a new server
 	s := &Server{

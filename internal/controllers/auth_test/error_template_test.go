@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hail2skins/the-virtual-armory/cmd/web/views/auth"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,20 +26,12 @@ func TestErrorTemplates(t *testing.T) {
 		message  string
 	}{
 		{
-			name: "Auth Error Template",
-			template: func(msg string) error {
-				component := auth.Error(msg)
-				return component.Render(c.Request.Context(), w)
-			},
-			message: "Test auth error",
-		},
-		{
-			name: "Partials Error Template",
+			name: "Error Template",
 			template: func(msg string) error {
 				component := partials.Error(msg)
 				return component.Render(c.Request.Context(), w)
 			},
-			message: "Test partials error",
+			message: "Test error message",
 		},
 	}
 
