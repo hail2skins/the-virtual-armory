@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -178,4 +179,109 @@ func TestAdminDashboardEndpointWithAdminUser(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Admin Dashboard", "Response should contain dashboard title")
 	assert.Contains(t, rr.Body.String(), "Total Users", "Response should contain total users section")
 	assert.Contains(t, rr.Body.String(), "Recent Users", "Response should contain recent users section")
+}
+
+// TestAdminDashboardTotalUsersMetrics tests that the total users count is accurate
+func TestAdminDashboardTotalUsersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users
+	additionalUsers := []models.User{
+		{Email: "test1@test.com", Password: "password"},
+		{Email: "test2@test.com", Password: "password"},
+		{Email: "test3@test.com", Password: "password"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Count total users in database (3 additional + admin + regular from setup = 5)
+	var totalUsers int64
+	err := db.Model(&models.User{}).Count(&totalUsers).Error
+	require.NoError(t, err)
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain the actual total number of users
+	body := rr.Body.String()
+	assert.Contains(t, body, fmt.Sprintf("%d", totalUsers)) // Should show actual total users
+	assert.NotContains(t, body, "1,234")                    // Should not contain the mock data
+}
+
+// TestAdminDashboardUserGrowthPercentage tests that the dashboard displays a growth percentage
+func TestAdminDashboardUserGrowthPercentage(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create some users to ensure there's data
+	additionalUsers := []models.User{
+		{Email: "test1@test.com", Password: "password"},
+		{Email: "test2@test.com", Password: "password"},
+	}
+
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage")
+	assert.NotContains(t, body, "+12%", "Should not contain mock growth data")
 }

@@ -1,8 +1,16 @@
 package admin
 
-import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+import (
+	"fmt"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+)
 
-templ Dashboard() {
+type DashboardData struct {
+	TotalUsers      int64
+	UserGrowthRate  float64
+}
+
+templ Dashboard(data DashboardData) {
 	@partials.BaseWithAuth(true) {
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="bg-white shadow-md rounded-lg p-6">
@@ -11,8 +19,8 @@ templ Dashboard() {
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 					<div class="bg-blue-50 p-4 rounded-lg shadow">
 						<h3 class="text-lg font-semibold mb-2">Total Users</h3>
-						<p class="text-3xl font-bold">1,234</p>
-						<p class="text-sm text-gray-500 mt-2">+12% from last month</p>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.TotalUsers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.UserGrowthRate) } from last month</p>
 					</div>
 					
 					<div class="bg-green-50 p-4 rounded-lg shadow">

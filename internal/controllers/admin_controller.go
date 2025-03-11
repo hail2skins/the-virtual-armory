@@ -6,7 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/cmd/web/views/admin"
+	"github.com/hail2skins/the-virtual-armory/internal/database"
 	"github.com/hail2skins/the-virtual-armory/internal/middleware"
+	"github.com/hail2skins/the-virtual-armory/internal/models"
 )
 
 // AdminController handles admin-related routes
@@ -93,6 +95,56 @@ func (c *AdminController) ErrorMetrics(ctx *gin.Context) {
 
 // Dashboard renders the admin dashboard page
 func (c *AdminController) Dashboard(ctx *gin.Context) {
-	component := admin.Dashboard()
-	component.Render(ctx.Request.Context(), ctx.Writer)
+	// Get current time and normalize it to the start of the current month
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	startOfLastMonth := startOfMonth.AddDate(0, -1, 0)
+
+	// Count total users
+	var totalUsers int64
+	if err := database.GetDB().Model(&models.User{}).Count(&totalUsers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching total users")
+		return
+	}
+
+	// Count users created in different time periods
+	var thisMonthUsers int64
+	var lastMonthUsers int64
+
+	// Count users created this month (from start of this month to now)
+	if err := database.GetDB().Model(&models.User{}).
+		Where("created_at >= ?", startOfMonth).
+		Count(&thisMonthUsers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching this month's users")
+		return
+	}
+
+	// Count users created last month (from start of last month to start of this month)
+	if err := database.GetDB().Model(&models.User{}).
+		Where("created_at >= ? AND created_at < ?", startOfLastMonth, startOfMonth).
+		Count(&lastMonthUsers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's users")
+		return
+	}
+
+	// Calculate growth rate
+	var growthRate float64
+	if lastMonthUsers > 0 {
+		growthRate = float64(thisMonthUsers-lastMonthUsers) / float64(lastMonthUsers) * 100
+	} else if thisMonthUsers > 0 {
+		growthRate = 100 // If there were no users last month but there are this month, that's 100% growth
+	} else if lastMonthUsers > 0 && thisMonthUsers == 0 {
+		growthRate = -100 // If there were users last month but none this month, that's -100% growth
+	}
+
+	data := admin.DashboardData{
+		TotalUsers:     totalUsers,
+		UserGrowthRate: growthRate,
+	}
+
+	component := admin.Dashboard(data)
+	if err := component.Render(ctx.Request.Context(), ctx.Writer); err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
 }
