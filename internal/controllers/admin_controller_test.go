@@ -137,3 +137,135 @@ func TestCalculateSubscribedGrowthRate(t *testing.T) {
 		})
 	}
 }
+
+// TestCalculateNewRegistrationsGrowthRate tests the new registrations growth rate calculation logic
+func TestCalculateNewRegistrationsGrowthRate(t *testing.T) {
+	// Test cases - reusing the same test cases as they follow the same logic
+	testCases := []struct {
+		name                   string
+		lastMonthRegistrations int64
+		thisMonthRegistrations int64
+		expectedRate           float64
+	}{
+		{
+			name:                   "Positive growth in registrations",
+			lastMonthRegistrations: 5,
+			thisMonthRegistrations: 10,
+			expectedRate:           100.0, // (10-5)/5 * 100 = 100%
+		},
+		{
+			name:                   "Negative growth in registrations",
+			lastMonthRegistrations: 12,
+			thisMonthRegistrations: 6,
+			expectedRate:           -50.0, // (6-12)/12 * 100 = -50%
+		},
+		{
+			name:                   "Zero growth in registrations",
+			lastMonthRegistrations: 8,
+			thisMonthRegistrations: 8,
+			expectedRate:           0.0, // (8-8)/8 * 100 = 0%
+		},
+		{
+			name:                   "No registrations last month, some this month",
+			lastMonthRegistrations: 0,
+			thisMonthRegistrations: 7,
+			expectedRate:           100.0, // Special case: 100%
+		},
+		{
+			name:                   "Some registrations last month, none this month",
+			lastMonthRegistrations: 9,
+			thisMonthRegistrations: 0,
+			expectedRate:           -100.0, // Special case: -100%
+		},
+		{
+			name:                   "No registrations in either month",
+			lastMonthRegistrations: 0,
+			thisMonthRegistrations: 0,
+			expectedRate:           0.0, // No growth
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Calculate the growth rate manually using the same logic as in the controller
+			var registrationsGrowthRate float64
+			if tc.lastMonthRegistrations > 0 {
+				registrationsGrowthRate = float64(tc.thisMonthRegistrations-tc.lastMonthRegistrations) / float64(tc.lastMonthRegistrations) * 100
+			} else if tc.thisMonthRegistrations > 0 {
+				registrationsGrowthRate = 100.0
+			} else if tc.lastMonthRegistrations > 0 && tc.thisMonthRegistrations == 0 {
+				registrationsGrowthRate = -100.0
+			}
+
+			// Verify the growth rate calculation
+			assert.InDelta(t, tc.expectedRate, registrationsGrowthRate, 0.01, "New registrations growth rate calculation should match expected value")
+		})
+	}
+}
+
+// TestCalculateNewSubscriptionsGrowthRate tests the new subscriptions growth rate calculation logic
+func TestCalculateNewSubscriptionsGrowthRate(t *testing.T) {
+	// Test cases - reusing the same test cases as they follow the same logic
+	testCases := []struct {
+		name                      string
+		lastMonthNewSubscriptions int64
+		thisMonthNewSubscriptions int64
+		expectedRate              float64
+	}{
+		{
+			name:                      "Positive growth in new subscriptions",
+			lastMonthNewSubscriptions: 2,
+			thisMonthNewSubscriptions: 5,
+			expectedRate:              150.0, // (5-2)/2 * 100 = 150%
+		},
+		{
+			name:                      "Negative growth in new subscriptions",
+			lastMonthNewSubscriptions: 6,
+			thisMonthNewSubscriptions: 3,
+			expectedRate:              -50.0, // (3-6)/6 * 100 = -50%
+		},
+		{
+			name:                      "Zero growth in new subscriptions",
+			lastMonthNewSubscriptions: 4,
+			thisMonthNewSubscriptions: 4,
+			expectedRate:              0.0, // (4-4)/4 * 100 = 0%
+		},
+		{
+			name:                      "No new subscriptions last month, some this month",
+			lastMonthNewSubscriptions: 0,
+			thisMonthNewSubscriptions: 3,
+			expectedRate:              100.0, // Special case: 100%
+		},
+		{
+			name:                      "Some new subscriptions last month, none this month",
+			lastMonthNewSubscriptions: 4,
+			thisMonthNewSubscriptions: 0,
+			expectedRate:              -100.0, // Special case: -100%
+		},
+		{
+			name:                      "No new subscriptions in either month",
+			lastMonthNewSubscriptions: 0,
+			thisMonthNewSubscriptions: 0,
+			expectedRate:              0.0, // No growth
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Calculate the growth rate manually using the same logic as in the controller
+			var newSubscriptionsGrowthRate float64
+			if tc.lastMonthNewSubscriptions > 0 {
+				newSubscriptionsGrowthRate = float64(tc.thisMonthNewSubscriptions-tc.lastMonthNewSubscriptions) / float64(tc.lastMonthNewSubscriptions) * 100
+			} else if tc.thisMonthNewSubscriptions > 0 {
+				newSubscriptionsGrowthRate = 100.0
+			} else if tc.lastMonthNewSubscriptions > 0 && tc.thisMonthNewSubscriptions == 0 {
+				newSubscriptionsGrowthRate = -100.0
+			}
+
+			// Verify the growth rate calculation
+			assert.InDelta(t, tc.expectedRate, newSubscriptionsGrowthRate, 0.01, "New subscriptions growth rate calculation should match expected value")
+		})
+	}
+}

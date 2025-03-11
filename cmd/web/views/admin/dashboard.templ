@@ -6,10 +6,14 @@ import (
 )
 
 type DashboardData struct {
-	TotalUsers           int64
-	UserGrowthRate       float64
-	SubscribedUsers      int64
-	SubscribedGrowthRate float64
+	TotalUsers                int64
+	UserGrowthRate            float64
+	SubscribedUsers           int64
+	SubscribedGrowthRate      float64
+	NewRegistrations          int64
+	NewRegistrationsGrowthRate float64
+	NewSubscriptions          int64
+	NewSubscriptionsGrowthRate float64
 }
 
 templ Dashboard(data DashboardData) {
@@ -18,7 +22,7 @@ templ Dashboard(data DashboardData) {
 			<div class="bg-white shadow-md rounded-lg p-6">
 				<h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
 				
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+				<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
 					<div class="bg-blue-50 p-4 rounded-lg shadow">
 						<h3 class="text-lg font-semibold mb-2">Total Users</h3>
 						<p class="text-3xl font-bold">{ fmt.Sprint(data.TotalUsers) }</p>
@@ -33,8 +37,14 @@ templ Dashboard(data DashboardData) {
 					
 					<div class="bg-purple-50 p-4 rounded-lg shadow">
 						<h3 class="text-lg font-semibold mb-2">New Registrations</h3>
-						<p class="text-3xl font-bold">56</p>
-						<p class="text-sm text-gray-500 mt-2">+15% from last month</p>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.NewRegistrations) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.NewRegistrationsGrowthRate) } from last month</p>
+					</div>
+					
+					<div class="bg-yellow-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">New Subscriptions</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.NewSubscriptions) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.NewSubscriptionsGrowthRate) } from last month</p>
 					</div>
 				</div>
 				

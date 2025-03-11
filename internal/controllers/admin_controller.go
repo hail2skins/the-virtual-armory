@@ -178,11 +178,71 @@ func (c *AdminController) Dashboard(ctx *gin.Context) {
 		subscribedGrowthRate = -100 // If there were subscribed users last month but none this month, that's -100% growth
 	}
 
+	// Count new registrations (users created this month)
+	var newRegistrations int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("created_at >= ? AND created_at < ?", startOfMonth, now).
+		Count(&newRegistrations).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching new registrations")
+		return
+	}
+
+	// Count new registrations last month
+	var lastMonthRegistrations int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("created_at >= ? AND created_at < ?", startOfLastMonth, startOfMonth).
+		Count(&lastMonthRegistrations).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's registrations")
+		return
+	}
+
+	// Calculate growth rate for new registrations
+	var newRegistrationsGrowthRate float64
+	if lastMonthRegistrations > 0 {
+		newRegistrationsGrowthRate = float64(newRegistrations-lastMonthRegistrations) / float64(lastMonthRegistrations) * 100
+	} else if newRegistrations > 0 {
+		newRegistrationsGrowthRate = 100 // If there were no registrations last month but there are this month, that's 100% growth
+	} else if lastMonthRegistrations > 0 && newRegistrations == 0 {
+		newRegistrationsGrowthRate = -100 // If there were registrations last month but none this month, that's -100% growth
+	}
+
+	// Count new subscriptions (users who subscribed this month)
+	var newSubscriptions int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier != 'free' AND created_at >= ? AND created_at < ?", startOfMonth, now).
+		Count(&newSubscriptions).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching new subscriptions")
+		return
+	}
+
+	// Count new subscriptions last month
+	var lastMonthNewSubscriptions int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier != 'free' AND created_at >= ? AND created_at < ?", startOfLastMonth, startOfMonth).
+		Count(&lastMonthNewSubscriptions).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's new subscriptions")
+		return
+	}
+
+	// Calculate growth rate for new subscriptions
+	var newSubscriptionsGrowthRate float64
+	if lastMonthNewSubscriptions > 0 {
+		newSubscriptionsGrowthRate = float64(newSubscriptions-lastMonthNewSubscriptions) / float64(lastMonthNewSubscriptions) * 100
+	} else if newSubscriptions > 0 {
+		newSubscriptionsGrowthRate = 100 // If there were no new subscriptions last month but there are this month, that's 100% growth
+	} else if lastMonthNewSubscriptions > 0 && newSubscriptions == 0 {
+		newSubscriptionsGrowthRate = -100 // If there were new subscriptions last month but none this month, that's -100% growth
+	}
+
 	data := admin.DashboardData{
-		TotalUsers:           totalUsers,
-		UserGrowthRate:       userGrowthRate,
-		SubscribedUsers:      subscribedUsers,
-		SubscribedGrowthRate: subscribedGrowthRate,
+		TotalUsers:                 totalUsers,
+		UserGrowthRate:             userGrowthRate,
+		SubscribedUsers:            subscribedUsers,
+		SubscribedGrowthRate:       subscribedGrowthRate,
+		NewRegistrations:           newRegistrations,
+		NewRegistrationsGrowthRate: newRegistrationsGrowthRate,
+		NewSubscriptions:           newSubscriptions,
+		NewSubscriptionsGrowthRate: newSubscriptionsGrowthRate,
 	}
 
 	component := admin.Dashboard(data)
