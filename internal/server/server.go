@@ -26,6 +26,9 @@ type Server struct {
 func New(cfg *config.Config, auth *auth.Auth, db *gorm.DB) *Server {
 	router := gin.Default()
 
+	// Add error metrics middleware
+	router.Use(middleware.ErrorMetricsMiddleware())
+
 	// Add our error handling middleware
 	router.Use(middleware.ErrorHandler())
 

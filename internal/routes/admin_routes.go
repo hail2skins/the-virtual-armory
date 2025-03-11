@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/controllers"
 	"gorm.io/gorm"
 )
@@ -44,4 +45,15 @@ func SetupAdminRoutes(router *gin.Engine, db *gorm.DB) {
 	adminRoutes.GET("/weapon-types/:id/edit", weaponTypeController.Edit)
 	adminRoutes.POST("/weapon-types/:id", weaponTypeController.Update)
 	adminRoutes.POST("/weapon-types/:id/delete", weaponTypeController.Delete)
+}
+
+// RegisterAdminRoutes registers all admin routes
+func RegisterAdminRoutes(router *gin.Engine, adminController *controllers.AdminController, authInstance *auth.Auth) {
+	// Create an admin group with authentication and admin middleware
+	adminGroup := router.Group("/admin")
+	adminGroup.Use(authInstance.RequireAuth())
+	adminGroup.Use(authInstance.RequireAdmin())
+
+	// Register admin routes
+	adminGroup.GET("/error-metrics", adminController.ErrorMetrics)
 }

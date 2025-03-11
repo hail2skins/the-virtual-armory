@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/errors"
 	"github.com/hail2skins/the-virtual-armory/internal/logger"
@@ -9,6 +11,9 @@ import (
 // ErrorHandler returns a middleware that handles errors using our custom error types and logger
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Record the start time for latency tracking
+		startTime := time.Now()
+
 		// Process the request
 		c.Next()
 
@@ -27,6 +32,10 @@ func ErrorHandler() gin.HandlerFunc {
 			// Handle the error with our custom error handler
 			errors.HandleError(c, err.Err)
 
+			// Record error metrics
+			duration := time.Since(startTime).Seconds()
+			recordErrorMetrics(c, err.Err, duration)
+
 			// Stop further handlers from executing
 			c.Abort()
 		}
@@ -42,4 +51,28 @@ func getUserID(c *gin.Context) uint {
 		}
 	}
 	return 0
+}
+
+// recordErrorMetrics records error metrics for the given error
+func recordErrorMetrics(c *gin.Context, err error, duration float64) {
+	// Get the error type
+	errorType := "internal_error" // Default type
+
+	// Try to determine the error type
+	switch e := err.(type) {
+	case interface{ ErrorType() string }:
+		// If the error has an ErrorType method, use that
+		errorType = e.ErrorType()
+	default:
+		// Otherwise, use the error message
+		errorType = e.Error()
+	}
+
+	// Record the error metrics
+	errorMetrics.Record(
+		errorType,
+		c.Writer.Status(),
+		duration,
+		c.Request.URL.Path,
+	)
 }

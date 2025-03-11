@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/config"
+	"github.com/hail2skins/the-virtual-armory/internal/controllers"
 	"github.com/hail2skins/the-virtual-armory/internal/services/email"
 	"gorm.io/gorm"
 )
@@ -71,4 +72,8 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *co
 
 	// Register payment routes
 	RegisterPaymentRoutes(r, db, authInstance)
+
+	// Register admin routes
+	adminController := controllers.NewAdminController()
+	RegisterAdminRoutes(r, adminController, authInstance)
 }

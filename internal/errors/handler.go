@@ -64,6 +64,14 @@ func HandleError(c *gin.Context, err error) {
 			// In test mode, just set the status code and a simple text response
 			c.String(response.Code, response.Message)
 		} else {
+			// Try to render HTML response, fall back to string if template is not available
+			defer func() {
+				if r := recover(); r != nil {
+					// If rendering HTML fails, fall back to string response
+					c.String(response.Code, response.Message)
+				}
+			}()
+
 			// Return HTML response
 			c.HTML(response.Code, "partials/error.templ", gin.H{
 				"errorMsg": response.Message,
