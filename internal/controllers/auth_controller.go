@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	authviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/auth"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 	userviews "github.com/hail2skins/the-virtual-armory/cmd/web/views/user"
 	"github.com/hail2skins/the-virtual-armory/internal/auth"
 	"github.com/hail2skins/the-virtual-armory/internal/config"
@@ -299,7 +300,7 @@ func (c *AuthController) VerifyEmail(ctx *gin.Context) {
 	// Get token from URL parameter
 	token := ctx.Param("token")
 	if token == "" {
-		component := authviews.Error("Invalid verification token")
+		component := partials.Error("Invalid verification token")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -310,7 +311,7 @@ func (c *AuthController) VerifyEmail(ctx *gin.Context) {
 	result := db.Where("confirm_token = ?", token).First(&user)
 	if result.Error != nil {
 		log.Printf("Error finding user by verification token: %v", result.Error)
-		component := authviews.Error("Invalid or expired verification token. Please request a new verification email.")
+		component := partials.Error("Invalid or expired verification token. Please request a new verification email.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -318,7 +319,7 @@ func (c *AuthController) VerifyEmail(ctx *gin.Context) {
 	// Check if token is expired
 	if user.ConfirmTokenExpiry.Before(time.Now()) {
 		log.Printf("Verification token expired for user %s", user.Email)
-		component := authviews.Error("Your verification token has expired. Please request a new verification email.")
+		component := partials.Error("Your verification token has expired. Please request a new verification email.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -331,7 +332,7 @@ func (c *AuthController) VerifyEmail(ctx *gin.Context) {
 	err := db.Save(&user).Error
 	if err != nil {
 		log.Printf("Error updating user verification status: %v", err)
-		component := authviews.Error("An error occurred while verifying your email. Please try again later.")
+		component := partials.Error("An error occurred while verifying your email. Please try again later.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -368,7 +369,7 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 	// Get email from form
 	email := ctx.PostForm("email")
 	if email == "" {
-		component := authviews.Error("Email is required")
+		component := partials.Error("Email is required")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -379,14 +380,14 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 	result := db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		log.Printf("Error finding user by email: %v", result.Error)
-		component := authviews.Error("User not found")
+		component := partials.Error("User not found")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
 
 	// Check if the user is already confirmed
 	if user.Confirmed {
-		component := authviews.Error("Your email is already verified")
+		component := partials.Error("Your email is already verified")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -395,7 +396,7 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 	token, err := generateToken(32)
 	if err != nil {
 		log.Printf("Error generating token: %v", err)
-		component := authviews.Error("An error occurred. Please try again later.")
+		component := partials.Error("An error occurred. Please try again later.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -406,7 +407,7 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 	err = db.Save(&user).Error
 	if err != nil {
 		log.Printf("Error updating user with new token: %v", err)
-		component := authviews.Error("An error occurred. Please try again later.")
+		component := partials.Error("An error occurred. Please try again later.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
@@ -415,7 +416,7 @@ func (c *AuthController) ResendVerification(ctx *gin.Context) {
 	err = c.EmailService.SendVerificationEmail(user.Email, token)
 	if err != nil {
 		log.Printf("Error sending verification email: %v", err)
-		component := authviews.Error("An error occurred while sending the verification email. Please try again later.")
+		component := partials.Error("An error occurred while sending the verification email. Please try again later.")
 		component.Render(ctx, ctx.Writer)
 		return
 	}
