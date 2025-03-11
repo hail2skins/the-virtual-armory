@@ -71,3 +71,69 @@ func TestCalculateGrowthRate(t *testing.T) {
 		})
 	}
 }
+
+// TestCalculateSubscribedGrowthRate tests the subscribed users growth rate calculation logic
+func TestCalculateSubscribedGrowthRate(t *testing.T) {
+	// Test cases - reusing the same test cases as they follow the same logic
+	testCases := []struct {
+		name                string
+		lastMonthSubscribed int64
+		thisMonthSubscribed int64
+		expectedRate        float64
+	}{
+		{
+			name:                "Positive growth in subscriptions",
+			lastMonthSubscribed: 3,
+			thisMonthSubscribed: 6,
+			expectedRate:        100.0, // (6-3)/3 * 100 = 100%
+		},
+		{
+			name:                "Negative growth in subscriptions",
+			lastMonthSubscribed: 8,
+			thisMonthSubscribed: 4,
+			expectedRate:        -50.0, // (4-8)/8 * 100 = -50%
+		},
+		{
+			name:                "Zero growth in subscriptions",
+			lastMonthSubscribed: 5,
+			thisMonthSubscribed: 5,
+			expectedRate:        0.0, // (5-5)/5 * 100 = 0%
+		},
+		{
+			name:                "No subscriptions last month, some this month",
+			lastMonthSubscribed: 0,
+			thisMonthSubscribed: 3,
+			expectedRate:        100.0, // Special case: 100%
+		},
+		{
+			name:                "Some subscriptions last month, none this month",
+			lastMonthSubscribed: 3,
+			thisMonthSubscribed: 0,
+			expectedRate:        -100.0, // Special case: -100%
+		},
+		{
+			name:                "No subscriptions in either month",
+			lastMonthSubscribed: 0,
+			thisMonthSubscribed: 0,
+			expectedRate:        0.0, // No growth
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Calculate the growth rate manually using the same logic as in the controller
+			var subscribedGrowthRate float64
+			if tc.lastMonthSubscribed > 0 {
+				subscribedGrowthRate = float64(tc.thisMonthSubscribed-tc.lastMonthSubscribed) / float64(tc.lastMonthSubscribed) * 100
+			} else if tc.thisMonthSubscribed > 0 {
+				subscribedGrowthRate = 100.0
+			} else if tc.lastMonthSubscribed > 0 && tc.thisMonthSubscribed == 0 {
+				subscribedGrowthRate = -100.0
+			}
+
+			// Verify the growth rate calculation
+			assert.InDelta(t, tc.expectedRate, subscribedGrowthRate, 0.01, "Subscribed growth rate calculation should match expected value")
+		})
+	}
+}

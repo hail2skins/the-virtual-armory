@@ -6,8 +6,10 @@ import (
 )
 
 type DashboardData struct {
-	TotalUsers      int64
-	UserGrowthRate  float64
+	TotalUsers           int64
+	UserGrowthRate       float64
+	SubscribedUsers      int64
+	SubscribedGrowthRate float64
 }
 
 templ Dashboard(data DashboardData) {
@@ -24,9 +26,9 @@ templ Dashboard(data DashboardData) {
 					</div>
 					
 					<div class="bg-green-50 p-4 rounded-lg shadow">
-						<h3 class="text-lg font-semibold mb-2">Active Users</h3>
-						<p class="text-3xl font-bold">987</p>
-						<p class="text-sm text-gray-500 mt-2">+8% from last month</p>
+						<h3 class="text-lg font-semibold mb-2">Subscribed Users</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.SubscribedUsers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.SubscribedGrowthRate) } from last month</p>
 					</div>
 					
 					<div class="bg-purple-50 p-4 rounded-lg shadow">

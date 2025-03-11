@@ -285,3 +285,58 @@ func TestAdminDashboardUserGrowthPercentage(t *testing.T) {
 	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage")
 	assert.NotContains(t, body, "+12%", "Should not contain mock growth data")
 }
+
+// TestAdminDashboardSubscribedUsersMetrics tests that the subscribed users count is displayed
+func TestAdminDashboardSubscribedUsersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with different subscription tiers
+	additionalUsers := []models.User{
+		{Email: "monthly@test.com", Password: "password", SubscriptionTier: "monthly"},
+		{Email: "yearly@test.com", Password: "password", SubscriptionTier: "yearly"},
+		{Email: "lifetime@test.com", Password: "password", SubscriptionTier: "lifetime"},
+		{Email: "premium@test.com", Password: "password", SubscriptionTier: "premium"},
+		{Email: "free@test.com", Password: "password", SubscriptionTier: "free"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain "Subscribed Users" and a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Contains(t, body, "Subscribed Users", "Should show Subscribed Users section")
+	assert.NotContains(t, body, "Active Users", "Should not contain the old Active Users label")
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for subscribed users")
+	assert.NotContains(t, body, "987", "Should not contain the mock data for active users")
+}
