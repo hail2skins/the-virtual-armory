@@ -76,4 +76,8 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *co
 	// Register admin routes
 	adminController := controllers.NewAdminController()
 	RegisterAdminRoutes(r, adminController, authInstance)
+
+	// Register admin health routes
+	adminHealthController := controllers.NewAdminHealthController(db)
+	RegisterAdminHealthRoutes(r, adminHealthController, authInstance)
 }

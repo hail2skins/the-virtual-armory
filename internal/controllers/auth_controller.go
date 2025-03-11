@@ -184,6 +184,11 @@ func (c *AuthController) ProcessLogin(ctx *gin.Context) {
 	ctx.SetCookie("is_logged_in", "true", 3600, "/", "", false, true)
 	ctx.SetCookie("user_email", email, 3600, "/", "", false, true)
 
+	// Check if the user is an admin and set the appropriate cookie
+	if user.IsAdmin {
+		ctx.SetCookie("is_admin", "true", 3600, "/", "", false, true)
+	}
+
 	// Set a welcome back message
 	flash.SetMessage(ctx, "Welcome back!", "success")
 

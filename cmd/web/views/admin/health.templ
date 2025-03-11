@@ -1,0 +1,129 @@
+package admin
+
+import (
+	"time"
+	"fmt"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+)
+
+type SystemMetrics struct {
+	MemoryUsageMB    float64
+	TotalAllocatedMB float64
+	SystemMemoryMB   float64
+	Goroutines       int
+	NumCPU           int
+}
+
+type ExternalService struct {
+	Name   string
+	Status string
+}
+
+type DetailedHealthData struct {
+	Status           string
+	Timestamp        time.Time
+	Database         string
+	System           SystemMetrics
+	ExternalServices []ExternalService
+	Version          string
+}
+
+// FormatBytes formats bytes to a human-readable format
+func formatBytes(bytes float64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%.2f B", bytes)
+	}
+	div, exp := unit, 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.2f %cB", bytes/float64(div), "KMGTPE"[exp])
+}
+
+// DetailedHealth renders the detailed health view
+templ DetailedHealth(data DetailedHealthData) {
+	@partials.BaseWithAuth(true) {
+		<div class="container mx-auto px-4 py-8">
+			<h1 class="text-3xl font-bold mb-6">System Health</h1>
+			
+			<div class="bg-white shadow-md rounded-lg p-6 mb-6">
+				<div class="flex justify-between items-center mb-4">
+					<h2 class="text-xl font-semibold">Overview</h2>
+					<span class={ "px-3 py-1 rounded-full text-sm font-medium", templ.KV("bg-green-100 text-green-800", data.Status == "ok"), templ.KV("bg-red-100 text-red-800", data.Status != "ok") }>
+						{ data.Status }
+					</span>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<p class="text-gray-600">Last Updated</p>
+						<p class="font-medium">{ data.Timestamp.Format(time.RFC1123) }</p>
+					</div>
+					<div>
+						<p class="text-gray-600">Version</p>
+						<p class="font-medium">{ data.Version }</p>
+					</div>
+					<div>
+						<p class="text-gray-600">Database</p>
+						<p class={ "font-medium", templ.KV("text-green-600", data.Database == "connected"), templ.KV("text-red-600", data.Database != "connected") }>
+							{ data.Database }
+						</p>
+					</div>
+				</div>
+			</div>
+			
+			<div class="bg-white shadow-md rounded-lg p-6 mb-6">
+				<h2 class="text-xl font-semibold mb-4">System Resources</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					<div class="border rounded-lg p-4">
+						<p class="text-gray-600">Memory Usage</p>
+						<p class="text-2xl font-bold">{ formatBytes(data.System.MemoryUsageMB * 1024 * 1024) }</p>
+					</div>
+					<div class="border rounded-lg p-4">
+						<p class="text-gray-600">Total Allocated</p>
+						<p class="text-2xl font-bold">{ formatBytes(data.System.TotalAllocatedMB * 1024 * 1024) }</p>
+					</div>
+					<div class="border rounded-lg p-4">
+						<p class="text-gray-600">System Memory</p>
+						<p class="text-2xl font-bold">{ formatBytes(data.System.SystemMemoryMB * 1024 * 1024) }</p>
+					</div>
+					<div class="border rounded-lg p-4">
+						<p class="text-gray-600">Goroutines</p>
+						<p class="text-2xl font-bold">{ fmt.Sprintf("%d", data.System.Goroutines) }</p>
+					</div>
+					<div class="border rounded-lg p-4">
+						<p class="text-gray-600">CPU Cores</p>
+						<p class="text-2xl font-bold">{ fmt.Sprintf("%d", data.System.NumCPU) }</p>
+					</div>
+				</div>
+			</div>
+			
+			<div class="bg-white shadow-md rounded-lg p-6">
+				<h2 class="text-xl font-semibold mb-4">External Services</h2>
+				<div class="overflow-x-auto">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							for _, service := range data.ExternalServices {
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ service.Name }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm">
+										<span class={ "px-2 py-1 rounded-full text-xs font-medium", templ.KV("bg-green-100 text-green-800", service.Status == "connected"), templ.KV("bg-red-100 text-red-800", service.Status != "connected") }>
+											{ service.Status }
+										</span>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	}
+} 

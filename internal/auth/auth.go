@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hail2skins/the-virtual-armory/internal/database"
+	"github.com/hail2skins/the-virtual-armory/internal/models"
 	"github.com/volatiletech/authboss/v3"
 	"github.com/volatiletech/authboss/v3/defaults"
 )
@@ -120,6 +122,16 @@ func (a *Auth) RequireAuth() gin.HandlerFunc {
 		// Fall back to Authboss authentication
 		user, err := a.CurrentUser(c.Request)
 		if err != nil || user == nil {
+			// Set flash message for guest users
+			// Check if the request is for an admin route
+			path := c.Request.URL.Path
+			if strings.HasPrefix(path, "/admin") {
+				c.SetCookie("flash_message", "You do not have permission to access that page", 5, "/", "", false, true)
+			} else {
+				c.SetCookie("flash_message", "You do not have permission to access that page", 5, "/", "", false, true)
+			}
+			c.SetCookie("flash_type", "error", 5, "/", "", false, true)
+
 			// Redirect to login page
 			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
@@ -132,29 +144,42 @@ func (a *Auth) RequireAuth() gin.HandlerFunc {
 // RequireAdmin is a middleware that requires admin privileges
 func (a *Auth) RequireAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Check for the is_logged_in cookie first (our simplified auth)
-		cookie, err := c.Cookie("is_logged_in")
-		if err == nil && cookie == "true" {
-			// For now, assume all logged-in users are admins
-			c.Next()
+		// First check if the user is logged in
+		userEmail, err := c.Cookie("user_email")
+		if err != nil || userEmail == "" {
+			// User is not logged in, redirect to login
+			c.SetCookie("flash_message", "You do not have permission to access this page", 5, "/", "", false, true)
+			c.SetCookie("flash_type", "error", 5, "/", "", false, true)
+			c.Redirect(http.StatusFound, "/login")
+			c.Abort()
 			return
 		}
 
-		// Fall back to Authboss authentication
-		user, err := a.CurrentUser(c.Request)
-		if err != nil || user == nil {
-			// Redirect to login page
+		// User is logged in, check if they are an admin by querying the database
+		db := database.GetDB()
+		var user models.User
+		result := db.Where("email = ?", userEmail).First(&user)
+
+		if result.Error != nil {
+			// Error finding user, redirect to login
+			c.SetCookie("flash_message", "Authentication error. Please log in again.", 5, "/", "", false, true)
+			c.SetCookie("flash_type", "error", 5, "/", "", false, true)
 			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
 
 		// Check if the user is an admin
-		if !user.(*UserWrapper).IsAdmin() {
-			// Return forbidden
-			c.AbortWithStatus(http.StatusForbidden)
+		if !user.IsAdmin {
+			// User is not an admin, redirect to owner page
+			c.SetCookie("flash_message", "You must be an administrator to access this page", 5, "/", "", false, true)
+			c.SetCookie("flash_type", "error", 5, "/", "", false, true)
+			c.Redirect(http.StatusFound, "/owner")
+			c.Abort()
 			return
 		}
+
+		// User is an admin, proceed
 		c.Next()
 	}
 }

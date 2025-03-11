@@ -37,13 +37,13 @@ DB_SCHEMA=public
 1. Start PostgreSQL:
 
 ```bash
-docker-compose up -d
+docker-run
 ```
 
 2. Run the application:
 
 ```bash
-go run cmd/api/main.go
+go run main.go
 ```
 
 Or use the Makefile:
@@ -57,13 +57,13 @@ make run
 To create an admin user, run:
 
 ```bash
-go run cmd/scripts/create_admin.go <email> <password>
+go run cmd/scripts/create_admin.go -email <email> -password<password>
 ```
 
 For example:
 
 ```bash
-go run cmd/scripts/create_admin.go admin@example.com password123
+go run cmd/scripts/create_admin.go -emailadmin@example.com -password password123
 ```
 
 ## Authentication
@@ -73,13 +73,13 @@ The application uses Authboss for authentication. The following routes are avail
 - `/login` - Login page
 - `/register` - Registration page
 - `/recover` - Password recovery page
-- `/auth/*` - Authboss routes
 
 ## Protected Routes
 
 The following routes are protected and require authentication:
 
-- `/protected/profile` - User profile page
+- `/owner` - User armory page
+- `/profile` - User profile page
 
 ## Admin Routes
 

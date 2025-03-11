@@ -57,3 +57,14 @@ func RegisterAdminRoutes(router *gin.Engine, adminController *controllers.AdminC
 	// Register admin routes
 	adminGroup.GET("/error-metrics", adminController.ErrorMetrics)
 }
+
+// RegisterAdminHealthRoutes registers admin health-related routes
+func RegisterAdminHealthRoutes(router *gin.Engine, adminHealthController *controllers.AdminHealthController, authInstance *auth.Auth) {
+	// Create an admin group with authentication and admin middleware
+	adminGroup := router.Group("/admin")
+	adminGroup.Use(authInstance.RequireAuth())
+	adminGroup.Use(authInstance.RequireAdmin())
+
+	// Register admin health routes
+	adminGroup.GET("/detailed-health", adminHealthController.DetailedHealth)
+}
