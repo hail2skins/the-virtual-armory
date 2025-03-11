@@ -16,7 +16,7 @@ import (
 )
 
 // setupAdminHealthTestRouter creates a test router with the admin health routes registered
-func setupAdminHealthTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
+func setupAdminHealthTestRouter(t *testing.T) (*gin.Engine, *gorm.DB, *testutils.TestUsers) {
 	// Set Gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -27,6 +27,9 @@ func setupAdminHealthTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	// Setup test database
 	db, err := testutils.SetupTestDB()
 	require.NoError(t, err, "Failed to setup test database")
+
+	// Create test users
+	testUsers := testutils.CreateTestUsers()
 
 	// Create real auth instance
 	authInstance, err := auth.New()
@@ -46,12 +49,18 @@ func setupAdminHealthTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 		})
 	})
 
-	return r, db
+	// Save users to database
+	err = db.Create(&testUsers.Admin).Error
+	require.NoError(t, err, "Failed to create admin user")
+	err = db.Create(&testUsers.Unsubscribed).Error
+	require.NoError(t, err, "Failed to create regular user")
+
+	return r, db, testUsers
 }
 
 // TestAdminDetailedHealthEndpointWithGuestUser tests that a guest user is redirected to login with a flash message
 func TestAdminDetailedHealthEndpointWithGuestUser(t *testing.T) {
-	r, db := setupAdminHealthTestRouter(t)
+	r, db, _ := setupAdminHealthTestRouter(t)
 	defer db.Migrator().DropTable(&models.User{})
 
 	// Create a test HTTP request without authentication
@@ -90,12 +99,8 @@ func TestAdminDetailedHealthEndpointWithGuestUser(t *testing.T) {
 
 // TestAdminDetailedHealthEndpointWithRegularUser tests that a regular user is redirected to owner page with an admin required message
 func TestAdminDetailedHealthEndpointWithRegularUser(t *testing.T) {
-	r, db := setupAdminHealthTestRouter(t)
+	r, db, testUsers := setupAdminHealthTestRouter(t)
 	defer db.Migrator().DropTable(&models.User{})
-
-	// Create a real regular user
-	regularUser, err := testutils.CreateTestUser(db, "regular@example.com", "password123", false)
-	require.NoError(t, err, "Failed to create regular user")
 
 	// Create a test HTTP request
 	req, err := http.NewRequest("GET", "/admin/detailed-health", nil)
@@ -108,7 +113,7 @@ func TestAdminDetailedHealthEndpointWithRegularUser(t *testing.T) {
 	})
 	req.AddCookie(&http.Cookie{
 		Name:  "user_email",
-		Value: regularUser.Email,
+		Value: testUsers.Unsubscribed.Email,
 	})
 
 	// Create a ResponseRecorder to record the response
@@ -143,12 +148,8 @@ func TestAdminDetailedHealthEndpointWithRegularUser(t *testing.T) {
 
 // TestAdminDetailedHealthEndpointWithAdminUser tests that an admin user can access the endpoint
 func TestAdminDetailedHealthEndpointWithAdminUser(t *testing.T) {
-	r, db := setupAdminHealthTestRouter(t)
+	r, db, testUsers := setupAdminHealthTestRouter(t)
 	defer db.Migrator().DropTable(&models.User{})
-
-	// Create a real admin user
-	adminUser, err := testutils.CreateTestUser(db, "admin@example.com", "password123", true)
-	require.NoError(t, err, "Failed to create admin user")
 
 	// Create a test HTTP request
 	req, err := http.NewRequest("GET", "/admin/detailed-health", nil)
@@ -161,7 +162,7 @@ func TestAdminDetailedHealthEndpointWithAdminUser(t *testing.T) {
 	})
 	req.AddCookie(&http.Cookie{
 		Name:  "user_email",
-		Value: adminUser.Email,
+		Value: testUsers.Admin.Email,
 	})
 	req.AddCookie(&http.Cookie{
 		Name:  "is_admin",
