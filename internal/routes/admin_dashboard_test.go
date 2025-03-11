@@ -442,3 +442,203 @@ func TestAdminDashboardNewSubscriptionsMetrics(t *testing.T) {
 	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for new subscriptions")
 	assert.NotContains(t, body, "+15%", "Should not contain the mock growth data")
 }
+
+// TestAdminDashboardMonthlySubscribersMetrics tests that the monthly subscribers count is displayed
+func TestAdminDashboardMonthlySubscribersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with monthly subscription tier
+	additionalUsers := []models.User{
+		{Email: "monthly1@test.com", Password: "password", SubscriptionTier: "monthly"},
+		{Email: "monthly2@test.com", Password: "password", SubscriptionTier: "monthly"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain "Monthly Subscribers" and a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Contains(t, body, "Monthly Subscribers", "Should show Monthly Subscribers section")
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for monthly subscribers")
+}
+
+// TestAdminDashboardYearlySubscribersMetrics tests that the yearly subscribers count is displayed
+func TestAdminDashboardYearlySubscribersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with yearly subscription tier
+	additionalUsers := []models.User{
+		{Email: "yearly1@test.com", Password: "password", SubscriptionTier: "yearly"},
+		{Email: "yearly2@test.com", Password: "password", SubscriptionTier: "yearly"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain "Yearly Subscribers" and a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Contains(t, body, "Yearly Subscribers", "Should show Yearly Subscribers section")
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for yearly subscribers")
+}
+
+// TestAdminDashboardLifetimeSubscribersMetrics tests that the lifetime subscribers count is displayed
+func TestAdminDashboardLifetimeSubscribersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with lifetime subscription tier
+	additionalUsers := []models.User{
+		{Email: "lifetime1@test.com", Password: "password", SubscriptionTier: "lifetime"},
+		{Email: "lifetime2@test.com", Password: "password", SubscriptionTier: "lifetime"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain "Lifetime Subscribers" and a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Contains(t, body, "Lifetime Subscribers", "Should show Lifetime Subscribers section")
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for lifetime subscribers")
+}
+
+// TestAdminDashboardPremiumSubscribersMetrics tests that the premium subscribers count is displayed
+func TestAdminDashboardPremiumSubscribersMetrics(t *testing.T) {
+	r, db, testUsers := setupAdminDashboardTestRouter(t)
+	defer db.Migrator().DropTable(&models.User{})
+
+	// Create additional test users with premium subscription tier
+	additionalUsers := []models.User{
+		{Email: "premium1@test.com", Password: "password", SubscriptionTier: "premium"},
+		{Email: "premium2@test.com", Password: "password", SubscriptionTier: "premium"},
+	}
+
+	// Create the users in the database
+	for _, user := range additionalUsers {
+		err := db.Create(&user).Error
+		require.NoError(t, err)
+	}
+
+	// Create request as admin
+	req, err := http.NewRequest("GET", "/admin/dashboard", nil)
+	require.NoError(t, err)
+
+	// Set up session for the admin user
+	req.AddCookie(&http.Cookie{
+		Name:  "is_logged_in",
+		Value: "true",
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "user_email",
+		Value: testUsers.Admin.Email,
+	})
+	req.AddCookie(&http.Cookie{
+		Name:  "is_admin",
+		Value: "true",
+	})
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Serve the HTTP request
+	r.ServeHTTP(rr, req)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// The response should contain "Premium Subscribers" and a percentage sign for growth rate
+	body := rr.Body.String()
+	assert.Contains(t, body, "Premium Subscribers", "Should show Premium Subscribers section")
+	assert.Regexp(t, `[+-]?\d+%`, body, "Should show a growth percentage for premium subscribers")
+}

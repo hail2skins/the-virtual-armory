@@ -14,6 +14,14 @@ type DashboardData struct {
 	NewRegistrationsGrowthRate float64
 	NewSubscriptions          int64
 	NewSubscriptionsGrowthRate float64
+	MonthlySubscribers        int64
+	MonthlyGrowthRate         float64
+	YearlySubscribers         int64
+	YearlyGrowthRate          float64
+	LifetimeSubscribers       int64
+	LifetimeGrowthRate        float64
+	PremiumSubscribers        int64
+	PremiumGrowthRate         float64
 }
 
 templ Dashboard(data DashboardData) {
@@ -45,6 +53,32 @@ templ Dashboard(data DashboardData) {
 						<h3 class="text-lg font-semibold mb-2">New Subscriptions</h3>
 						<p class="text-3xl font-bold">{ fmt.Sprint(data.NewSubscriptions) }</p>
 						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.NewSubscriptionsGrowthRate) } from last month</p>
+					</div>
+				</div>
+				
+				<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+					<div class="bg-indigo-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Monthly Subscribers</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.MonthlySubscribers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.MonthlyGrowthRate) } from last month</p>
+					</div>
+					
+					<div class="bg-pink-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Yearly Subscribers</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.YearlySubscribers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.YearlyGrowthRate) } from last month</p>
+					</div>
+					
+					<div class="bg-teal-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Lifetime Subscribers</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.LifetimeSubscribers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.LifetimeGrowthRate) } from last month</p>
+					</div>
+					
+					<div class="bg-amber-50 p-4 rounded-lg shadow">
+						<h3 class="text-lg font-semibold mb-2">Premium Subscribers</h3>
+						<p class="text-3xl font-bold">{ fmt.Sprint(data.PremiumSubscribers) }</p>
+						<p class="text-sm text-gray-500 mt-2">{ fmt.Sprintf("%+.0f%%", data.PremiumGrowthRate) } from last month</p>
 					</div>
 				</div>
 				

@@ -234,6 +234,118 @@ func (c *AdminController) Dashboard(ctx *gin.Context) {
 		newSubscriptionsGrowthRate = -100 // If there were new subscriptions last month but none this month, that's -100% growth
 	}
 
+	// Count monthly subscribers
+	var monthlySubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'monthly'").
+		Count(&monthlySubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching monthly subscribers")
+		return
+	}
+
+	// Count monthly subscribers as of the start of this month
+	var lastMonthMonthlySubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'monthly' AND created_at < ?", startOfMonth).
+		Count(&lastMonthMonthlySubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's monthly subscribers")
+		return
+	}
+
+	// Calculate growth rate for monthly subscribers
+	var monthlyGrowthRate float64
+	if lastMonthMonthlySubscribers > 0 {
+		monthlyGrowthRate = float64(monthlySubscribers-lastMonthMonthlySubscribers) / float64(lastMonthMonthlySubscribers) * 100
+	} else if monthlySubscribers > 0 {
+		monthlyGrowthRate = 100 // If there were no monthly subscribers last month but there are this month, that's 100% growth
+	} else if lastMonthMonthlySubscribers > 0 && monthlySubscribers == 0 {
+		monthlyGrowthRate = -100 // If there were monthly subscribers last month but none this month, that's -100% growth
+	}
+
+	// Count yearly subscribers
+	var yearlySubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'yearly'").
+		Count(&yearlySubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching yearly subscribers")
+		return
+	}
+
+	// Count yearly subscribers as of the start of this month
+	var lastMonthYearlySubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'yearly' AND created_at < ?", startOfMonth).
+		Count(&lastMonthYearlySubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's yearly subscribers")
+		return
+	}
+
+	// Calculate growth rate for yearly subscribers
+	var yearlyGrowthRate float64
+	if lastMonthYearlySubscribers > 0 {
+		yearlyGrowthRate = float64(yearlySubscribers-lastMonthYearlySubscribers) / float64(lastMonthYearlySubscribers) * 100
+	} else if yearlySubscribers > 0 {
+		yearlyGrowthRate = 100 // If there were no yearly subscribers last month but there are this month, that's 100% growth
+	} else if lastMonthYearlySubscribers > 0 && yearlySubscribers == 0 {
+		yearlyGrowthRate = -100 // If there were yearly subscribers last month but none this month, that's -100% growth
+	}
+
+	// Count lifetime subscribers
+	var lifetimeSubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'lifetime'").
+		Count(&lifetimeSubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching lifetime subscribers")
+		return
+	}
+
+	// Count lifetime subscribers as of the start of this month
+	var lastMonthLifetimeSubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'lifetime' AND created_at < ?", startOfMonth).
+		Count(&lastMonthLifetimeSubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's lifetime subscribers")
+		return
+	}
+
+	// Calculate growth rate for lifetime subscribers
+	var lifetimeGrowthRate float64
+	if lastMonthLifetimeSubscribers > 0 {
+		lifetimeGrowthRate = float64(lifetimeSubscribers-lastMonthLifetimeSubscribers) / float64(lastMonthLifetimeSubscribers) * 100
+	} else if lifetimeSubscribers > 0 {
+		lifetimeGrowthRate = 100 // If there were no lifetime subscribers last month but there are this month, that's 100% growth
+	} else if lastMonthLifetimeSubscribers > 0 && lifetimeSubscribers == 0 {
+		lifetimeGrowthRate = -100 // If there were lifetime subscribers last month but none this month, that's -100% growth
+	}
+
+	// Count premium subscribers
+	var premiumSubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'premium'").
+		Count(&premiumSubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching premium subscribers")
+		return
+	}
+
+	// Count premium subscribers as of the start of this month
+	var lastMonthPremiumSubscribers int64
+	if err := database.GetDB().Model(&models.User{}).
+		Where("subscription_tier = 'premium' AND created_at < ?", startOfMonth).
+		Count(&lastMonthPremiumSubscribers).Error; err != nil {
+		ctx.String(http.StatusInternalServerError, "Error fetching last month's premium subscribers")
+		return
+	}
+
+	// Calculate growth rate for premium subscribers
+	var premiumGrowthRate float64
+	if lastMonthPremiumSubscribers > 0 {
+		premiumGrowthRate = float64(premiumSubscribers-lastMonthPremiumSubscribers) / float64(lastMonthPremiumSubscribers) * 100
+	} else if premiumSubscribers > 0 {
+		premiumGrowthRate = 100 // If there were no premium subscribers last month but there are this month, that's 100% growth
+	} else if lastMonthPremiumSubscribers > 0 && premiumSubscribers == 0 {
+		premiumGrowthRate = -100 // If there were premium subscribers last month but none this month, that's -100% growth
+	}
+
 	data := admin.DashboardData{
 		TotalUsers:                 totalUsers,
 		UserGrowthRate:             userGrowthRate,
@@ -243,6 +355,14 @@ func (c *AdminController) Dashboard(ctx *gin.Context) {
 		NewRegistrationsGrowthRate: newRegistrationsGrowthRate,
 		NewSubscriptions:           newSubscriptions,
 		NewSubscriptionsGrowthRate: newSubscriptionsGrowthRate,
+		MonthlySubscribers:         monthlySubscribers,
+		MonthlyGrowthRate:          monthlyGrowthRate,
+		YearlySubscribers:          yearlySubscribers,
+		YearlyGrowthRate:           yearlyGrowthRate,
+		LifetimeSubscribers:        lifetimeSubscribers,
+		LifetimeGrowthRate:         lifetimeGrowthRate,
+		PremiumSubscribers:         premiumSubscribers,
+		PremiumGrowthRate:          premiumGrowthRate,
 	}
 
 	component := admin.Dashboard(data)
