@@ -282,19 +282,19 @@ templ Dashboard(data DashboardData) {
 								<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
 								<p>All systems operational</p>
 							</div>
-							<div class="mt-2">
-								<p class="text-sm text-gray-500">Last checked: Today at 12:45 PM</p>
+							<div class="mt-4">
+								<a href="/admin/detailed-health" class="text-blue-600 hover:underline">View Detailed Health →</a>
 							</div>
 						</div>
 						
 						<div class="bg-gray-50 p-4 rounded-lg">
-							<h3 class="text-lg font-semibold mb-2">Database Status</h3>
+							<h3 class="text-lg font-semibold mb-2">Error Metrics</h3>
 							<div class="flex items-center">
 								<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-								<p>Connected (3ms response time)</p>
+								<p>No critical errors</p>
 							</div>
-							<div class="mt-2">
-								<p class="text-sm text-gray-500">Storage: 42% used</p>
+							<div class="mt-4">
+								<a href="/admin/error-metrics" class="text-blue-600 hover:underline">View Error Metrics →</a>
 							</div>
 						</div>
 					</div>
