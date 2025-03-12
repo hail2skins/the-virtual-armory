@@ -2,35 +2,108 @@ package layout
 
 templ Base(title string) {
 	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>{ title } | The Virtual Armory</title>
-		<link rel="stylesheet" href="/assets/css/output.css" />
-		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-	</head>
-	<body class="bg-gray-100 min-h-screen">
-		<header class="bg-blue-800 text-white p-4 shadow-md">
-			<div class="container mx-auto flex justify-between items-center">
-				<a href="/" class="text-2xl font-bold">The Virtual Armory</a>
-				<nav>
-					<ul class="flex space-x-4">
-						<li><a href="/" class="hover:underline">Home</a></li>
-						<li><a href="/login" class="hover:underline">Login</a></li>
-						<li><a href="/register" class="hover:underline">Register</a></li>
-					</ul>
-				</nav>
-			</div>
-		</header>
-		<main class="container mx-auto py-8 px-4">
-			{ children... }
-		</main>
-		<footer class="bg-blue-800 text-white p-4 mt-8">
-			<div class="container mx-auto text-center">
-				<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
-			</div>
-		</footer>
-	</body>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width,initial-scale=1"/>
+			<title>{ title } | The Virtual Armory</title>
+			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<script src="/assets/js/htmx.min.js"></script>
+		</head>
+		<body class="leading-normal tracking-normal text-white bg-gunmetal-100 font-sans">
+			<nav id="header" class="fixed w-full z-30 top-0 text-white bg-gunmetal-800">
+				<div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
+					<div class="pl-4 flex items-center">
+						<a class="text-2xl font-bold text-white no-underline hover:text-brass-300 hover:no-underline" href="/">
+							The Virtual Armory
+						</a>
+					</div>
+					<div class="block lg:hidden pr-4">
+						<button id="nav-toggle" class="flex items-center p-1 text-white hover:text-brass-300 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out">
+							<svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+								<title>Menu</title>
+								<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+							</svg>
+						</button>
+					</div>
+					<div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden mt-2 lg:mt-0 bg-gunmetal-800 lg:bg-transparent text-white p-4 lg:p-0 z-20" id="nav-content">
+						<ul class="list-reset lg:flex justify-end flex-1 items-center">
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/">Home</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/about">About</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/contact">Contact</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/pricing">Pricing</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/login">Login</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block text-white py-2 px-4 font-medium no-underline border border-white hover:border-transparent hover:text-gunmetal-800 hover:bg-brass-300 rounded" href="/register">Register</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<hr class="border-b border-gray-700 opacity-25 my-0 py-0" />
+			</nav>
+			
+			<main class="pt-24 pb-8">
+				<div class="container px-3 mx-auto">
+					{ children... }
+				</div>
+			</main>
+			
+			<footer class="bg-gunmetal-700 text-white py-8">
+				<div class="container mx-auto px-8">
+					<div class="w-full flex flex-col md:flex-row py-6">
+						<div class="flex-1 mb-6">
+							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
+							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Links</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								</li>
+							</ul>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="text-center pt-6 border-t border-gray-700">
+						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					</div>
+				</div>
+			</footer>
+			
+			<script>
+				// Toggle mobile menu
+				document.getElementById('nav-toggle').onclick = function() {
+					document.getElementById("nav-content").classList.toggle("hidden");
+				};
+			</script>
+		</body>
 	</html>
 } 

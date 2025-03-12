@@ -2,7 +2,7 @@ package partials
 
 templ Base() {
 	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
+	<html lang="en" class="h-full">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -11,49 +11,106 @@ templ Base() {
 			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
 		</head>
-		<body class="bg-gunmetal-100">
-			<header class="bg-gunmetal-800 text-white p-4">
-				<div class="container mx-auto">
-					<!-- Site name/logo placeholder -->
-					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
-					
-					<!-- Navigation bar -->
-					<div class="flex justify-between items-center">
-						<!-- Left side navigation -->
-						<nav>
-							<ul class="flex">
-								<li class="pl-0 pr-6"><a href="/" class="hover:text-brass-300 font-medium">Home</a></li>
-								<li class="px-6"><a href="/about" class="hover:text-brass-300 font-medium">About</a></li>
-								<li class="px-6"><a href="/contact" class="hover:text-brass-300 font-medium">Contact</a></li>
-								<li class="px-6"><a href="/pricing" class="hover:text-brass-300 font-medium">Pricing</a></li>
-							</ul>
-						</nav>
-						
-						<!-- Right side navigation -->
-						<nav>
-							<ul class="flex">
-								<li class="px-6"><a href="/login" class="hover:text-brass-300 font-medium">Login</a></li>
-								<li class="px-6"><a href="/register" class="hover:text-brass-300 font-medium">Register</a></li>
-							</ul>
-						</nav>
+		<body class="leading-normal tracking-normal text-white bg-gunmetal-100 font-sans">
+			<nav id="header" class="fixed w-full z-30 top-0 text-white bg-gunmetal-800">
+				<div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
+					<div class="pl-4 flex items-center">
+						<a class="text-2xl font-bold text-white no-underline hover:text-brass-300 hover:no-underline" href="/">
+							The Virtual Armory
+						</a>
+					</div>
+					<div class="block lg:hidden pr-4">
+						<button id="nav-toggle" class="flex items-center p-1 text-white hover:text-brass-300 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out">
+							<svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+								<title>Menu</title>
+								<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+							</svg>
+						</button>
+					</div>
+					<div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden mt-2 lg:mt-0 bg-gunmetal-800 lg:bg-transparent text-white p-4 lg:p-0 z-20" id="nav-content">
+						<ul class="list-reset lg:flex justify-end flex-1 items-center">
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/">Home</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/about">About</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/contact">Contact</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/pricing">Pricing</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/login">Login</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block text-white py-2 px-4 font-medium no-underline border border-white hover:border-transparent hover:text-gunmetal-800 hover:bg-brass-300 rounded" href="/register">Register</a>
+							</li>
+						</ul>
 					</div>
 				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				{ children... }
+				<hr class="border-b border-gray-700 opacity-25 my-0 py-0" />
+			</nav>
+			
+			<main class="pt-24 pb-8">
+				<div class="container px-3 mx-auto">
+					{ children... }
+				</div>
 			</main>
-			<footer class="bg-gunmetal-700 text-white p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+			
+			<footer class="bg-gunmetal-700 text-white py-8">
+				<div class="container mx-auto px-8">
+					<div class="w-full flex flex-col md:flex-row py-6">
+						<div class="flex-1 mb-6">
+							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
+							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Links</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								</li>
+							</ul>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="text-center pt-6 border-t border-gray-700">
+						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					</div>
 				</div>
 			</footer>
+			
+			<script>
+				// Toggle mobile menu
+				document.getElementById('nav-toggle').onclick = function() {
+					document.getElementById("nav-content").classList.toggle("hidden");
+				};
+			</script>
 		</body>
 	</html>
 }
 
 templ BaseWithAuth(isLoggedIn bool) {
 	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
+	<html lang="en" class="h-full">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -99,7 +156,7 @@ templ BaseWithAuth(isLoggedIn bool) {
 						flashContainer.innerHTML = `<span class="block sm:inline">${decodedMessage}</span>`;
 						
 						// Insert at the beginning of the main content
-						const mainContent = document.querySelector('main');
+						const mainContent = document.querySelector('main .container');
 						if (mainContent && mainContent.firstChild) {
 							mainContent.insertBefore(flashContainer, mainContent.firstChild);
 						}
@@ -117,48 +174,283 @@ templ BaseWithAuth(isLoggedIn bool) {
 				document.addEventListener('DOMContentLoaded', displayFlashMessage);
 			</script>
 		</head>
-		<body class="bg-gunmetal-100">
-			<header class="bg-gunmetal-800 text-white p-4">
-				<div class="container mx-auto">
-					<!-- Site name/logo placeholder -->
-					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
-					
-					<!-- Navigation bar -->
-					<div class="flex justify-between items-center">
-						<!-- Left side navigation -->
-						<nav>
-							<ul class="flex">
-								<li class="pl-0 pr-6"><a href="/" class="hover:text-brass-300 font-medium">Home</a></li>
-								<li class="px-6"><a href="/about" class="hover:text-brass-300 font-medium">About</a></li>
-								<li class="px-6"><a href="/contact" class="hover:text-brass-300 font-medium">Contact</a></li>
-								<li class="px-6"><a href="/pricing" class="hover:text-brass-300 font-medium">Pricing</a></li>
-							</ul>
-						</nav>
-						
-						<!-- Right side navigation -->
-						<nav>
-							<ul class="flex">
-								if isLoggedIn {
-									<li class="px-6"><a href="/owner" class="hover:text-brass-300 font-medium">My Armory</a></li>
-									<li class="px-6"><a href="/admin/dashboard" class="hover:text-brass-300 font-medium">Admin</a></li>
-									<li class="px-6"><a href="/logout" class="hover:text-brass-300 font-medium">Logout</a></li>
-								} else {
-									<li class="px-6"><a href="/login" class="hover:text-brass-300 font-medium">Login</a></li>
-									<li class="px-6"><a href="/register" class="hover:text-brass-300 font-medium">Register</a></li>
-								}
-							</ul>
-						</nav>
+		<body class="leading-normal tracking-normal text-white bg-gunmetal-100 font-sans">
+			<nav id="header" class="fixed w-full z-30 top-0 text-white bg-gunmetal-800">
+				<div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
+					<div class="pl-4 flex items-center">
+						<a class="text-2xl font-bold text-white no-underline hover:text-brass-300 hover:no-underline" href="/">
+							The Virtual Armory
+						</a>
+					</div>
+					<div class="block lg:hidden pr-4">
+						<button id="nav-toggle" class="flex items-center p-1 text-white hover:text-brass-300 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out">
+							<svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+								<title>Menu</title>
+								<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+							</svg>
+						</button>
+					</div>
+					<div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden mt-2 lg:mt-0 bg-gunmetal-800 lg:bg-transparent text-white p-4 lg:p-0 z-20" id="nav-content">
+						<ul class="list-reset lg:flex justify-end flex-1 items-center">
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/">Home</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/about">About</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/contact">Contact</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/pricing">Pricing</a>
+							</li>
+							if isLoggedIn {
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/owner">My Armory</a>
+								</li>
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/admin/dashboard">Admin</a>
+								</li>
+								<li class="mr-3">
+									<a class="inline-block text-white py-2 px-4 font-medium no-underline border border-white hover:border-transparent hover:text-gunmetal-800 hover:bg-brass-300 rounded" href="/logout">Logout</a>
+								</li>
+							} else {
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/login">Login</a>
+								</li>
+								<li class="mr-3">
+									<a class="inline-block text-white py-2 px-4 font-medium no-underline border border-white hover:border-transparent hover:text-gunmetal-800 hover:bg-brass-300 rounded" href="/register">Register</a>
+								</li>
+							}
+						</ul>
 					</div>
 				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				{ children... }
+				<hr class="border-b border-gray-700 opacity-25 my-0 py-0" />
+			</nav>
+			
+			<main class="pt-24 pb-8">
+				<div class="container px-3 mx-auto">
+					{ children... }
+				</div>
 			</main>
-			<footer class="bg-gunmetal-700 text-white p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+			
+			<footer class="bg-gunmetal-700 text-white py-8">
+				<div class="container mx-auto px-8">
+					<div class="w-full flex flex-col md:flex-row py-6">
+						<div class="flex-1 mb-6">
+							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
+							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Links</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								</li>
+							</ul>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="text-center pt-6 border-t border-gray-700">
+						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					</div>
 				</div>
 			</footer>
+			
+			<script>
+				// Toggle mobile menu
+				document.getElementById('nav-toggle').onclick = function() {
+					document.getElementById("nav-content").classList.toggle("hidden");
+				};
+			</script>
+		</body>
+	</html>
+}
+
+templ BaseAdmin(isLoggedIn bool) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width,initial-scale=1"/>
+			<title>Admin | The Virtual Armory</title>
+			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+			<script src="/assets/js/htmx.min.js"></script>
+			<script>
+				// Function to get cookie value by name
+				function getCookie(name) {
+					const value = `; ${document.cookie}`;
+					const parts = value.split(`; ${name}=`);
+					if (parts.length === 2) return parts.pop().split(';').shift();
+					return null;
+				}
+				
+				// Function to display flash message
+				function displayFlashMessage() {
+					const flashMessage = getCookie('flash_message');
+					const flashType = getCookie('flash_type') || 'info';
+					
+					if (flashMessage) {
+						// Clear the flash cookies immediately
+						document.cookie = "flash_message=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+						document.cookie = "flash_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+						
+						// Decode the URI component to handle special characters
+						const decodedMessage = decodeURIComponent(flashMessage).replace(/\+/g, ' ');
+						
+						const flashContainer = document.createElement('div');
+						let cssClass = 'mb-6 p-4 rounded-md bg-gunmetal-600 text-white text-center';
+						
+						if (flashType === 'success') {
+							cssClass = 'mb-6 p-4 rounded-md bg-green-500 text-white text-center';
+						} else if (flashType === 'error') {
+							cssClass = 'mb-6 p-4 rounded-md bg-red-500 text-white text-center';
+						} else if (flashType === 'warning') {
+							cssClass = 'mb-6 p-4 rounded-md bg-yellow-500 text-white text-center';
+						}
+						
+						flashContainer.className = cssClass;
+						flashContainer.setAttribute('role', 'alert');
+						flashContainer.innerHTML = `<span class="block sm:inline">${decodedMessage}</span>`;
+						
+						// Insert at the beginning of the main content
+						const mainContent = document.querySelector('main .container');
+						if (mainContent && mainContent.firstChild) {
+							mainContent.insertBefore(flashContainer, mainContent.firstChild);
+						}
+						
+						// Auto-remove after 5 seconds
+						setTimeout(() => {
+							if (flashContainer.parentNode) {
+								flashContainer.parentNode.removeChild(flashContainer);
+							}
+						}, 5000);
+					}
+				}
+				
+				// Run when DOM is loaded
+				document.addEventListener('DOMContentLoaded', displayFlashMessage);
+			</script>
+		</head>
+		<body class="leading-normal tracking-normal text-gunmetal-800 bg-gunmetal-100 font-sans">
+			<nav id="header" class="fixed w-full z-30 top-0 text-white bg-gunmetal-800">
+				<div class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2">
+					<div class="pl-4 flex items-center">
+						<a class="text-2xl font-bold text-white no-underline hover:text-brass-300 hover:no-underline" href="/">
+							The Virtual Armory
+						</a>
+					</div>
+					<div class="block lg:hidden pr-4">
+						<button id="nav-toggle" class="flex items-center p-1 text-white hover:text-brass-300 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out">
+							<svg class="fill-current h-6 w-6" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+								<title>Menu</title>
+								<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+							</svg>
+						</button>
+					</div>
+					<div class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden mt-2 lg:mt-0 bg-gunmetal-800 lg:bg-transparent text-white p-4 lg:p-0 z-20" id="nav-content">
+						<ul class="list-reset lg:flex justify-end flex-1 items-center">
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/">Home</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/about">About</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/contact">Contact</a>
+							</li>
+							<li class="mr-3">
+								<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/pricing">Pricing</a>
+							</li>
+							if isLoggedIn {
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/owner">My Armory</a>
+								</li>
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/logout">Logout</a>
+								</li>
+							} else {
+								<li class="mr-3">
+									<a class="inline-block py-2 px-4 text-white font-medium no-underline hover:text-brass-300" href="/login">Login</a>
+								</li>
+								<li class="mr-3">
+									<a class="inline-block text-white py-2 px-4 font-medium no-underline border border-white hover:border-transparent hover:text-gunmetal-800 hover:bg-brass-300 rounded" href="/register">Register</a>
+								</li>
+							}
+						</ul>
+					</div>
+				</div>
+				<hr class="border-b border-gray-700 opacity-25 my-0 py-0" />
+			</nav>
+			
+			<main class="pt-24 pb-8">
+				<div class="container px-3 mx-auto">
+					{ children... }
+				</div>
+			</main>
+			
+			<footer class="bg-gunmetal-700 text-white py-8">
+				<div class="container mx-auto px-8">
+					<div class="w-full flex flex-col md:flex-row py-6">
+						<div class="flex-1 mb-6">
+							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
+							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Links</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								</li>
+							</ul>
+						</div>
+						<div class="flex-1">
+							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
+							<ul class="list-reset mb-6">
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
+								</li>
+								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
+									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="text-center pt-6 border-t border-gray-700">
+						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					</div>
+				</div>
+			</footer>
+			
+			<script>
+				// Toggle mobile menu
+				document.getElementById('nav-toggle').onclick = function() {
+					document.getElementById("nav-content").classList.toggle("hidden");
+				};
+			</script>
 		</body>
 	</html>
 }

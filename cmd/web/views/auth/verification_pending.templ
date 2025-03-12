@@ -4,8 +4,8 @@ import "github.com/hail2skins/the-virtual-armory/cmd/web/views/layout"
 
 templ VerificationPending(isEmailChange bool, email string) {
 	@layout.Base("Email Verification Required") {
-		<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-			<h1 class="text-2xl font-bold text-center mb-6">Email Verification Required</h1>
+		<div class="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg">
+			<h1 class="text-2xl font-bold text-center mb-6 text-gunmetal-800">Email Verification Required</h1>
 			
 			if isEmailChange {
 				<div class="mb-6 p-4 bg-gunmetal-100 border border-gunmetal-300 rounded-md text-gunmetal-800">
@@ -30,13 +30,13 @@ templ VerificationPending(isEmailChange bool, email string) {
 			
 			<form action="/resend-verification" method="POST" class="mb-6">
 				<input type="hidden" name="email" value={ email } />
-				<button type="submit" class="w-full bg-rust-600 hover:bg-rust-700 text-white py-2 px-4 rounded">
+				<button type="submit" class="w-full bg-gunmetal-800 hover:bg-gunmetal-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300">
 					Resend Verification Email
 				</button>
 			</form>
 			
 			<div class="text-center">
-				<a href="/" class="text-gunmetal-600 hover:text-brass-500">Return to Home Page</a>
+				<a href="/" class="text-gunmetal-600 hover:text-brass-500 transition duration-300">Return to Home Page</a>
 			</div>
 		</div>
 	}

@@ -23,7 +23,7 @@ type RecentError struct {
 }
 
 templ ErrorMetrics(data ErrorMetricsData) {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true) {
 		<div class="container mx-auto px-4 py-8">
 			<h1 class="text-3xl font-bold mb-6">Error Metrics Dashboard</h1>
 			

@@ -50,7 +50,7 @@ type DashboardData struct {
 }
 
 templ Dashboard(data DashboardData) {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true) {
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="bg-white shadow-md rounded-lg p-6">
 				<h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
