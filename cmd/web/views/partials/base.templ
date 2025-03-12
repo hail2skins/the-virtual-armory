@@ -8,11 +8,11 @@ templ Base() {
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
 			<title>The Virtual Armory</title>
 			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
 		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
+		<body class="bg-gunmetal-100">
+			<header class="bg-gunmetal-800 text-white p-4">
 				<div class="container mx-auto">
 					<!-- Site name/logo placeholder -->
 					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
@@ -22,18 +22,18 @@ templ Base() {
 						<!-- Left side navigation -->
 						<nav>
 							<ul class="flex">
-								<li class="pl-0 pr-6"><a href="/" class="hover:underline font-medium">Home</a></li>
-								<li class="px-6"><a href="/about" class="hover:underline font-medium">About</a></li>
-								<li class="px-6"><a href="/contact" class="hover:underline font-medium">Contact</a></li>
-								<li class="px-6"><a href="/pricing" class="hover:underline font-medium">Pricing</a></li>
+								<li class="pl-0 pr-6"><a href="/" class="hover:text-brass-300 font-medium">Home</a></li>
+								<li class="px-6"><a href="/about" class="hover:text-brass-300 font-medium">About</a></li>
+								<li class="px-6"><a href="/contact" class="hover:text-brass-300 font-medium">Contact</a></li>
+								<li class="px-6"><a href="/pricing" class="hover:text-brass-300 font-medium">Pricing</a></li>
 							</ul>
 						</nav>
 						
 						<!-- Right side navigation -->
 						<nav>
 							<ul class="flex">
-								<li class="px-6"><a href="/login" class="hover:underline font-medium">Login</a></li>
-								<li class="px-6"><a href="/register" class="hover:underline font-medium">Register</a></li>
+								<li class="px-6"><a href="/login" class="hover:text-brass-300 font-medium">Login</a></li>
+								<li class="px-6"><a href="/register" class="hover:text-brass-300 font-medium">Register</a></li>
 							</ul>
 						</nav>
 					</div>
@@ -42,7 +42,7 @@ templ Base() {
 			<main class="container mx-auto p-4">
 				{ children... }
 			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
+			<footer class="bg-gunmetal-700 text-white p-4 mt-8">
 				<div class="container mx-auto text-center">
 					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
 				</div>
@@ -59,7 +59,7 @@ templ BaseWithAuth(isLoggedIn bool) {
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
 			<title>The Virtual Armory</title>
 			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
 			<script>
 				// Function to get cookie value by name
@@ -84,7 +84,7 @@ templ BaseWithAuth(isLoggedIn bool) {
 						const decodedMessage = decodeURIComponent(flashMessage).replace(/\+/g, ' ');
 						
 						const flashContainer = document.createElement('div');
-						let cssClass = 'mb-6 p-4 rounded-md bg-blue-500 text-white text-center';
+						let cssClass = 'mb-6 p-4 rounded-md bg-gunmetal-600 text-white text-center';
 						
 						if (flashType === 'success') {
 							cssClass = 'mb-6 p-4 rounded-md bg-green-500 text-white text-center';
@@ -117,8 +117,8 @@ templ BaseWithAuth(isLoggedIn bool) {
 				document.addEventListener('DOMContentLoaded', displayFlashMessage);
 			</script>
 		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
+		<body class="bg-gunmetal-100">
+			<header class="bg-gunmetal-800 text-white p-4">
 				<div class="container mx-auto">
 					<!-- Site name/logo placeholder -->
 					<h1 class="text-2xl font-bold mb-4">The Virtual Armory</h1>
@@ -128,10 +128,10 @@ templ BaseWithAuth(isLoggedIn bool) {
 						<!-- Left side navigation -->
 						<nav>
 							<ul class="flex">
-								<li class="pl-0 pr-6"><a href="/" class="hover:underline font-medium">Home</a></li>
-								<li class="px-6"><a href="/about" class="hover:underline font-medium">About</a></li>
-								<li class="px-6"><a href="/contact" class="hover:underline font-medium">Contact</a></li>
-								<li class="px-6"><a href="/pricing" class="hover:underline font-medium">Pricing</a></li>
+								<li class="pl-0 pr-6"><a href="/" class="hover:text-brass-300 font-medium">Home</a></li>
+								<li class="px-6"><a href="/about" class="hover:text-brass-300 font-medium">About</a></li>
+								<li class="px-6"><a href="/contact" class="hover:text-brass-300 font-medium">Contact</a></li>
+								<li class="px-6"><a href="/pricing" class="hover:text-brass-300 font-medium">Pricing</a></li>
 							</ul>
 						</nav>
 						
@@ -139,12 +139,12 @@ templ BaseWithAuth(isLoggedIn bool) {
 						<nav>
 							<ul class="flex">
 								if isLoggedIn {
-									<li class="px-6"><a href="/owner" class="hover:underline font-medium">My Armory</a></li>
-									<li class="px-6"><a href="/admin/dashboard" class="hover:underline font-medium">Admin</a></li>
-									<li class="px-6"><a href="/logout" class="hover:underline font-medium">Logout</a></li>
+									<li class="px-6"><a href="/owner" class="hover:text-brass-300 font-medium">My Armory</a></li>
+									<li class="px-6"><a href="/admin/dashboard" class="hover:text-brass-300 font-medium">Admin</a></li>
+									<li class="px-6"><a href="/logout" class="hover:text-brass-300 font-medium">Logout</a></li>
 								} else {
-									<li class="px-6"><a href="/login" class="hover:underline font-medium">Login</a></li>
-									<li class="px-6"><a href="/register" class="hover:underline font-medium">Register</a></li>
+									<li class="px-6"><a href="/login" class="hover:text-brass-300 font-medium">Login</a></li>
+									<li class="px-6"><a href="/register" class="hover:text-brass-300 font-medium">Register</a></li>
 								}
 							</ul>
 						</nav>
@@ -154,7 +154,7 @@ templ BaseWithAuth(isLoggedIn bool) {
 			<main class="container mx-auto p-4">
 				{ children... }
 			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
+			<footer class="bg-gunmetal-700 text-white p-4 mt-8">
 				<div class="container mx-auto text-center">
 					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
 				</div>
@@ -172,6 +172,6 @@ func getFlashClass(flashType string) string {
 	case "warning":
 		return "mb-6 p-4 rounded-md bg-yellow-500 text-white text-center"
 	default:
-		return "mb-6 p-4 rounded-md bg-blue-500 text-white text-center"
+		return "mb-6 p-4 rounded-md bg-gunmetal-600 text-white text-center"
 	}
 } 
