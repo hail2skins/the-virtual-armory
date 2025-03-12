@@ -28,11 +28,11 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 						<input type="hidden" name="_method" value="PUT"/>
 						<div class="mb-4">
 							<label for="name" class="block text-gray-700 font-bold mb-2">Name*</label>
-							<input type="text" id="name" name="name" value={ gun.Name } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+							<input type="text" id="name" name="name" value={ gun.Name } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800"/>
 						</div>
 						<div class="mb-4">
 							<label for="weapon_type_id" class="block text-gray-700 font-bold mb-2">Weapon Type*</label>
-							<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								for _, weaponType := range weaponTypes {
 									if weaponType.ID == gun.WeaponTypeID {
 										<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) } selected>
@@ -54,7 +54,7 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 						</div>
 						<div class="mb-4">
 							<label for="caliber_id" class="block text-gray-700 font-bold mb-2">Caliber*</label>
-							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								for _, caliber := range calibers {
 									if caliber.ID == gun.CaliberID {
 										<option value={ strconv.FormatUint(uint64(caliber.ID), 10) } selected>
@@ -76,7 +76,7 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 						</div>
 						<div class="mb-4">
 							<label for="manufacturer_id" class="block text-gray-700 font-bold mb-2">Manufacturer*</label>
-							<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								for _, manufacturer := range manufacturers {
 									if manufacturer.ID == gun.ManufacturerID {
 										<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) } selected>
@@ -98,7 +98,7 @@ templ Edit(gun models.Gun, weaponTypes []models.WeaponType, calibers []models.Ca
 						</div>
 						<div class="mb-6">
 							<label for="acquired" class="block text-gray-700 font-bold mb-2">Acquired Date</label>
-							<input type="date" id="acquired" name="acquired" value={ formatDateValue(gun.Acquired) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+							<input type="date" id="acquired" name="acquired" value={ formatDateValue(gun.Acquired) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800"/>
 							<p class="text-sm text-gray-500 mt-1">Optional. When did you acquire this gun?</p>
 						</div>
 						<div class="flex items-center justify-between">

@@ -18,11 +18,11 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 					<form method="POST" action="/owner/guns">
 						<div class="mb-4">
 							<label for="name" class="block text-gray-700 font-bold mb-2">Name*</label>
-							<input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Glock 19"/>
+							<input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800" placeholder="e.g. Glock 19"/>
 						</div>
 						<div class="mb-4">
 							<label for="weapon_type_id" class="block text-gray-700 font-bold mb-2">Weapon Type*</label>
-							<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="weapon_type_id" name="weapon_type_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								<option value="">Select a weapon type</option>
 								for _, weaponType := range weaponTypes {
 									<option value={ strconv.FormatUint(uint64(weaponType.ID), 10) }>
@@ -36,7 +36,7 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 						</div>
 						<div class="mb-4">
 							<label for="caliber_id" class="block text-gray-700 font-bold mb-2">Caliber*</label>
-							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="caliber_id" name="caliber_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								<option value="">Select a caliber</option>
 								for _, caliber := range calibers {
 									<option value={ strconv.FormatUint(uint64(caliber.ID), 10) }>
@@ -50,7 +50,7 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 						</div>
 						<div class="mb-4">
 							<label for="manufacturer_id" class="block text-gray-700 font-bold mb-2">Manufacturer*</label>
-							<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+							<select id="manufacturer_id" name="manufacturer_id" required class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800">
 								<option value="">Select a manufacturer</option>
 								for _, manufacturer := range manufacturers {
 									<option value={ strconv.FormatUint(uint64(manufacturer.ID), 10) }>
@@ -64,7 +64,7 @@ templ New(weaponTypes []models.WeaponType, calibers []models.Caliber, manufactur
 						</div>
 						<div class="mb-6">
 							<label for="acquired" class="block text-gray-700 font-bold mb-2">Acquired Date</label>
-							<input type="date" id="acquired" name="acquired" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+							<input type="date" id="acquired" name="acquired" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gunmetal-800"/>
 							<p class="text-sm text-gray-500 mt-1">Optional. When did you acquire this gun?</p>
 						</div>
 						<div class="flex items-center justify-between">
