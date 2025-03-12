@@ -1,9 +1,9 @@
 package auth
 
-import "github.com/hail2skins/the-virtual-armory/cmd/web/views/layout"
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 
 templ VerificationPending(isEmailChange bool, email string) {
-	@layout.Base("Email Verification Required") {
+	@partials.Base("Email Verification Required") {
 		<div class="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg">
 			<h1 class="text-2xl font-bold text-center mb-6 text-gunmetal-800">Email Verification Required</h1>
 			

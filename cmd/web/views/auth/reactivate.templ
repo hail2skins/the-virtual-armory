@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/hail2skins/the-virtual-armory/cmd/web/views/layout"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 templ Reactivate(email string, errorMsg string) {
-	@layout.Base("Reactivate Account") {
+	@partials.Base("Reactivate Account") {
 		<div class="max-w-md mx-auto py-12 px-4">
 			<h1 class="text-3xl font-bold text-center mb-8 text-gunmetal-800">Reactivate Your Account</h1>
 			

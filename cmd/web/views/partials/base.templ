@@ -1,12 +1,19 @@
 package partials
 
-templ Base() {
+import "time"
+
+// getCurrentYear returns the current year as a string
+func getCurrentYear() string {
+	return time.Now().Format("2006")
+}
+
+templ Base(title string) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
-			<title>The Virtual Armory</title>
+			<title>{ title } | The Virtual Armory</title>
 			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script src="/assets/js/htmx.min.js"></script>
@@ -59,41 +66,25 @@ templ Base() {
 				</div>
 			</main>
 			
-			<footer class="bg-gunmetal-700 text-white py-8">
+			<footer class="bg-gunmetal-700 text-white py-4">
 				<div class="container mx-auto px-8">
-					<div class="w-full flex flex-col md:flex-row py-6">
-						<div class="flex-1 mb-6">
+					<div class="w-full flex flex-col md:flex-row py-2">
+						<div class="flex-1 mb-2 md:mb-0">
 							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
-							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+							<p class="text-gray-400 text-sm mt-1">Your Arsenal. On Target.</p>
 						</div>
 						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Links</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
-								</li>
-							</ul>
-						</div>
-						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
-								</li>
-							</ul>
+							<p class="uppercase text-gray-400 mb-2">Links</p>
+							<div class="flex flex-wrap gap-x-6 gap-y-1">
+								<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								<a href="/pricing" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Pricing</a>
+							</div>
 						</div>
 					</div>
-					<div class="text-center pt-6 border-t border-gray-700">
-						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					<div class="text-center pt-2 mt-2 border-t border-gray-700">
+						<p class="text-sm">&copy; { getCurrentYear() } The Virtual Armory. All rights reserved.</p>
 					</div>
 				</div>
 			</footer>
@@ -234,41 +225,25 @@ templ BaseWithAuth(isLoggedIn bool) {
 				</div>
 			</main>
 			
-			<footer class="bg-gunmetal-700 text-white py-8">
+			<footer class="bg-gunmetal-700 text-white py-4">
 				<div class="container mx-auto px-8">
-					<div class="w-full flex flex-col md:flex-row py-6">
-						<div class="flex-1 mb-6">
+					<div class="w-full flex flex-col md:flex-row py-2">
+						<div class="flex-1 mb-2 md:mb-0">
 							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
-							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+							<p class="text-gray-400 text-sm mt-1">Your Arsenal. On Target.</p>
 						</div>
 						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Links</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
-								</li>
-							</ul>
-						</div>
-						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
-								</li>
-							</ul>
+							<p class="uppercase text-gray-400 mb-2">Links</p>
+							<div class="flex flex-wrap gap-x-6 gap-y-1">
+								<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								<a href="/pricing" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Pricing</a>
+							</div>
 						</div>
 					</div>
-					<div class="text-center pt-6 border-t border-gray-700">
-						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					<div class="text-center pt-2 mt-2 border-t border-gray-700">
+						<p class="text-sm">&copy; { getCurrentYear() } The Virtual Armory. All rights reserved.</p>
 					</div>
 				</div>
 			</footer>
@@ -406,41 +381,25 @@ templ BaseAdmin(isLoggedIn bool) {
 				</div>
 			</main>
 			
-			<footer class="bg-gunmetal-700 text-white py-8">
+			<footer class="bg-gunmetal-700 text-white py-4">
 				<div class="container mx-auto px-8">
-					<div class="w-full flex flex-col md:flex-row py-6">
-						<div class="flex-1 mb-6">
+					<div class="w-full flex flex-col md:flex-row py-2">
+						<div class="flex-1 mb-2 md:mb-0">
 							<a class="text-white no-underline hover:text-brass-300 font-bold text-2xl" href="/">The Virtual Armory</a>
-							<p class="text-gray-400 text-sm mt-2">Your digital home for tracking your firearms collection.</p>
+							<p class="text-gray-400 text-sm mt-1">Your Arsenal. On Target.</p>
 						</div>
 						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Links</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
-								</li>
-							</ul>
-						</div>
-						<div class="flex-1">
-							<p class="uppercase text-gray-400 md:mb-6">Legal</p>
-							<ul class="list-reset mb-6">
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/terms" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Terms</a>
-								</li>
-								<li class="mt-2 inline-block mr-2 md:block md:mr-0">
-									<a href="/privacy" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Privacy</a>
-								</li>
-							</ul>
+							<p class="uppercase text-gray-400 mb-2">Links</p>
+							<div class="flex flex-wrap gap-x-6 gap-y-1">
+								<a href="/" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Home</a>
+								<a href="/about" class="no-underline hover:underline text-gray-300 hover:text-brass-300">About</a>
+								<a href="/contact" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Contact</a>
+								<a href="/pricing" class="no-underline hover:underline text-gray-300 hover:text-brass-300">Pricing</a>
+							</div>
 						</div>
 					</div>
-					<div class="text-center pt-6 border-t border-gray-700">
-						<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
+					<div class="text-center pt-2 mt-2 border-t border-gray-700">
+						<p class="text-sm">&copy; { getCurrentYear() } The Virtual Armory. All rights reserved.</p>
 					</div>
 				</div>
 			</footer>

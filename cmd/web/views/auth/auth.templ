@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/hail2skins/the-virtual-armory/cmd/web/views/layout"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 templ LoginForm(errorMsg string, emailValue string) {
@@ -9,7 +9,7 @@ templ LoginForm(errorMsg string, emailValue string) {
 }
 
 templ LoginFormWithFlash(errorMsg string, emailValue string, flashMessage string, flashType string) {
-	@layout.Base("Login") {
+	@partials.Base("Login") {
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
 			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Login</h2>
 			
@@ -75,7 +75,7 @@ templ LoginFormWithFlash(errorMsg string, emailValue string, flashMessage string
 }
 
 templ LoginFormWithVerified(errorMsg string, emailValue string) {
-	@layout.Base("Login") {
+	@partials.Base("Login") {
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
 			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Login</h2>
 			
@@ -125,9 +125,9 @@ templ LoginFormWithVerified(errorMsg string, emailValue string) {
 }
 
 templ RegisterForm(errorMsg string, emailValue string) {
-	@layout.Base("Register") {
+	@partials.Base("Register") {
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Register</h2>
+			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Create an Account</h2>
 			
 			if errorMsg != "" {
 				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -156,7 +156,7 @@ templ RegisterForm(errorMsg string, emailValue string) {
 						class="shadow appearance-none border rounded w-full py-3 px-4 text-gunmetal-700 leading-tight focus:outline-none focus:shadow-outline focus:border-brass-400 transition duration-300"
 						required
 					/>
-					<p class="text-sm text-gunmetal-500 mt-1">Password must be at least 8 characters long</p>
+					<p class="text-sm text-gunmetal-500 mt-1">Must be at least 8 characters</p>
 				</div>
 				<div class="mb-6">
 					<label for="confirm_password" class="block text-gunmetal-700 text-sm font-bold mb-2">Confirm Password</label>
@@ -172,7 +172,7 @@ templ RegisterForm(errorMsg string, emailValue string) {
 					type="submit" 
 					class="w-full bg-gunmetal-800 hover:bg-gunmetal-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300"
 				>
-					Register
+					Create Account
 				</button>
 			</form>
 			<div class="mt-8 pt-6 border-t border-gray-200">
@@ -186,7 +186,7 @@ templ RegisterForm(errorMsg string, emailValue string) {
 }
 
 templ RecoverForm() {
-	@layout.Base("Recover Password") {
+	@partials.Base("Recover Password") {
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
 			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Recover Password</h2>
 			<form action="/recover" method="POST">
@@ -218,18 +218,18 @@ templ RecoverForm() {
 }
 
 templ ResetPasswordForm(token string, errorMsg string) {
-	@layout.Base("Reset Password") {
+	@partials.Base("Reset Password") {
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
 			<h2 class="text-2xl font-bold mb-6 text-gunmetal-800">Reset Password</h2>
 			
 			if errorMsg != "" {
-				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-					<p>{ errorMsg }</p>
+				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+					<span class="block sm:inline">{ errorMsg }</span>
 				</div>
 			}
 			
 			<form action={ templ.SafeURL("/reset-password/" + token) } method="POST">
-				<div class="mb-6">
+				<div class="mb-4">
 					<label for="password" class="block text-gunmetal-700 text-sm font-bold mb-2">New Password</label>
 					<input 
 						type="password" 
@@ -238,10 +238,10 @@ templ ResetPasswordForm(token string, errorMsg string) {
 						class="shadow appearance-none border rounded w-full py-3 px-4 text-gunmetal-700 leading-tight focus:outline-none focus:shadow-outline focus:border-brass-400 transition duration-300"
 						required
 					/>
-					<p class="text-sm text-gunmetal-500 mt-1">Password must be at least 8 characters long.</p>
+					<p class="text-sm text-gunmetal-500 mt-1">Must be at least 8 characters</p>
 				</div>
 				<div class="mb-6">
-					<label for="confirm_password" class="block text-gunmetal-700 text-sm font-bold mb-2">Confirm Password</label>
+					<label for="confirm_password" class="block text-gunmetal-700 text-sm font-bold mb-2">Confirm New Password</label>
 					<input 
 						type="password" 
 						id="confirm_password" 
@@ -257,12 +257,6 @@ templ ResetPasswordForm(token string, errorMsg string) {
 					Reset Password
 				</button>
 			</form>
-			<div class="mt-8 pt-6 border-t border-gray-200">
-				<p class="text-center text-gunmetal-700">
-					Remember your password? 
-					<a href="/login" class="text-gunmetal-800 hover:text-brass-500 font-bold transition duration-300">Login</a>
-				</p>
-			</div>
 		</div>
 	}
 } 
