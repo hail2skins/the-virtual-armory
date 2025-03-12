@@ -3,7 +3,7 @@ package caliber
 import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 
 templ New() {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true, "/admin/calibers") {
 		<div class="max-w-3xl mx-auto">
 			<div class="mb-6">
 				<a href="/admin/calibers" class="text-blue-600 hover:text-blue-800">← Back to Calibers</a>

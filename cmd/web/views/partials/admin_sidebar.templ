@@ -1,0 +1,94 @@
+package partials
+
+import "strings"
+
+// AdminSidebar renders the sidebar navigation for admin pages
+templ AdminSidebar(currentPath string) {
+	<div class="bg-gunmetal-800 text-white w-64 min-h-screen fixed left-0 top-0 pt-20 shadow-lg">
+		<div class="px-4 py-6">
+			<h2 class="text-xl font-bold mb-6 text-brass-300">Admin Panel</h2>
+			<nav>
+				<ul class="space-y-2">
+					<li>
+						<a 
+							href="/admin/dashboard" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/dashboard") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+							</svg>
+							Dashboard
+						</a>
+					</li>
+					<li>
+						<a 
+							href="/admin/detailed-health" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/detailed-health") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+							</svg>
+							Detailed Health
+						</a>
+					</li>
+					<li>
+						<a 
+							href="/admin/error-metrics" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/error-metrics") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+							</svg>
+							Error Metrics
+						</a>
+					</li>
+					
+					<li class="pt-4 border-t border-gunmetal-700">
+						<h3 class="text-sm uppercase text-gray-400 font-semibold px-4 py-2">Data Management</h3>
+					</li>
+					<li>
+						<a 
+							href="/admin/manufacturers" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/manufacturers") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+							</svg>
+							Manufacturers
+						</a>
+					</li>
+					<li>
+						<a 
+							href="/admin/calibers" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/calibers") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+							</svg>
+							Calibers
+						</a>
+					</li>
+					<li>
+						<a 
+							href="/admin/weapon-types" 
+							class={ "flex items-center px-4 py-3 rounded-lg transition-colors " + getAdminNavClass(currentPath, "/admin/weapon-types") }
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+							</svg>
+							Weapon Types
+						</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+}
+
+// getAdminNavClass returns the appropriate CSS class for the admin navigation item
+func getAdminNavClass(currentPath, itemPath string) string {
+	if strings.HasPrefix(currentPath, itemPath) {
+		return "bg-brass-600 text-white hover:bg-brass-700"
+	}
+	return "hover:bg-gunmetal-700"
+} 

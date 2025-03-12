@@ -1,18 +1,21 @@
 package admin
 
 import (
-	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
-	"time"
 	"fmt"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 	"strconv"
+	"time"
 )
 
-type ErrorMetricsData struct {
-	ErrorRates         map[string]float64
-	LatencyPercentiles map[string]float64
-	RecentErrors       []RecentError
-	Stats              map[string]interface{}
-	TimeRange          string
+// ErrorData represents an error for display in the dashboard
+type ErrorData struct {
+	ID        uint
+	Message   string
+	Path      string
+	Count     int
+	LastSeen  time.Time
+	FirstSeen time.Time
+	Status    int
 }
 
 type RecentError struct {
@@ -22,8 +25,29 @@ type RecentError struct {
 	Path         string
 }
 
+type ErrorMetricsData struct {
+	TotalErrors        int64
+	ErrorRate          float64
+	ErrorRateChange    float64
+	TopErrors          []ErrorData
+	RecentErrors       []RecentError
+	ErrorsByPath       map[string]int64
+	ErrorsByStatus     map[int]int64
+	ErrorsByTimeOfDay  map[int]int64
+	ErrorsByDayOfWeek  map[string]int64
+	CurrentPage        int
+	TotalPages         int
+	PerPage            int
+	SortBy             string
+	SortOrder          string
+	ErrorRates         map[string]float64
+	LatencyPercentiles map[string]float64
+	Stats              map[string]interface{}
+	TimeRange          string
+}
+
 templ ErrorMetrics(data ErrorMetricsData) {
-	@partials.BaseAdmin(true) {
+	@partials.BaseAdmin(true, "/admin/error-metrics") {
 		<div class="container mx-auto px-4 py-8">
 			<h1 class="text-3xl font-bold mb-6">Error Metrics Dashboard</h1>
 			
@@ -39,170 +63,131 @@ templ ErrorMetrics(data ErrorMetricsData) {
 			</div>
 			
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-				<div class="bg-white p-6 rounded-lg shadow-md">
+				<div class="bg-white rounded-lg shadow-md p-6">
 					<h2 class="text-xl font-semibold mb-4">Error Rates</h2>
-					if len(data.ErrorRates) == 0 {
-						<p class="text-gray-500">No errors recorded in this time period.</p>
-					} else {
-						<div class="overflow-x-auto">
-							<table class="min-w-full">
-								<thead>
-									<tr class="bg-gray-100">
-										<th class="px-4 py-2 text-left">Error Type</th>
-										<th class="px-4 py-2 text-right">Count</th>
-									</tr>
-								</thead>
-								<tbody>
-									for errorType, count := range data.ErrorRates {
-										<tr class="border-t">
-											<td class="px-4 py-2">{ errorType }</td>
-											<td class="px-4 py-2 text-right">{ fmt.Sprintf("%.0f", count) }</td>
-										</tr>
-									}
-								</tbody>
-							</table>
-						</div>
-					}
-				</div>
-				
-				<div class="bg-white p-6 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold mb-4">Latency Percentiles</h2>
-					<div class="grid grid-cols-3 gap-4">
-						<div class="bg-gray-100 p-4 rounded text-center">
-							<div class="text-2xl font-bold">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p50"]) }ms</div>
-							<div class="text-sm text-gray-600">50th Percentile</div>
-						</div>
-						<div class="bg-gray-100 p-4 rounded text-center">
-							<div class="text-2xl font-bold">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p95"]) }ms</div>
-							<div class="text-sm text-gray-600">95th Percentile</div>
-						</div>
-						<div class="bg-gray-100 p-4 rounded text-center">
-							<div class="text-2xl font-bold">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p99"]) }ms</div>
-							<div class="text-sm text-gray-600">99th Percentile</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<div class="bg-white p-6 rounded-lg shadow-md mb-8">
-				<h2 class="text-xl font-semibold mb-4">Recent Errors</h2>
-				if len(data.RecentErrors) == 0 {
-					<p class="text-gray-500">No recent errors.</p>
-				} else {
 					<div class="overflow-x-auto">
-						<table class="min-w-full">
-							<thead>
-								<tr class="bg-gray-100">
-									<th class="px-4 py-2 text-left">Error Type</th>
-									<th class="px-4 py-2 text-left">Path</th>
-									<th class="px-4 py-2 text-right">Count</th>
-									<th class="px-4 py-2 text-right">Last Occurred</th>
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endpoint</th>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Rate</th>
 								</tr>
 							</thead>
-							<tbody>
-								for _, err := range data.RecentErrors {
-									<tr class="border-t">
-										<td class="px-4 py-2">{ err.ErrorType }</td>
-										<td class="px-4 py-2">{ err.Path }</td>
-										<td class="px-4 py-2 text-right">{ strconv.FormatInt(err.Count, 10) }</td>
-										<td class="px-4 py-2 text-right">{ err.LastOccurred.Format("2006-01-02 15:04:05") }</td>
+							<tbody class="bg-white divide-y divide-gray-200">
+								for endpoint, rate := range data.ErrorRates {
+									<tr>
+										<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ endpoint }</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ fmt.Sprintf("%.2f%%", rate) }</td>
+									</tr>
+								}
+								if len(data.ErrorRates) == 0 {
+									<tr>
+										<td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No error rates available</td>
 									</tr>
 								}
 							</tbody>
 						</table>
 					</div>
-				}
+				</div>
+				
+				<div class="bg-white rounded-lg shadow-md p-6">
+					<h2 class="text-xl font-semibold mb-4">Latency Percentiles</h2>
+					<div class="overflow-x-auto">
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentile</th>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latency (ms)</th>
+								</tr>
+							</thead>
+							<tbody class="bg-white divide-y divide-gray-200">
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">50th</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p50"]) }</td>
+								</tr>
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">90th</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p90"]) }</td>
+								</tr>
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">99th</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ fmt.Sprintf("%.2f", data.LatencyPercentiles["p99"]) }</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
 			</div>
 			
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div class="bg-white p-6 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold mb-4">Status Code Distribution</h2>
-					if statusCounts, ok := data.Stats["status_counts"].(map[int]interface{}); ok && len(statusCounts) > 0 {
-						<div class="overflow-x-auto">
-							<table class="min-w-full">
-								<thead>
-									<tr class="bg-gray-100">
-										<th class="px-4 py-2 text-left">Status Code</th>
-										<th class="px-4 py-2 text-right">Count</th>
+			<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+				<h2 class="text-xl font-semibold mb-4">Recent Errors</h2>
+				<div class="overflow-x-auto">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Type</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Occurred</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							for _, err := range data.RecentErrors {
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ err.ErrorType }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ err.Path }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ strconv.FormatInt(err.Count, 10) }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ err.LastOccurred.Format("Jan 02, 2006 15:04:05") }</td>
+								</tr>
+							}
+							if len(data.RecentErrors) == 0 {
+								<tr>
+									<td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No recent errors</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="bg-white rounded-lg shadow-md p-6">
+					<h2 class="text-xl font-semibold mb-4">Overall Stats</h2>
+					<div class="overflow-x-auto">
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metric</th>
+									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+								</tr>
+							</thead>
+							<tbody class="bg-white divide-y divide-gray-200">
+								for metric, value := range data.Stats {
+									<tr>
+										<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ metric }</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ fmt.Sprintf("%v", value) }</td>
 									</tr>
-								</thead>
-								<tbody>
-									for code, entry := range statusCounts {
-										if entryMap, ok := entry.(map[string]interface{}); ok {
-											if count, ok := entryMap["Count"].(float64); ok {
-												<tr class="border-t">
-													<td class="px-4 py-2">{ strconv.Itoa(code) }</td>
-													<td class="px-4 py-2 text-right">{ fmt.Sprintf("%.0f", count) }</td>
-												</tr>
-											}
-										}
-									}
-								</tbody>
-							</table>
-						</div>
-					} else {
-						<p class="text-gray-500">No status code data available.</p>
-					}
+								}
+								if len(data.Stats) == 0 {
+									<tr>
+										<td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No stats available</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
 				</div>
 				
-				<div class="bg-white p-6 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold mb-4">Endpoint Distribution</h2>
-					if endpointCounts, ok := data.Stats["endpoint_counts"].(map[string]interface{}); ok && len(endpointCounts) > 0 {
-						<div class="overflow-x-auto">
-							<table class="min-w-full">
-								<thead>
-									<tr class="bg-gray-100">
-										<th class="px-4 py-2 text-left">Endpoint</th>
-										<th class="px-4 py-2 text-right">Count</th>
-									</tr>
-								</thead>
-								<tbody>
-									for endpoint, entry := range endpointCounts {
-										if entryMap, ok := entry.(map[string]interface{}); ok {
-											if count, ok := entryMap["Count"].(float64); ok {
-												<tr class="border-t">
-													<td class="px-4 py-2">{ endpoint }</td>
-													<td class="px-4 py-2 text-right">{ fmt.Sprintf("%.0f", count) }</td>
-												</tr>
-											}
-										}
-									}
-								</tbody>
-							</table>
-						</div>
-					} else {
-						<p class="text-gray-500">No endpoint data available.</p>
-					}
-				</div>
-				
-				<div class="bg-white p-6 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold mb-4">Error Type Distribution</h2>
-					if errorCounts, ok := data.Stats["error_counts"].(map[string]interface{}); ok && len(errorCounts) > 0 {
-						<div class="overflow-x-auto">
-							<table class="min-w-full">
-								<thead>
-									<tr class="bg-gray-100">
-										<th class="px-4 py-2 text-left">Error Type</th>
-										<th class="px-4 py-2 text-right">Count</th>
-									</tr>
-								</thead>
-								<tbody>
-									for errorType, entry := range errorCounts {
-										if entryMap, ok := entry.(map[string]interface{}); ok {
-											if count, ok := entryMap["Count"].(float64); ok {
-												<tr class="border-t">
-													<td class="px-4 py-2">{ errorType }</td>
-													<td class="px-4 py-2 text-right">{ fmt.Sprintf("%.0f", count) }</td>
-												</tr>
-											}
-										}
-									}
-								</tbody>
-							</table>
-						</div>
-					} else {
-						<p class="text-gray-500">No error type data available.</p>
-					}
+				<div class="bg-white rounded-lg shadow-md p-6">
+					<h2 class="text-xl font-semibold mb-4">Actions</h2>
+					<div class="space-y-4">
+						<a href="/admin/error-metrics/clear" class="block w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-center">
+							Clear Error Metrics
+						</a>
+						<a href="/admin/dashboard" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-center">
+							Back to Dashboard
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>

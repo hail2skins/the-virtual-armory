@@ -5,7 +5,7 @@ import (
 )
 
 templ New() {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true, "/admin/manufacturers") {
 		<div class="max-w-2xl mx-auto">
 			<div class="flex justify-between items-center mb-6">
 				<h2 class="text-3xl font-bold">New Manufacturer</h2>

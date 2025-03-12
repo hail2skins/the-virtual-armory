@@ -7,7 +7,7 @@ import (
 )
 
 templ Index(calibers []models.Caliber) {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true, "/admin/calibers") {
 		<div class="max-w-6xl mx-auto">
 			<div class="flex justify-between items-center mb-6">
 				<h2 class="text-3xl font-bold">Calibers</h2>

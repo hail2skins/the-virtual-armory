@@ -7,7 +7,7 @@ import (
 )
 
 templ Edit(caliber models.Caliber) {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true, "/admin/calibers") {
 		<div class="max-w-3xl mx-auto">
 			<div class="mb-6">
 				<a href={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(caliber.ID), 10)) } class="text-blue-600 hover:text-blue-800">← Back to Caliber Details</a>

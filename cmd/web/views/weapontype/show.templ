@@ -7,7 +7,7 @@ import (
 )
 
 templ Show(weaponType models.WeaponType) {
-	@partials.BaseWithAuth(true) {
+	@partials.BaseAdmin(true, "/admin/weapon-types") {
 		<div class="max-w-3xl mx-auto">
 			<div class="mb-6">
 				<a href="/admin/weapon-types" class="text-blue-600 hover:text-blue-800">← Back to Weapon Types</a>
