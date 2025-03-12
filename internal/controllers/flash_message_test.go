@@ -47,7 +47,7 @@ func TestLogoutFlashMessage(t *testing.T) {
 	authInstance, _ := auth.New()
 
 	authController := NewAuthController(authInstance, mockEmailService, cfg)
-	homeController := NewHomeController()
+	homeController := NewHomeController(mockEmailService)
 
 	// Setup routes
 	router.GET("/", homeController.Index)
@@ -126,7 +126,7 @@ func TestDeleteAccountFlashMessage(t *testing.T) {
 	authInstance, _ := auth.New()
 
 	authController := NewAuthController(authInstance, mockEmailService, cfg)
-	homeController := NewHomeController()
+	homeController := NewHomeController(mockEmailService)
 
 	// Setup routes
 	router.GET("/", homeController.Index)

@@ -13,7 +13,7 @@ templ Index(isLoggedIn bool) {
 templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 	@partials.BaseWithAuth(isLoggedIn) {
 		if flashMessage != "" {
-			<div class={getFlashClass(flashType)} role="alert">
+			<div class={getIndexFlashClass(flashType)} role="alert">
 				<span class="block sm:inline">{flashMessage}</span>
 			</div>
 		}
@@ -132,8 +132,8 @@ templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 	}
 }
 
-// Helper function to get the CSS class for flash messages
-func getFlashClass(flashType string) string {
+// getIndexFlashClass returns the appropriate CSS class based on the message type
+func getIndexFlashClass(flashType string) string {
 	switch flashType {
 	case "success":
 		return "mb-6 p-4 rounded-md bg-green-500 text-white text-center"

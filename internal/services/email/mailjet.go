@@ -14,6 +14,7 @@ type MailJetService struct {
 	senderEmail  string
 	senderName   string
 	appBaseURL   string
+	adminEmail   string
 	isConfigured bool
 }
 
@@ -38,6 +39,7 @@ func NewMailJetService(cfg *config.Config) EmailService {
 		senderEmail:  cfg.MailJetSenderEmail,
 		senderName:   cfg.MailJetSenderName,
 		appBaseURL:   cfg.AppBaseURL,
+		adminEmail:   cfg.AdminEmail,
 		isConfigured: true,
 	}
 }
@@ -128,5 +130,75 @@ func (s *MailJetService) SendPasswordResetEmail(email, resetLink string) error {
 	}
 
 	log.Printf("Password reset email sent to %s", email)
+	return nil
+}
+
+// SendContactFormEmail sends a contact form submission to the admin
+func (s *MailJetService) SendContactFormEmail(name, email, subject, message string) error {
+	if !s.isConfigured {
+		log.Println("MailJet not configured. Skipping contact form email.")
+		return nil
+	}
+
+	// Use the admin email from config, or use the sender email as fallback
+	adminEmail := s.adminEmail
+	if adminEmail == "" {
+		adminEmail = s.senderEmail
+		log.Println("Admin email not configured. Using sender email as recipient.")
+	}
+
+	// Format the email content
+	htmlContent := fmt.Sprintf(`
+		<h3>New Contact Form Submission</h3>
+		<p><strong>From:</strong> %s &lt;%s&gt;</p>
+		<p><strong>Subject:</strong> %s</p>
+		<p><strong>Message:</strong></p>
+		<div style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+			%s
+		</div>
+		<p>To reply, simply respond to this email or send a new email to: %s</p>
+	`, name, email, subject, message, email)
+
+	textContent := fmt.Sprintf(`
+New Contact Form Submission
+--------------------------
+From: %s <%s>
+Subject: %s
+
+Message:
+%s
+
+To reply, simply respond to this email or send a new email to: %s
+	`, name, email, subject, message, email)
+
+	messagesInfo := []mailjet.InfoMessagesV31{
+		{
+			From: &mailjet.RecipientV31{
+				Email: s.senderEmail,
+				Name:  s.senderName,
+			},
+			To: &mailjet.RecipientsV31{
+				mailjet.RecipientV31{
+					Email: adminEmail,
+				},
+			},
+			Subject:  fmt.Sprintf("Contact Form: %s", subject),
+			TextPart: textContent,
+			HTMLPart: htmlContent,
+			ReplyTo: &mailjet.RecipientV31{
+				Email: s.senderEmail,
+				Name:  s.senderName,
+			},
+		},
+	}
+
+	messages := mailjet.MessagesV31{Info: messagesInfo}
+	_, err := s.client.SendMailV31(&messages)
+	if err != nil {
+		log.Printf("Error sending contact form email: %v", err)
+		return err
+	}
+
+	log.Printf("Contact form email sent to admin from %s <%s>", name, email)
 	return nil
 }

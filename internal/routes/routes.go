@@ -50,7 +50,7 @@ func RegisterRoutes(r *gin.Engine, authInstance *auth.Auth, db *gorm.DB, cfg *co
 	RegisterHealthRoute(r)
 
 	// Register home routes
-	RegisterHomeRoutes(r)
+	RegisterHomeRoutes(r, emailService)
 
 	// Register auth routes
 	RegisterAuthRoutes(r, authInstance, emailService, cfg)

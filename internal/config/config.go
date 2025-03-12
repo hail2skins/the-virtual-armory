@@ -21,6 +21,8 @@ type Config struct {
 	MailJetSenderEmail string
 	MailJetSenderName  string
 	AppBaseURL         string
+	// Admin configuration
+	AdminEmail string
 }
 
 // New creates a new Config instance with values from environment variables
@@ -42,6 +44,7 @@ func New() *Config {
 		MailJetSenderEmail: getEnv("MAILJET_SENDER_EMAIL", "noreply@thevirtualarmory.com"),
 		MailJetSenderName:  getEnv("MAILJET_SENDER_NAME", "The Virtual Armory"),
 		AppBaseURL:         getEnv("APP_BASE_URL", "http://localhost:8080"),
+		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 	}
 }
 

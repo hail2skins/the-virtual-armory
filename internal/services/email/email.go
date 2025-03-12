@@ -10,4 +10,7 @@ type EmailService interface {
 
 	// SendPasswordResetEmail sends a password reset email with a custom link
 	SendPasswordResetEmail(email, resetLink string) error
+
+	// SendContactFormEmail sends a contact form submission to the admin
+	SendContactFormEmail(name, email, subject, message string) error
 }

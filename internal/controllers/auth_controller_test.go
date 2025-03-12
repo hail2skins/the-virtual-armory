@@ -43,6 +43,12 @@ func (m *MockEmailService) SendPasswordResetEmail(email, token string) error {
 	return args.Error(0)
 }
 
+// SendContactFormEmail sends a contact form email
+func (m *MockEmailService) SendContactFormEmail(name, email, subject, message string) error {
+	args := m.Called(name, email, subject, message)
+	return args.Error(0)
+}
+
 // setupTestDB sets up a test database
 func setupTestDB(t *testing.T) *gorm.DB {
 	// Use an in-memory SQLite database for testing
@@ -72,6 +78,7 @@ func setupTestRouter(t *testing.T, db *gorm.DB) (*gin.Engine, *AuthController) {
 	}
 	mockEmailService.On("SendVerificationEmail", mock.Anything, mock.Anything).Return(nil)
 	mockEmailService.On("SendPasswordResetEmail", mock.Anything, mock.Anything).Return(nil)
+	mockEmailService.On("SendContactFormEmail", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	// Create an auth instance
 	authInstance, err := auth.New()

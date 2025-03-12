@@ -39,6 +39,12 @@ func (m *UserControllerMockEmailService) SendPasswordResetEmail(email, resetLink
 	return args.Error(0)
 }
 
+// SendContactFormEmail mocks the SendContactFormEmail method
+func (m *UserControllerMockEmailService) SendContactFormEmail(name, email, subject, message string) error {
+	args := m.Called(name, email, subject, message)
+	return args.Error(0)
+}
+
 // MockUserController extends UserController with a mock getCurrentUser method
 type MockUserController struct {
 	*UserController
@@ -61,6 +67,7 @@ func setupUserControllerTest(t *testing.T) (*gin.Engine, *UserController, *UserC
 	mockEmailService.On("IsConfigured").Return(true)
 	mockEmailService.On("SendVerificationEmail", mock.Anything, mock.Anything).Return(nil)
 	mockEmailService.On("SendPasswordResetEmail", mock.Anything, mock.Anything).Return(nil)
+	mockEmailService.On("SendContactFormEmail", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	// Create a user controller with the mock email service
 	userController := NewUserControllerWithEmailService(database.TestDB, mockEmailService)
