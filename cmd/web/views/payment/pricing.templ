@@ -219,9 +219,12 @@ templ Pricing(user *models.User) {
 									Login to Subscribe
 								</a>
 							} else {
-								<a href={ getStripeLink("monthly", user.ID) } class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
-									Subscribe Monthly
-								</a>
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="monthly" />
+									<button type="submit" class="block w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-700 transition duration-200 text-center">
+										Subscribe Monthly
+									</button>
+								</form>
 							}
 						</div>
 					</div>
@@ -272,9 +275,12 @@ templ Pricing(user *models.User) {
 									Login to Subscribe
 								</a>
 							} else {
-								<a href={ getStripeLink("yearly", user.ID) } class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
-									Subscribe Yearly
-								</a>
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="yearly" />
+									<button type="submit" class="block w-full bg-green-600 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition duration-200 text-center">
+										Subscribe Yearly
+									</button>
+								</form>
 							}
 						</div>
 					</div>
@@ -319,9 +325,12 @@ templ Pricing(user *models.User) {
 									Login to Subscribe
 								</a>
 							} else {
-								<a href={ getStripeLink("lifetime", user.ID) } class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
-									Buy Lifetime
-								</a>
+								<form method="POST" action="/checkout">
+									<input type="hidden" name="tier" value="lifetime" />
+									<button type="submit" class="block w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded hover:bg-purple-700 transition duration-200 text-center">
+										Get Lifetime Access
+									</button>
+								</form>
 							}
 						</div>
 					</div>
@@ -372,9 +381,12 @@ templ Pricing(user *models.User) {
 										Login to Subscribe
 									</a>
 								} else {
-									<a href={ getStripeLink("premium_lifetime", user.ID) } class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
-										Buy Premium Lifetime - $1000
-									</a>
+									<form method="POST" action="/checkout">
+										<input type="hidden" name="tier" value="premium_lifetime" />
+										<button type="submit" class="block w-full bg-white text-indigo-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition duration-200 text-center">
+											Buy Premium Lifetime - $1000
+										</button>
+									</form>
 								}
 							</div>
 						</div>

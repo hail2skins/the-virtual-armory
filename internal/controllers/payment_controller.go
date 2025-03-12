@@ -76,6 +76,14 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 	// Set Stripe API key
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
+	// Check if automatic tax is enabled in the Stripe account
+	// If not, we'll still create the checkout session but without automatic tax
+	automaticTaxEnabled := true
+	if os.Getenv("STRIPE_TAX_ENABLED") == "false" {
+		automaticTaxEnabled = false
+		log.Printf("Automatic tax is disabled in the Stripe account")
+	}
+
 	// Get the product ID based on the tier
 	var productID string
 	switch tier {
@@ -128,9 +136,11 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 					Currency: stripe.String(currency),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String(productName),
+						Name:    stripe.String(productName),
+						TaxCode: stripe.String("txcd_10000000"), // Standard tax code
 					},
-					UnitAmount: stripe.Int64(unitAmount),
+					UnitAmount:  stripe.Int64(unitAmount),
+					TaxBehavior: stripe.String("exclusive"), // Add tax on top of the price
 					Recurring: func() *stripe.CheckoutSessionLineItemPriceDataRecurringParams {
 						if interval == "" {
 							return nil
@@ -150,9 +160,11 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 			}
 			return stripe.String(string(stripe.CheckoutSessionModeSubscription))
 		}(),
-		SuccessURL:    stripe.String(os.Getenv("APP_BASE_URL") + "/payment/success?session_id={CHECKOUT_SESSION_ID}"),
-		CancelURL:     stripe.String(os.Getenv("APP_BASE_URL") + "/payment/cancel"),
-		CustomerEmail: stripe.String(user.Email),
+		SuccessURL:               stripe.String(os.Getenv("APP_BASE_URL") + "/payment/success?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:                stripe.String(os.Getenv("APP_BASE_URL") + "/payment/cancel"),
+		CustomerEmail:            stripe.String(user.Email),
+		AutomaticTax:             &stripe.CheckoutSessionAutomaticTaxParams{Enabled: stripe.Bool(automaticTaxEnabled)},
+		BillingAddressCollection: stripe.String(string(stripe.CheckoutSessionBillingAddressCollectionRequired)),
 	}
 
 	// Add metadata
@@ -160,19 +172,45 @@ func (c *PaymentController) CreateCheckoutSession(ctx *gin.Context) {
 	params.AddMetadata("subscription_tier", tier)
 	params.AddMetadata("product_id", productID)
 
+	// Log the success URL for debugging
+	successURL := os.Getenv("APP_BASE_URL") + "/payment/success?session_id={CHECKOUT_SESSION_ID}"
+	log.Printf("Success URL for checkout: %s", successURL)
+	log.Printf("APP_BASE_URL: %s", os.Getenv("APP_BASE_URL"))
+	log.Printf("Tax settings: AutomaticTax=%v, BillingAddressCollection=Required",
+		*params.AutomaticTax.Enabled)
+
 	// Create the checkout session
 	s, err := session.New(params)
 	if err != nil {
 		log.Printf("Error creating checkout session: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout session"})
-		return
+
+		// If the error is related to tax, try again without automatic tax
+		if strings.Contains(err.Error(), "tax") {
+			log.Printf("Retrying checkout session creation without automatic tax")
+			params.AutomaticTax.Enabled = stripe.Bool(false)
+			s, err = session.New(params)
+			if err != nil {
+				log.Printf("Error creating checkout session without tax: %v", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout session"})
+				return
+			}
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout session"})
+			return
+		}
 	}
 
 	log.Printf("Created checkout session for user %d, tier %s, session ID: %s", user.ID, tier, s.ID)
+	log.Printf("Checkout URL: %s", s.URL)
+	log.Printf("Success URL in session: %s", *params.SuccessURL)
 
 	// Redirect to the checkout page
 	ctx.Redirect(http.StatusSeeOther, s.URL)
 }
+
+// Note: All subscription tiers (monthly, yearly, lifetime, premium_lifetime) now use Checkout Sessions
+// instead of direct Stripe payment links. This ensures consistent handling of payments and proper
+// redirection back to the site after checkout completion.
 
 // logWebhookEvent logs webhook event details for monitoring and debugging
 func logWebhookEvent(eventType string, eventID string, userID string, status string, details string) {
