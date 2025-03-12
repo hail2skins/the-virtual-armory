@@ -24,7 +24,7 @@ templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 				<!-- Left Column / Hero Text -->
 				<div class="flex flex-col w-full md:w-2/5 justify-center items-start text-center md:text-left text-gunmetal-900">
 					<h1 class="my-4 text-5xl font-bold leading-tight">The Virtual Armory</h1>
-					<p class="leading-normal text-2xl mb-8">Your digital home for tracking your firearms collection safely and securely.</p>
+					<p class="leading-normal text-2xl mb-8">Your digital home for tracking your home arsenal safely and securely.</p>
 					
 					if isLoggedIn {
 						<a href="/owner/guns" class="mx-auto md:mx-0 hover:underline bg-gunmetal-800 text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg hover:bg-gunmetal-700 transition duration-300">
@@ -70,7 +70,7 @@ templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 					<div class="w-full md:w-1/3 p-6 flex flex-col">
 						<div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow">
 							<div class="p-8 text-gunmetal-800 text-center">
-								<div class="w-full font-bold text-xl">Maintenance Records</div>
+								<div class="w-full font-bold text-xl">Maintenance Records*</div>
 								<p class="text-base mt-4">Log cleaning, repairs, and modifications to keep your firearms in top condition.</p>
 							</div>
 						</div>
@@ -79,11 +79,42 @@ templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 					<div class="w-full md:w-1/3 p-6 flex flex-col">
 						<div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow">
 							<div class="p-8 text-gunmetal-800 text-center">
-								<div class="w-full font-bold text-xl">Range Day Tracking</div>
+								<div class="w-full font-bold text-xl">Range Day Tracking*</div>
 								<p class="text-base mt-4">Record your range sessions and ammunition usage for each firearm.</p>
 							</div>
 						</div>
 					</div>
+
+					<div class="w-full md:w-1/3 p-6 flex flex-col">
+						<div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow">
+							<div class="p-8 text-gunmetal-800 text-center">
+								<div class="w-full font-bold text-xl">Ammo Inventory*</div>
+								<p class="text-base mt-4">Keep track of your ammunition types and amounts in one convenient place.</p>
+							</div>
+						</div>
+					</div>
+					
+					<div class="w-full md:w-1/3 p-6 flex flex-col">
+						<div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow">
+							<div class="p-8 text-gunmetal-800 text-center">
+								<div class="w-full font-bold text-xl">Modding Paradise*</div>
+								<p class="text-base mt-4">Track custom parts, sights, lights, and other accessories you are using on each weapon.</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="w-full md:w-1/3 p-6 flex flex-col">
+						<div class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow">
+							<div class="p-8 text-gunmetal-800 text-center">
+								<div class="w-full font-bold text-xl">And More*</div>
+								<p class="text-base mt-4">Arsenal advisor, range target image uploads, custom notifications, and more on the roadmap.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="text-center mt-6 text-gunmetal-600">
+					<p>* = When Available</p>
 				</div>
 			</div>
 		</div>
@@ -92,7 +123,7 @@ templ IndexWithFlash(isLoggedIn bool, flashMessage string, flashType string) {
 		<div class="container mx-auto px-4 py-12">
 			<div class="bg-gunmetal-800 text-white rounded-lg shadow-xl py-10 px-6 md:py-16 md:px-12 text-center">
 				<h2 class="text-3xl font-bold mb-4">Ready to organize your collection?</h2>
-				<p class="text-xl mb-8">Join thousands of firearm enthusiasts who trust The Virtual Armory.</p>
+				<p class="text-xl mb-8">Join firearm enthusiasts and build your virtual armory.</p>
 				<a href="/pricing" class="mx-auto hover:underline bg-brass-400 text-gunmetal-800 font-bold rounded-full py-4 px-8 shadow-lg hover:bg-brass-300 transition duration-300">
 					View Pricing
 				</a>
