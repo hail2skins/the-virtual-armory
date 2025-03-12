@@ -1,59 +1,55 @@
 package caliber
 
+import "github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
+
 templ New() {
-	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>The Virtual Armory</title>
-			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script src="/assets/js/htmx.min.js"></script>
-		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
-				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-						</ul>
-					</nav>
+	@partials.BaseWithAuth(true) {
+		<div class="max-w-3xl mx-auto">
+			<div class="mb-6">
+				<a href="/admin/calibers" class="text-blue-600 hover:text-blue-800">← Back to Calibers</a>
+			</div>
+			<div class="bg-white shadow-md rounded-lg overflow-hidden">
+				<div class="p-6">
+					<h2 class="text-3xl font-bold mb-6">New Caliber</h2>
+					<form method="POST" action="/admin/calibers">
+						<div class="mb-4">
+							<label for="caliber" class="block text-gray-700 font-bold mb-2">Caliber*</label>
+							<input 
+								type="text" 
+								id="caliber" 
+								name="caliber" 
+								required 
+								class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+								placeholder="e.g. 9mm"
+							/>
+						</div>
+						<div class="mb-6">
+							<label for="nickname" class="block text-gray-700 font-bold mb-2">Nickname</label>
+							<input 
+								type="text" 
+								id="nickname" 
+								name="nickname" 
+								class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+								placeholder="e.g. 9x19mm Parabellum (optional)"
+							/>
+						</div>
+						<div class="flex items-center justify-between">
+							<button 
+								type="submit" 
+								class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+							>
+								Create Caliber
+							</button>
+							<a 
+								href="/admin/calibers" 
+								class="inline-block align-baseline font-bold text-sm text-blue-600 hover:text-blue-800"
+							>
+								Cancel
+							</a>
+						</div>
+					</form>
 				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				<div class="max-w-3xl mx-auto">
-					<div class="flex justify-between items-center mb-6">
-						<h2 class="text-3xl font-bold">New Caliber</h2>
-						<a href="/admin/calibers" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Back to List</a>
-					</div>
-					<div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
-						<form method="POST" action="/admin/calibers">
-							<div class="mb-4">
-								<label for="caliber" class="block text-gray-700 text-sm font-bold mb-2">Caliber</label>
-								<input type="text" name="caliber" id="caliber" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required/>
-							</div>
-							<div class="mb-4">
-								<label for="nickname" class="block text-gray-700 text-sm font-bold mb-2">Nickname</label>
-								<input type="text" name="nickname" id="nickname" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
-							</div>
-							<div class="flex items-center justify-between">
-								<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-									Create Caliber
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
-				</div>
-			</footer>
-		</body>
-	</html>
+			</div>
+		</div>
+	}
 } 

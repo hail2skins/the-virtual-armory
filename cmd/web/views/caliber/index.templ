@@ -3,75 +3,61 @@ package caliber
 import (
 	"strconv"
 	"github.com/hail2skins/the-virtual-armory/internal/models"
+	"github.com/hail2skins/the-virtual-armory/cmd/web/views/partials"
 )
 
 templ Index(calibers []models.Caliber) {
-	<!DOCTYPE html>
-	<html lang="en" class="h-screen">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>The Virtual Armory</title>
-			<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script src="/assets/js/htmx.min.js"></script>
-		</head>
-		<body class="bg-gray-100">
-			<header class="bg-blue-800 text-white p-4">
-				<div class="container mx-auto">
-					<h1 class="text-2xl font-bold">The Virtual Armory</h1>
-					<nav class="mt-2">
-						<ul class="flex space-x-4">
-							<li><a href="/" class="hover:underline">Home</a></li>
-							<li><a href="/about" class="hover:underline">About</a></li>
-							<li><a href="/contact" class="hover:underline">Contact</a></li>
-						</ul>
-					</nav>
+	@partials.BaseWithAuth(true) {
+		<div class="max-w-6xl mx-auto">
+			<div class="flex justify-between items-center mb-6">
+				<h2 class="text-3xl font-bold">Calibers</h2>
+				<a href="/admin/calibers/new" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
+					Add New Caliber
+				</a>
+			</div>
+			
+			if len(calibers) == 0 {
+				<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+					<p>No calibers found. Add your first caliber using the button above.</p>
 				</div>
-			</header>
-			<main class="container mx-auto p-4">
-				<div class="max-w-6xl mx-auto">
-					<div class="flex justify-between items-center mb-6">
-						<h2 class="text-3xl font-bold">Calibers</h2>
-						<a href="/admin/calibers/new" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Add New Caliber</a>
-					</div>
-					<div class="bg-white shadow-md rounded-lg overflow-hidden">
-						<table class="min-w-full divide-y divide-gray-200">
-							<thead class="bg-gray-50">
-								<tr>
-									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Caliber</th>
-									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
-									<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+			} else {
+				<div class="bg-white shadow-md rounded-lg overflow-hidden">
+					<table class="min-w-full divide-y divide-gray-200">
+						<thead class="bg-gray-50">
+							<tr>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Caliber</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							for _, c := range calibers {
+								<tr class="hover:bg-gray-50">
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ strconv.FormatUint(uint64(c.ID), 10) }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ c.Caliber }</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+										if c.Nickname != "" {
+											{ c.Nickname }
+										} else {
+											<span class="text-gray-400">-</span>
+										}
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+										<div class="flex space-x-2">
+											<a href={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(c.ID), 10)) } class="text-blue-600 hover:text-blue-900">View</a>
+											<a href={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(c.ID), 10) + "/edit") } class="text-indigo-600 hover:text-indigo-900">Edit</a>
+											<form method="POST" action={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(c.ID), 10) + "/delete") } onsubmit="return confirm('Are you sure you want to delete this caliber?');" class="inline">
+												<button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+											</form>
+										</div>
+									</td>
 								</tr>
-							</thead>
-							<tbody class="bg-white divide-y divide-gray-200">
-								for _, caliber := range calibers {
-									<tr class="hover:bg-gray-50">
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ strconv.FormatUint(uint64(caliber.ID), 10) }</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ caliber.Caliber }</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ caliber.Nickname }</td>
-										<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-											<div class="flex space-x-2">
-												<a href={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(caliber.ID), 10)) } class="text-blue-600 hover:text-blue-900">View</a>
-												<a href={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(caliber.ID), 10) + "/edit") } class="text-indigo-600 hover:text-indigo-900">Edit</a>
-												<form method="POST" action={ templ.SafeURL("/admin/calibers/" + strconv.FormatUint(uint64(caliber.ID), 10) + "/delete") } onsubmit="return confirm('Are you sure you want to delete this caliber?');" class="inline">
-													<button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-												</form>
-											</div>
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
-					</div>
+							}
+						</tbody>
+					</table>
 				</div>
-			</main>
-			<footer class="bg-gray-200 p-4 mt-8">
-				<div class="container mx-auto text-center">
-					<p>&copy; 2024 The Virtual Armory. All rights reserved.</p>
-				</div>
-			</footer>
-		</body>
-	</html>
+			}
+		</div>
+	}
 } 
